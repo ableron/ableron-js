@@ -1,2 +1,2 @@
-# ableron-js
-JavaScript Library for Ableron Server Side UI Composition
+# Ableron JavaScript Library
+JavaScript Library for Ableron Server Side UI Composition.
