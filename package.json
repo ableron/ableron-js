@@ -6,10 +6,7 @@
   "module": "dist/esm/index.js",
   "types": "dist/types/index.d.js",
   "scripts": {
-    "build": "npm run build:cjs && npm run build:esm && npm run build:types",
-    "build:cjs": "rimraf dist && tsc -p config/tsconfig.cjs.json",
-    "build:esm": "rimraf dist && tsc -p config/tsconfig.esm.json",
-    "build:types": "rimraf dist && tsc -p config/tsconfig.types.json",
+    "build": "npm run clean && tsc -p tsconfig.json && tsc -p tsconfig-esm.json && tsc -p tsconfig-types.json",
     "clean": "rimraf dist",
     "lint": "eslint \"src/**/*.ts\" --fix",
     "package": "npm run build && npm pack",
