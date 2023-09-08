@@ -9,7 +9,6 @@
     "build": "npm run clean && tsc -p tsconfig.json && tsc -p tsconfig-esm.json && tsc -p tsconfig-types.json",
     "clean": "rimraf dist",
     "lint": "eslint \"src/**/*.ts\" --fix",
-    "package": "npm run build && npm pack",
     "test": "jest --no-cache --runInBand",
     "test:cov": "jest --coverage --no-cache --runInBand"
   },
