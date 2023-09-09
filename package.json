@@ -27,7 +27,7 @@
   "homepage": "https://github.com/ableron/ableron-js",
   "repository": {
     "type": "git",
-    "url": "git@github.com:ableron/ableron-js.git"
+    "url": "git+ssh://git@github.com/ableron/ableron-js.git"
   },
   "bugs": {
     "url": "https://github.com/ableron/ableron-js/issues"
