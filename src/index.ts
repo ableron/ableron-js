@@ -1,3 +1,5 @@
-import { Ableron } from './Ableron';
+import { Ableron } from './ableron';
+import { AbleronConfig } from './ableron-config';
+import { TransclusionResult } from './transclusion-result';
 
-export { Ableron };
+export { Ableron, AbleronConfig, TransclusionResult };
