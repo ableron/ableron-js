@@ -1,6 +1,6 @@
 module.exports = {
   parser: '@typescript-eslint/parser',
-  extends: ['plugin:@typescript-eslint/recommended'],
+  extends: ['plugin:@typescript-eslint/recommended', 'prettier'],
   parserOptions: {
     sourceType: 'module'
   },
@@ -15,4 +15,4 @@ module.exports = {
     'semi': ['error', 'always'],
     'sort-imports': ['error', { ignoreDeclarationSort: true }]
   }
-}
+};

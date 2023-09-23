@@ -1,5 +1,5 @@
-import { AbleronConfig } from "./ableron-config";
-import {TransclusionResult} from "./transclusion-result";
+import { AbleronConfig } from './ableron-config';
+import { TransclusionResult } from './transclusion-result';
 
 export class TransclusionProcessor {
   private readonly ableronConfig: AbleronConfig;

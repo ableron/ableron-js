@@ -15,9 +15,8 @@ export class TransclusionResult {
   }
 
   private getStats(): string {
-    let stats = '\n<!-- Ableron stats:\n'
-      + 'Processed ' + this.processedIncludesCount + ' include(s) in ' + this.processingTimeMillis + 'ms\n';
-    this.resolvedIncludesLog.forEach(logEntry => stats = stats + logEntry + '\n');
+    let stats = `\n<!-- Ableron stats:\nProcessed ${this.processedIncludesCount} include(s) in ${this.processingTimeMillis}ms\n`;
+    this.resolvedIncludesLog.forEach((logEntry) => (stats = stats + logEntry + '\n'));
     return stats + '-->';
   }
 }

@@ -1,5 +1,4 @@
 export class AbleronConfig {
-
   /**
    * Whether UI composition is enabled.
    */

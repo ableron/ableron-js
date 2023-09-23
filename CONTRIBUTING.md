@@ -1,9 +1,11 @@
 # Contributing
 
 ## Tooling
-* See Artifacts in [npm Registry](https://www.npmjs.com/package/ableron)
+
+- See Artifacts in [npm Registry](https://www.npmjs.com/package/ableron)
 
 ## Perform Release
+
 1. Run `publish` workflow to release current main branch (using the version set in `package.json`)
 2. Manually create [GitHub Release](https://github.com/ableron/ableron-js/releases/new)
    1. Set tag name to the version declared in `package.json`, e.g. `v0.0.1`
