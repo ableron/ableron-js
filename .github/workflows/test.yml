@@ -12,6 +12,10 @@ jobs:
           - windows-latest
         node: [16.x, 18.x, 20.x]
     steps:
+      - name: Stop GitHub from converting line endings from lf to crlf on windows which breaks prettier code style check
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
         with:
