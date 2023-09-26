@@ -1,8 +1,8 @@
 export class TransclusionResult {
-  private readonly content: string;
+  private content: string;
   private readonly appendStatsToContent: boolean;
-  private readonly processedIncludesCount: number = 0;
-  private readonly processingTimeMillis: number = 0;
+  private processedIncludesCount: number = 0;
+  private processingTimeMillis: number = 0;
   private readonly resolvedIncludesLog: string[] = [];
 
   constructor(content: string, appendStatsToContent: boolean = false) {
@@ -20,6 +20,16 @@ export class TransclusionResult {
 
   getProcessingTimeMillis(): number {
     return this.processingTimeMillis;
+  }
+
+  setProcessingTimeMillis(processingTimeMillis: number): void {
+    this.processingTimeMillis = processingTimeMillis;
+  }
+
+  addResolvedInclude() {
+    //TODO: Implement
+    this.content = 'fallback';
+    this.processedIncludesCount++;
   }
 
   private getStats(): string {

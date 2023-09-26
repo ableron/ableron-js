@@ -9,6 +9,14 @@ export class TransclusionProcessor {
   }
 
   resolveIncludes(content: string, presentRequestHeaders: Map<string, string[]>): TransclusionResult {
-    return new TransclusionResult(content);
+    const startTime = Date.now();
+    const transclusionResult = new TransclusionResult(content, this.ableronConfig.statsAppendToContent);
+
+    //TODO: Implement
+    transclusionResult.addResolvedInclude();
+    // findIncludes().map (include => include.resolve());...
+
+    transclusionResult.setProcessingTimeMillis(Date.now() - startTime);
+    return transclusionResult;
   }
 }

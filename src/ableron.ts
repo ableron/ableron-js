@@ -15,7 +15,7 @@ export class Ableron {
     if (this.ableronConfig.enabled) {
       const transclusionResult = this.transclusionProcessor.resolveIncludes(content, presentRequestHeaders);
       console.debug(
-        `Ableron UI composition processed ${transclusionResult.getProcessedIncludesCount()} includes in ${transclusionResult.getProcessingTimeMillis()}ms`
+        `Ableron UI composition processed ${transclusionResult.getProcessedIncludesCount()} include(s) in ${transclusionResult.getProcessingTimeMillis()}ms`
       );
       return transclusionResult;
     }
