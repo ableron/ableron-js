@@ -11,9 +11,9 @@ export class Ableron {
     this.transclusionProcessor = new TransclusionProcessor(ableronConfig);
   }
 
-  resolveIncludes(content: string, presentRequestHeaders: Map<string, string[]>): TransclusionResult {
+  async resolveIncludes(content: string, presentRequestHeaders: Map<string, string[]>): Promise<TransclusionResult> {
     if (this.ableronConfig.enabled) {
-      const transclusionResult = this.transclusionProcessor.resolveIncludes(content, presentRequestHeaders);
+      const transclusionResult = await this.transclusionProcessor.resolveIncludes(content, presentRequestHeaders);
       console.debug(
         `Ableron UI composition processed ${transclusionResult.getProcessedIncludesCount()} include(s) in ${transclusionResult.getProcessingTimeMillis()}ms`
       );

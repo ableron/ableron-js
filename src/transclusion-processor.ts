@@ -27,15 +27,22 @@ export class TransclusionProcessor {
         );
   }
 
-  resolveIncludes(content: string, presentRequestHeaders: Map<string, string[]>): TransclusionResult {
+  async resolveIncludes(content: string, presentRequestHeaders: Map<string, string[]>): Promise<TransclusionResult> {
     const startTime = Date.now();
     const transclusionResult = new TransclusionResult(content, this.ableronConfig.statsAppendToContent);
-
-    //TODO: Implement
-    this.findIncludes(content).forEach((include) => {
-      transclusionResult.addResolvedInclude();
-      console.log(include);
-    });
+    await Promise.all(
+      Array.from(this.findIncludes(content)).map((include) => {
+        const includeResolveStartTime = Date.now();
+        include
+          .resolve()
+          .then((fragment) => {
+            const includeResolveTimeMillis = Date.now() - includeResolveStartTime;
+            console.debug('Resolved include %s in %dms', include.id, includeResolveTimeMillis);
+            transclusionResult.addResolvedInclude(include, fragment, includeResolveTimeMillis);
+          })
+          .catch((error) => console.log('Unable to resolve include %s: %s', include.id, error));
+      })
+    );
     transclusionResult.setProcessingTimeMillis(Date.now() - startTime);
     return transclusionResult;
   }

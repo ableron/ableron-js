@@ -1,3 +1,6 @@
+import { Fragment } from './fragment';
+import * as crypto from 'crypto';
+
 export class Include {
   /**
    * Name of the attribute which contains the ID of the include - an optional unique name.
@@ -42,6 +45,11 @@ export class Include {
   private readonly rawAttributes: Map<string, string>;
 
   /**
+   * Fragment ID. Either generated or passed via attribute.
+   */
+  readonly id: string;
+
+  /**
    * Fallback content to use in case the include could not be resolved.
    */
   private readonly fallbackContent: string | undefined;
@@ -53,9 +61,26 @@ export class Include {
    * @param fallbackContent Fallback content to use in case the include could not be resolved
    * @param rawIncludeTag Raw include tag
    */
-  constructor(rawAttributes: Map<string, string>, fallbackContent?: string, rawIncludeTag?: string) {
+  constructor(rawAttributes?: Map<string, string>, fallbackContent?: string, rawIncludeTag?: string) {
     this.rawIncludeTag = typeof rawIncludeTag !== 'undefined' ? rawIncludeTag : '';
-    this.rawAttributes = rawAttributes;
+    this.rawAttributes = typeof rawAttributes !== 'undefined' ? rawAttributes : new Map<string, string>();
+    this.id = this.buildIncludeId(this.rawAttributes.get(this.ATTR_ID));
     this.fallbackContent = typeof fallbackContent !== 'undefined' ? fallbackContent : '';
+  }
+
+  resolve(): Promise<Fragment> {
+    return Promise.resolve(new Fragment('fallback'));
+  }
+
+  private buildIncludeId(providedId?: string): string {
+    if (typeof providedId !== 'undefined') {
+      const sanitizedId = providedId.replaceAll(/[^A-Za-z0-9_-]/, '');
+
+      if (sanitizedId !== '') {
+        return sanitizedId;
+      }
+    }
+
+    return crypto.createHash('sha1').update(this.rawIncludeTag).digest('hex');
   }
 }

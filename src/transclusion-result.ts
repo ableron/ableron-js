@@ -1,3 +1,6 @@
+import { Include } from './include';
+import { Fragment } from './fragment';
+
 export class TransclusionResult {
   private content: string;
   private readonly appendStatsToContent: boolean;
@@ -26,7 +29,7 @@ export class TransclusionResult {
     this.processingTimeMillis = processingTimeMillis;
   }
 
-  addResolvedInclude() {
+  addResolvedInclude(include: Include, fragment: Fragment, includeResolveTimeMillis: number) {
     //TODO: Implement
     this.content = 'fallback';
     this.processedIncludesCount++;
