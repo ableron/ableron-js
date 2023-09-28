@@ -3,6 +3,10 @@ import { Fragment } from './fragment';
 
 export class TransclusionResult {
   private content: string;
+  private contentExpirationTime: Date | undefined;
+  private hasPrimaryInclude: boolean = false;
+  private statusCodeOverride: number | undefined;
+  private readonly responseHeadersToPass: Map<string, string[]> = new Map<string, string[]>();
   private readonly appendStatsToContent: boolean;
   private processedIncludesCount: number = 0;
   private processingTimeMillis: number = 0;
@@ -15,6 +19,22 @@ export class TransclusionResult {
 
   getContent(): string {
     return this.appendStatsToContent ? this.content + this.getStats() : this.content;
+  }
+
+  getContentExpirationTime(): Date | undefined {
+    return this.contentExpirationTime;
+  }
+
+  getHasPrimaryInclude(): boolean {
+    return this.hasPrimaryInclude;
+  }
+
+  getStatusCodeOverride(): number | undefined {
+    return this.statusCodeOverride;
+  }
+
+  getResponseHeadersToPass(): Map<string, string[]> {
+    return this.responseHeadersToPass;
   }
 
   getProcessedIncludesCount(): number {
