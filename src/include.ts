@@ -47,12 +47,12 @@ export class Include {
   /**
    * Fragment ID. Either generated or passed via attribute.
    */
-  readonly id: string;
+  private readonly id: string;
 
   /**
    * Fallback content to use in case the include could not be resolved.
    */
-  private readonly fallbackContent: string | undefined;
+  private readonly fallbackContent: string;
 
   /**
    * Constructs a new Include.
@@ -68,19 +68,35 @@ export class Include {
     this.fallbackContent = typeof fallbackContent !== 'undefined' ? fallbackContent : '';
   }
 
+  getRawIncludeTag(): string {
+    return this.rawIncludeTag;
+  }
+
+  getRawAttributes(): Map<string, string> {
+    return this.rawAttributes;
+  }
+
+  getId(): string {
+    return this.id;
+  }
+
+  getFallbackContent(): string {
+    return this.fallbackContent;
+  }
+
   resolve(): Promise<Fragment> {
     return Promise.resolve(new Fragment('fallback'));
   }
 
   private buildIncludeId(providedId?: string): string {
     if (typeof providedId !== 'undefined') {
-      const sanitizedId = providedId.replaceAll(/[^A-Za-z0-9_-]/, '');
+      const sanitizedId = providedId.replaceAll(/[^A-Za-z0-9_-]/g, '');
 
       if (sanitizedId !== '') {
         return sanitizedId;
       }
     }
 
-    return crypto.createHash('sha1').update(this.rawIncludeTag).digest('hex');
+    return crypto.createHash('sha1').update(this.rawIncludeTag).digest('hex').substring(0, 7);
   }
 }

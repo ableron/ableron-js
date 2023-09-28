@@ -37,10 +37,10 @@ export class TransclusionProcessor {
           .resolve()
           .then((fragment) => {
             const includeResolveTimeMillis = Date.now() - includeResolveStartTime;
-            console.debug('Resolved include %s in %dms', include.id, includeResolveTimeMillis);
+            console.debug('Resolved include %s in %dms', include.getId(), includeResolveTimeMillis);
             transclusionResult.addResolvedInclude(include, fragment, includeResolveTimeMillis);
           })
-          .catch((error) => console.log('Unable to resolve include %s: %s', include.id, error));
+          .catch((error) => console.log('Unable to resolve include %s: %s', include.getId(), error));
       })
     );
     transclusionResult.setProcessingTimeMillis(Date.now() - startTime);
