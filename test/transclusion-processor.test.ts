@@ -24,3 +24,90 @@ test.each([
 ])('should recognize includes of different forms', (content: string, expectedRawIncludeTag: string) => {
   expect(transclusionProcessor.findIncludes(content)[0].getRawIncludeTag()).toBe(expectedRawIncludeTag);
 });
+
+test.each([
+  ['<ableron-include/>'],
+  ['<ableron-include >'],
+  ['<ableron-include src="s">'],
+  ['<ableron-include src="s" b="b">']
+])('should not recognize includes with invalid format', (content: string) => {
+  expect(transclusionProcessor.findIncludes(content)).toHaveLength(0);
+});
+
+test('should accept line breaks in include tag attributes', () => {
+  // when
+  const include = transclusionProcessor.findIncludes(
+    '<ableron-include\nsrc="https://foo.bar/fragment-1"\nfallback-src="https://foo.bar/fragment-1-fallback"/>'
+  )[0];
+
+  // then
+  expect(include.getSrc()).toBe('https://foo.bar/fragment-1');
+  expect(include.getFallbackSrc()).toBe('https://foo.bar/fragment-1-fallback');
+});
+
+test.each([
+  ['<ableron-include src="https://example.com"/>', new Map([['src', 'https://example.com']])],
+  ['<ableron-include  src="https://example.com"/>', new Map([['src', 'https://example.com']])],
+  ['<ableron-include   src="https://example.com"/>', new Map([['src', 'https://example.com']])],
+  ['<ableron-include -src="https://example.com"/>', new Map([['-src', 'https://example.com']])],
+  ['<ableron-include _src="https://example.com"/>', new Map([['_src', 'https://example.com']])],
+  ['<ableron-include 0src="https://example.com"/>', new Map([['0src', 'https://example.com']])],
+  [
+    '<ableron-include foo="" src="https://example.com"/>',
+    new Map([
+      ['foo', ''],
+      ['src', 'https://example.com']
+    ])
+  ],
+  [
+    '<ableron-include src="source" fallback-src="fallback"/>',
+    new Map([
+      ['src', 'source'],
+      ['fallback-src', 'fallback']
+    ])
+  ],
+  [
+    '<ableron-include fallback-src="fallback" src="source"/>',
+    new Map([
+      ['src', 'source'],
+      ['fallback-src', 'fallback']
+    ])
+  ],
+  [
+    '<ableron-include src=">" fallback-src="/>"/>',
+    new Map([
+      ['src', '>'],
+      ['fallback-src', '/>']
+    ])
+  ],
+  [
+    '<ableron-include src="https://example.com" primary/>',
+    new Map([
+      ['src', 'https://example.com'],
+      ['primary', '']
+    ])
+  ],
+  [
+    '<ableron-include primary src="https://example.com"/>',
+    new Map([
+      ['src', 'https://example.com'],
+      ['primary', '']
+    ])
+  ],
+  [
+    '<ableron-include src="https://example.com" primary="primary"/>',
+    new Map([
+      ['src', 'https://example.com'],
+      ['primary', 'primary']
+    ])
+  ],
+  [
+    '<ableron-include src="https://example.com" primary="foo"/>',
+    new Map([
+      ['src', 'https://example.com'],
+      ['primary', 'foo']
+    ])
+  ]
+])('should parse include tag attributes', (content: string, expectedRawAttributes: Map<string, string>) => {
+  expect(transclusionProcessor.findIncludes(content)[0].getRawAttributes()).toEqual(expectedRawAttributes);
+});

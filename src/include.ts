@@ -50,6 +50,16 @@ export class Include {
   private readonly id: string;
 
   /**
+   * URL of the fragment to include.
+   */
+  private readonly src: string | undefined;
+
+  /**
+   * URL of the fragment to include in case the request to the source URL failed.
+   */
+  private readonly fallbackSrc: string | undefined;
+
+  /**
    * Fallback content to use in case the include could not be resolved.
    */
   private readonly fallbackContent: string;
@@ -62,10 +72,12 @@ export class Include {
    * @param rawIncludeTag Raw include tag
    */
   constructor(rawAttributes?: Map<string, string>, fallbackContent?: string, rawIncludeTag?: string) {
-    this.rawIncludeTag = typeof rawIncludeTag !== 'undefined' ? rawIncludeTag : '';
-    this.rawAttributes = typeof rawAttributes !== 'undefined' ? rawAttributes : new Map<string, string>();
+    this.rawIncludeTag = rawIncludeTag !== undefined ? rawIncludeTag : '';
+    this.rawAttributes = rawAttributes !== undefined ? rawAttributes : new Map<string, string>();
     this.id = this.buildIncludeId(this.rawAttributes.get(this.ATTR_ID));
-    this.fallbackContent = typeof fallbackContent !== 'undefined' ? fallbackContent : '';
+    this.src = this.rawAttributes.get(this.ATTR_SOURCE);
+    this.fallbackSrc = this.rawAttributes.get(this.ATTR_FALLBACK_SOURCE);
+    this.fallbackContent = fallbackContent !== undefined ? fallbackContent : '';
   }
 
   getRawIncludeTag(): string {
@@ -80,6 +92,14 @@ export class Include {
     return this.id;
   }
 
+  getSrc(): string | undefined {
+    return this.src;
+  }
+
+  getFallbackSrc(): string | undefined {
+    return this.fallbackSrc;
+  }
+
   getFallbackContent(): string {
     return this.fallbackContent;
   }
@@ -89,7 +109,7 @@ export class Include {
   }
 
   private buildIncludeId(providedId?: string): string {
-    if (typeof providedId !== 'undefined') {
+    if (providedId !== undefined) {
       const sanitizedId = providedId.replaceAll(/[^A-Za-z0-9_-]/g, '');
 
       if (sanitizedId !== '') {

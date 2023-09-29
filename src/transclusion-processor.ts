@@ -59,7 +59,7 @@ export class TransclusionProcessor {
     const matches = attributesString.matchAll(this.ATTRIBUTES_PATTERN);
 
     for (const match of matches) {
-      attributes.set(match[1], match[3]);
+      attributes.set(match[1], match[3] === undefined ? '' : match[3]);
     }
 
     return attributes;
