@@ -6,7 +6,12 @@ export class TransclusionProcessor {
   /**
    * Regular expression for matching ableron includes.
    */
-  private readonly INCLUDE_PATTERN: RegExp = /<(ableron-include)\s(([^">]|"[^"]*")*?)(\/>|>(.*?)<\/\1>)/g;
+  private readonly INCLUDE_PATTERN: RegExp = /<(ableron-include)\s(([^">]|"[^"]*")*?)(\/>|>(.*?)<\/\1>)/gs;
+
+  /**
+   * Regular expression for parsing include tag attributes.
+   */
+  private readonly ATTRIBUTES_PATTERN: RegExp = /\s*([a-zA-Z0-9_-]+)(="([^"]+)")?/gs;
 
   private readonly ableronConfig: AbleronConfig;
 
@@ -14,17 +19,19 @@ export class TransclusionProcessor {
     this.ableronConfig = ableronConfig;
   }
 
-  findIncludes(content: string): Set<Include> {
+  findIncludes(content: string): Include[] {
     const firstIncludePosition = content.indexOf('<ableron-include');
 
     return firstIncludePosition === -1
-      ? new Set()
-      : new Set(
-          Array.from(
-            content.matchAll(this.INCLUDE_PATTERN),
-            (match) => new Include(new Map<string, string>(), match[5], match[0])
+      ? []
+      : [
+          ...new Set(
+            Array.from(
+              content.matchAll(this.INCLUDE_PATTERN),
+              (match) => new Include(this.parseAttributes(match[2]), match[5], match[0])
+            )
           )
-        );
+        ];
   }
 
   async resolveIncludes(content: string, presentRequestHeaders: Map<string, string[]>): Promise<TransclusionResult> {
@@ -45,5 +52,16 @@ export class TransclusionProcessor {
     );
     transclusionResult.setProcessingTimeMillis(Date.now() - startTime);
     return transclusionResult;
+  }
+
+  parseAttributes(attributesString: string): Map<string, string> {
+    const attributes = new Map<string, string>();
+    const matches = attributesString.matchAll(this.ATTRIBUTES_PATTERN);
+
+    for (const match of matches) {
+      attributes.set(match[1], match[3]);
+    }
+
+    return attributes;
   }
 }
