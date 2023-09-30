@@ -25,12 +25,12 @@ export class TransclusionProcessor {
     return firstIncludePosition === -1
       ? []
       : [
-          ...new Set(
-            Array.from(
-              content.matchAll(this.INCLUDE_PATTERN),
-              (match) => new Include(this.parseAttributes(match[2]), match[5], match[0])
-            )
-          )
+          ...new Map(
+            Array.from(content.matchAll(this.INCLUDE_PATTERN)).map((match) => [
+              match[0],
+              new Include(this.parseAttributes(match[2]), match[5], match[0])
+            ])
+          ).values()
         ];
   }
 
