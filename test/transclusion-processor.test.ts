@@ -111,3 +111,28 @@ test.each([
 ])('should parse include tag attributes', (content: string, expectedRawAttributes: Map<string, string>) => {
   expect(transclusionProcessor.findIncludes(content)[0].getRawAttributes()).toEqual(expectedRawAttributes);
 });
+
+test('should find all includes in input content', () => {
+  expect(
+    transclusionProcessor
+      .findIncludes(
+        '<html>' +
+          '<head>' +
+          '<ableron-include src="https://foo.bar/baz?test=123" />' +
+          '<title>Foo</title>' +
+          '<ableron-include foo="bar" src="https://foo.bar/baz?test=456"/>' +
+          '</head>' +
+          '<body>' +
+          '<ableron-include src="https://foo.bar/baz?test=789" fallback-src="https://example.com"/>' +
+          '<ableron-include src="https://foo.bar/baz?test=789" fallback-src="https://example.com">fallback</ableron-include>' +
+          '</body>' +
+          '</html>'
+      )
+      .map((include) => include.getRawIncludeTag())
+  ).toEqual([
+    '<ableron-include src="https://foo.bar/baz?test=123" />',
+    '<ableron-include foo="bar" src="https://foo.bar/baz?test=456"/>',
+    '<ableron-include src="https://foo.bar/baz?test=789" fallback-src="https://example.com"/>',
+    '<ableron-include src="https://foo.bar/baz?test=789" fallback-src="https://example.com">fallback</ableron-include>'
+  ]);
+});
