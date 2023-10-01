@@ -162,3 +162,58 @@ test('should treat multiple identical includes as one include', () => {
     '<ableron-include src="...">...</ableron-include>'
   ]);
 });
+
+test('should perform search for includes in big input string', () => {
+  // given
+  let randomStringWithoutIncludes = '';
+
+  for (let i = 0; i < 512 * 1024; i++) {
+    // @see https://stackoverflow.com/questions/1527803/generating-random-whole-numbers-in-javascript-in-a-specific-range#1527820
+    // Code Points 32 (inclusive) - 127 (exclusive) = Printable ASCII Characters from Space to Tilde
+    randomStringWithoutIncludes += String.fromCodePoint(Math.floor(Math.random() * (127 - 32 + 1)) + 32);
+  }
+
+  const randomStringWithIncludeAtTheBeginning = '<ableron-include />' + randomStringWithoutIncludes;
+  const randomStringWithIncludeAtTheEnd = randomStringWithoutIncludes + '<ableron-include />';
+  const randomStringWithIncludeAtTheMiddle =
+    randomStringWithoutIncludes + '<ableron-include />' + randomStringWithoutIncludes;
+
+  // expect
+  expect(transclusionProcessor.findIncludes(randomStringWithoutIncludes)).toHaveLength(0);
+  expect(transclusionProcessor.findIncludes(randomStringWithIncludeAtTheBeginning)).toHaveLength(1);
+  expect(transclusionProcessor.findIncludes(randomStringWithIncludeAtTheEnd)).toHaveLength(1);
+  expect(transclusionProcessor.findIncludes(randomStringWithIncludeAtTheMiddle)).toHaveLength(1);
+});
+
+test('should populate TransclusionResult', async () => {
+  // when
+  const result = await transclusionProcessor.resolveIncludes(
+    '<html>\n' +
+      '<head>\n' +
+      '  <ableron-include src="https://foo.bar/baz?test=123"><!-- failed loading 1st include --></ableron-include>\n' +
+      '<title>Foo</title>\n' +
+      '<ableron-include foo="bar" src="https://foo.bar/baz?test=456"><!-- failed loading 2nd include --></ableron-include>\n' +
+      '</head>\n' +
+      '<body>\n' +
+      '<ableron-include src="https://foo.bar/baz?test=789"><!-- failed loading 3rd include --></ableron-include>\n' +
+      '</body>\n' +
+      '</html>',
+    new Map()
+  );
+
+  // then
+  expect(result.getProcessedIncludesCount()).toBe(3);
+  expect(result.getProcessingTimeMillis()).toBeGreaterThanOrEqual(1);
+  expect(result.getContent()).toBe(
+    '<html>\n' +
+      '<head>\n' +
+      '  <!-- failed loading 1st include -->\n' +
+      '<title>Foo</title>\n' +
+      '<!-- failed loading 2nd include -->\n' +
+      '</head>\n' +
+      '<body>\n' +
+      '<!-- failed loading 3rd include -->\n' +
+      '</body>\n' +
+      '</html>'
+  );
+});

@@ -54,7 +54,7 @@ export class TransclusionProcessor {
     return transclusionResult;
   }
 
-  parseAttributes(attributesString: string): Map<string, string> {
+  private parseAttributes(attributesString: string): Map<string, string> {
     const attributes = new Map<string, string>();
     const matches = attributesString.matchAll(this.ATTRIBUTES_PATTERN);
 

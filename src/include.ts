@@ -60,6 +60,11 @@ export class Include {
   private readonly fallbackSrc: string | undefined;
 
   /**
+   * Whether the include provides the primary fragment and thus sets the response code of the page.
+   */
+  private readonly primary: boolean;
+
+  /**
    * Fallback content to use in case the include could not be resolved.
    */
   private readonly fallbackContent: string;
@@ -77,6 +82,8 @@ export class Include {
     this.id = this.buildIncludeId(this.rawAttributes.get(this.ATTR_ID));
     this.src = this.rawAttributes.get(this.ATTR_SOURCE);
     this.fallbackSrc = this.rawAttributes.get(this.ATTR_FALLBACK_SOURCE);
+    const primary = this.rawAttributes.get(this.ATTR_PRIMARY);
+    this.primary = typeof primary === 'string' && ['', 'primary'].includes(primary.toLowerCase());
     this.fallbackContent = fallbackContent !== undefined ? fallbackContent : '';
   }
 
@@ -100,12 +107,17 @@ export class Include {
     return this.fallbackSrc;
   }
 
+  isPrimary(): boolean {
+    return this.primary;
+  }
+
   getFallbackContent(): string {
     return this.fallbackContent;
   }
 
   resolve(): Promise<Fragment> {
-    return Promise.resolve(new Fragment('fallback'));
+    //TODO
+    return Promise.resolve(new Fragment(200, this.fallbackContent));
   }
 
   private buildIncludeId(providedId?: string): string {
