@@ -141,6 +141,10 @@ export class Include {
   }
 
   private parseTimeout(timeoutAsString?: string): number | undefined {
+    if (timeoutAsString === undefined) {
+      return undefined;
+    }
+
     const parsedTimeout = Number(timeoutAsString);
 
     if (isNaN(parsedTimeout)) {
