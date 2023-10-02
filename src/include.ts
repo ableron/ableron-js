@@ -55,9 +55,19 @@ export class Include {
   private readonly src: string | undefined;
 
   /**
+   * Timeout in milliseconds for requesting the src URL.
+   */
+  private readonly srcTimeoutMillis: number | undefined;
+
+  /**
    * URL of the fragment to include in case the request to the source URL failed.
    */
   private readonly fallbackSrc: string | undefined;
+
+  /**
+   * Timeout in milliseconds for requesting the fallback-src URL.
+   */
+  private readonly fallbackSrcTimeoutMillis: number | undefined;
 
   /**
    * Whether the include provides the primary fragment and thus sets the response code of the page.
@@ -81,9 +91,11 @@ export class Include {
     this.rawAttributes = rawAttributes !== undefined ? rawAttributes : new Map<string, string>();
     this.id = this.buildIncludeId(this.rawAttributes.get(this.ATTR_ID));
     this.src = this.rawAttributes.get(this.ATTR_SOURCE);
+    this.srcTimeoutMillis = this.parseTimeout(this.rawAttributes.get(this.ATTR_SOURCE_TIMEOUT_MILLIS));
     this.fallbackSrc = this.rawAttributes.get(this.ATTR_FALLBACK_SOURCE);
+    this.fallbackSrcTimeoutMillis = this.parseTimeout(this.rawAttributes.get(this.ATTR_FALLBACK_SOURCE_TIMEOUT_MILLIS));
     const primary = this.rawAttributes.get(this.ATTR_PRIMARY);
-    this.primary = typeof primary === 'string' && ['', 'primary'].includes(primary.toLowerCase());
+    this.primary = primary !== undefined && ['', 'primary'].includes(primary.toLowerCase());
     this.fallbackContent = fallbackContent !== undefined ? fallbackContent : '';
   }
 
@@ -103,8 +115,16 @@ export class Include {
     return this.src;
   }
 
+  getSrcTimeoutMillis(): number | undefined {
+    return this.srcTimeoutMillis;
+  }
+
   getFallbackSrc(): string | undefined {
     return this.fallbackSrc;
+  }
+
+  getFallbackSrcTimeoutMillis(): number | undefined {
+    return this.fallbackSrcTimeoutMillis;
   }
 
   isPrimary(): boolean {
@@ -118,6 +138,17 @@ export class Include {
   resolve(): Promise<Fragment> {
     //TODO
     return Promise.resolve(new Fragment(200, this.fallbackContent));
+  }
+
+  private parseTimeout(timeoutAsString?: string): number | undefined {
+    const parsedTimeout = Number(timeoutAsString);
+
+    if (isNaN(parsedTimeout)) {
+      console.error(`Invalid request timeout: ${timeoutAsString}`);
+      return undefined;
+    }
+
+    return parsedTimeout;
   }
 
   private buildIncludeId(providedId?: string): string {

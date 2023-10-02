@@ -33,3 +33,46 @@ test.each([
 ])('should handle include id', (include: Include, expectedId: string) => {
   expect(include.getId()).toBe(expectedId);
 });
+
+test.each([
+  [new Include(new Map()), undefined],
+  [new Include(new Map([['src', 'https://example.com']])), 'https://example.com']
+])('should set src attribute in constructor', (include: Include, expectedSrc?: string) => {
+  expect(include.getSrc()).toBe(expectedSrc);
+});
+
+test.each([
+  [new Include(new Map()), undefined],
+  [new Include(new Map([['src-timeout-millis', '2000']])), 2000],
+  [new Include(new Map([['src-timeout-millis', '2s']])), undefined]
+])('should set src timeout attribute in constructor', (include: Include, expectedSrcTimeout?: number) => {
+  expect(include.getSrcTimeoutMillis()).toBe(expectedSrcTimeout);
+});
+
+test.each([
+  [new Include(new Map()), undefined],
+  [new Include(new Map([['fallback-src', 'https://example.com']])), 'https://example.com']
+])('should set fallback-src attribute in constructor', (include: Include, expectedFallbackSrc?: string) => {
+  expect(include.getFallbackSrc()).toBe(expectedFallbackSrc);
+});
+
+test.each([
+  [new Include(new Map()), undefined],
+  [new Include(new Map([['fallback-src-timeout-millis', '2000']])), 2000],
+  [new Include(new Map([['fallback-src-timeout-millis', '2s']])), undefined]
+])(
+  'should set fallback-src timeout attribute in constructor',
+  (include: Include, expectedFallbackSrcTimeout?: number) => {
+    expect(include.getFallbackSrcTimeoutMillis()).toBe(expectedFallbackSrcTimeout);
+  }
+);
+
+test.each([
+  [new Include(new Map()), false],
+  [new Include(new Map([['primary', '']])), true],
+  [new Include(new Map([['primary', 'primary']])), true],
+  [new Include(new Map([['primary', 'PRIMARY']])), true],
+  [new Include(new Map([['primary', 'nope']])), false]
+])('should set primary attribute in constructor', (include: Include, expectedPrimary: boolean) => {
+  expect(include.isPrimary()).toBe(expectedPrimary);
+});
