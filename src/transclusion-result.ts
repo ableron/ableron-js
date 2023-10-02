@@ -1,5 +1,6 @@
 import { Include } from './include';
 import { Fragment } from './fragment';
+import { HttpUtil } from './http-util';
 
 export class TransclusionResult {
   private content: string;
@@ -73,6 +74,44 @@ export class TransclusionResult {
     this.resolvedIncludesLog.push(
       `Resolved include ${include.getId()} with ${this.getFragmentDebugInfo(fragment)} in ${includeResolveTimeMillis}ms`
     );
+  }
+
+  /**
+   * Calculates the <code>Cache-Control</code> header value based on the fragment with the lowest
+   * expiration time and the given page max age.
+   *
+   * @return The Cache-Control header value. Either "no-store" or "max-age=xxx"
+   */
+  calculateCacheControlHeaderValue(pageMaxAgeInSeconds?: number) {
+    const now = new Date();
+
+    if (
+      this.contentExpirationTime == undefined ||
+      this.contentExpirationTime < now ||
+      pageMaxAgeInSeconds === undefined ||
+      pageMaxAgeInSeconds <= 0
+    ) {
+      return 'no-store';
+    }
+
+    if (this.contentExpirationTime < new Date(now.getTime() + pageMaxAgeInSeconds * 1000)) {
+      return `max-age=${Math.ceil((this.contentExpirationTime.getTime() - now.getTime()) / 1000)}`;
+    }
+
+    return 'max-age=' + pageMaxAgeInSeconds;
+  }
+
+  /**
+   * Calculates the <code>Cache-Control</code> header value based on the fragment with the lowest
+   * expiration time and the given response headers which may contain page expiration time.
+   *
+   * @return The Cache-Control header value. Either "no-store" or "max-age=xxx"
+   */
+  calculateCacheControlHeaderValueByResponseHeaders(responseHeaders: Map<string, string[]>) {
+    const pageExpirationTime: Date = HttpUtil.calculateResponseExpirationTime(responseHeaders);
+    const pageMaxAge: number =
+      pageExpirationTime > new Date() ? Math.ceil((pageExpirationTime.getTime() - new Date().getTime()) / 1000) : 0;
+    return this.calculateCacheControlHeaderValue(pageMaxAge);
   }
 
   private getFragmentDebugInfo(fragment: Fragment): string {
