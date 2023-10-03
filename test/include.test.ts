@@ -1,4 +1,25 @@
 import { Include } from '../src/include';
+import Fastify, { FastifyInstance } from 'fastify';
+
+let server: FastifyInstance | undefined;
+
+beforeEach(() => {
+  server = undefined;
+});
+
+afterEach(async () => {
+  if (server) {
+    await server.close();
+  }
+});
+
+function serverAddress(path: string): string {
+  if (server) {
+    return 'http://' + server.addresses()[0].address + ':' + server.addresses()[0].port + '/' + path.replace(/^\//, '');
+  }
+
+  return 'undefined';
+}
 
 test('should set raw attributes in constructor', () => {
   // given
@@ -75,4 +96,19 @@ test.each([
   [new Include(new Map([['primary', 'nope']])), false]
 ])('should set primary attribute in constructor', (include: Include, expectedPrimary: boolean) => {
   expect(include.isPrimary()).toBe(expectedPrimary);
+});
+
+test('should resolve include with URL provided via src attribute', async () => {
+  // given
+  server = Fastify();
+  server.get('/', function (request, reply) {
+    reply.status(200).send('response');
+  });
+  await server.listen({ port: 57364 });
+
+  // when
+  const fragment = await new Include(new Map([['src', serverAddress('/')]])).resolve();
+
+  // then
+  expect(fragment.content).toBe('response');
 });

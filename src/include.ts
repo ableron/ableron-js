@@ -135,8 +135,17 @@ export class Include {
     return this.fallbackContent;
   }
 
+  //TODO: Implement
   resolve(): Promise<Fragment> {
-    //TODO
+    if (this.src !== undefined) {
+      return fetch(this.src)
+        .then((response) => response.text().then((body) => new Fragment(response.status, body, this.src)))
+        .catch((e) => {
+          console.error(e);
+          return Promise.resolve(new Fragment(200, this.fallbackContent));
+        });
+    }
+
     return Promise.resolve(new Fragment(200, this.fallbackContent));
   }
 
