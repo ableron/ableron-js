@@ -111,4 +111,4 @@ test('should resolve include with URL provided via src attribute', async () => {
 
   // then
   expect(fragment.content).toBe('response');
-}, 10000);
+});
