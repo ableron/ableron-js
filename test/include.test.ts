@@ -1,5 +1,6 @@
 import { Include } from '../src/include';
 import Fastify, { FastifyInstance } from 'fastify';
+import { AbleronConfig } from '../src';
 
 let server: FastifyInstance | undefined;
 
@@ -20,6 +21,10 @@ function serverAddress(path: string): string {
 
   return 'undefined';
 }
+
+const config = new AbleronConfig({
+  fragmentRequestTimeoutMillis: 1000
+});
 
 test('should set raw attributes in constructor', () => {
   // given
@@ -107,8 +112,79 @@ test('should resolve include with URL provided via src attribute', async () => {
   await server.listen({ port: 3000 });
 
   // when
-  const fragment = await new Include(new Map([['src', serverAddress('/')]])).resolve();
+  const fragment = await new Include(new Map([['src', serverAddress('/')]])).resolve(config);
 
   // then
   expect(fragment.content).toBe('response');
+});
+
+test('should resolve include with URL provided via fallback-src attribute if src could not be loaded', async () => {
+  // given
+  server = Fastify();
+  server.get('/src', function (request, reply) {
+    reply.status(500).send('fragment from src');
+  });
+  server.get('/fallback-src', function (request, reply) {
+    reply.status(200).send('fragment from fallback-src');
+  });
+  await server.listen({ port: 3000 });
+
+  // when
+  const fragment = await new Include(
+    new Map([
+      ['src', serverAddress('/src')],
+      ['fallback-src', serverAddress('/fallback-src')]
+    ])
+  ).resolve(config);
+
+  // then
+  expect(fragment.content).toBe('fragment from fallback-src');
+});
+
+test('should resolve include with fallback content if src and fallback-src could not be loaded', async () => {
+  // given
+  server = Fastify();
+  server.get('/src', function (request, reply) {
+    reply.status(500).send('fragment from src');
+  });
+  server.get('/fallback-src', function (request, reply) {
+    reply.status(500).send('fragment from fallback-src');
+  });
+  await server.listen({ port: 3000 });
+
+  // when
+  const fragment = await new Include(
+    new Map([
+      ['src', serverAddress('/src')],
+      ['fallback-src', serverAddress('/fallback-src')]
+    ]),
+    'fallback content'
+  ).resolve(config);
+
+  // then
+  expect(fragment.content).toBe('fallback content');
+});
+
+test('should resolve include to empty string if src, fallback src and fallback content are not present', async () => {
+  // when
+  const fragment = await new Include().resolve(config);
+
+  // then
+  expect(fragment.content).toBe('');
+});
+
+test('should set fragment status code for successfully resolved src', async () => {
+  // given
+  server = Fastify();
+  server.get('/src', function (request, reply) {
+    reply.status(206).send('fragment from src');
+  });
+  await server.listen({ port: 3000 });
+
+  // when
+  const fragment = await new Include(new Map([['src', serverAddress('/src')]])).resolve(config);
+
+  // then
+  expect(fragment.content).toBe('fragment from src');
+  expect(fragment.statusCode).toBe(206);
 });

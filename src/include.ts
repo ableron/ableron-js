@@ -1,5 +1,6 @@
 import { Fragment } from './fragment';
 import * as crypto from 'crypto';
+import { AbleronConfig } from './ableron-config';
 
 export class Include {
   /**
@@ -33,6 +34,11 @@ export class Include {
    * for the page.
    */
   private readonly ATTR_PRIMARY: string = 'primary';
+
+  /**
+   * HTTP status codes indicating successful and cacheable responses.
+   */
+  private readonly HTTP_STATUS_CODES_SUCCESS: number[] = [200, 203, 204, 206];
 
   /**
    * Raw include tag.
@@ -136,17 +142,35 @@ export class Include {
   }
 
   //TODO: Implement
-  resolve(): Promise<Fragment> {
-    if (this.src !== undefined) {
-      return fetch(this.src)
-        .then((response) => response.text().then((body) => new Fragment(response.status, body, this.src)))
-        .catch((e) => {
-          console.error(e);
-          return Promise.resolve(new Fragment(200, this.fallbackContent));
-        });
+  resolve(config: AbleronConfig): Promise<Fragment> {
+    return this.load(this.src, this.getRequestTimeout(this.srcTimeoutMillis, config))
+      .then((fragment) =>
+        fragment === null
+          ? this.load(this.fallbackSrc, this.getRequestTimeout(this.fallbackSrcTimeoutMillis, config))
+          : fragment
+      )
+      .then((fragment) => (fragment === null ? new Fragment(200, this.fallbackContent) : fragment));
+  }
+
+  private load(url: string | undefined, requestTimeoutMillis: number): Promise<Fragment | null> {
+    if (url === undefined) {
+      return Promise.resolve(null);
     }
 
-    return Promise.resolve(new Fragment(200, this.fallbackContent));
+    console.debug(`Loading fragment ${url} for include ${this.id} with timeout ${requestTimeoutMillis}ms`);
+
+    return fetch(url)
+      .then((response) =>
+        this.HTTP_STATUS_CODES_SUCCESS.includes(response.status)
+          ? response.text().then((body) => new Fragment(response.status, body, this.src))
+          : null
+      )
+      .catch((e: Error) => {
+        console.error(
+          `Unable to load fragment ${url} for include ${this.id}: ${e?.message}${e?.cause ? ` (${e.cause})` : ''}`
+        );
+        return null;
+      });
   }
 
   private parseTimeout(timeoutAsString?: string): number | undefined {
@@ -162,6 +186,10 @@ export class Include {
     }
 
     return parsedTimeout;
+  }
+
+  private getRequestTimeout(localTimeout: number | undefined, config: AbleronConfig): number {
+    return localTimeout ? localTimeout : config.fragmentRequestTimeoutMillis;
   }
 
   private buildIncludeId(providedId?: string): string {

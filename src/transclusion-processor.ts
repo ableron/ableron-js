@@ -42,7 +42,7 @@ export class TransclusionProcessor {
       Array.from(this.findIncludes(content)).map(async (include) => {
         const includeResolveStartTime = Date.now();
         await include
-          .resolve()
+          .resolve(this.ableronConfig)
           .then((fragment) => {
             const includeResolveTimeMillis = Date.now() - includeResolveStartTime;
             console.debug('Resolved include %s in %dms', include.getId(), includeResolveTimeMillis);
