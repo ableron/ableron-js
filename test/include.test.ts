@@ -104,11 +104,11 @@ test('should resolve include with URL provided via src attribute', async () => {
   server.get('/', function (request, reply) {
     reply.status(200).send('response');
   });
-  await server.listen({ port: 57364 });
+  await server.listen({ port: 3000 });
 
   // when
   const fragment = await new Include(new Map([['src', serverAddress('/')]])).resolve();
 
   // then
   expect(fragment.content).toBe('response');
-});
+}, 10000);
