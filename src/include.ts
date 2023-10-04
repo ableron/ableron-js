@@ -1,5 +1,6 @@
 import { Fragment } from './fragment';
 import * as crypto from 'crypto';
+import fetch from 'node-fetch';
 
 export class Include {
   /**
