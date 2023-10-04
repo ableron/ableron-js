@@ -188,3 +188,28 @@ test('should set fragment status code for successfully resolved src', async () =
   expect(fragment.content).toBe('fragment from src');
   expect(fragment.statusCode).toBe(206);
 });
+
+test('should set fragment status code for successfully resolved fallback-src of primary include', async () => {
+  // given
+  server = Fastify();
+  server.get('/src', function (request, reply) {
+    reply.status(500).send('fragment from src');
+  });
+  server.get('/fallback-src', function (request, reply) {
+    reply.status(206).send('fragment from fallback-src');
+  });
+  await server.listen({ port: 3000 });
+
+  // when
+  const fragment = await new Include(
+    new Map([
+      ['src', serverAddress('/src')],
+      ['fallback-src', serverAddress('/fallback-src')],
+      ['primary', '']
+    ])
+  ).resolve(config);
+
+  // then
+  expect(fragment.content).toBe('fragment from fallback-src');
+  expect(fragment.statusCode).toBe(206);
+});
