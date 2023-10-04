@@ -141,7 +141,6 @@ export class Include {
     return this.fallbackContent;
   }
 
-  //TODO: Implement
   resolve(config: AbleronConfig): Promise<Fragment> {
     return this.load(this.src, this.getRequestTimeout(this.srcTimeoutMillis, config))
       .then((fragment) =>
@@ -157,20 +156,34 @@ export class Include {
       return Promise.resolve(null);
     }
 
-    console.debug(`Loading fragment ${url} for include ${this.id} with timeout ${requestTimeoutMillis}ms`);
+    return this.performRequest(url, requestTimeoutMillis);
+  }
 
-    return fetch(url)
+  private performRequest(url: string, requestTimeoutMillis: number): Promise<Fragment | null> {
+    console.debug(`Loading fragment ${url} for include ${this.id} with timeout ${requestTimeoutMillis}ms`);
+    const abortController = new AbortController();
+    const timeoutId = setTimeout(() => abortController.abort(), requestTimeoutMillis);
+
+    return fetch(url, { signal: abortController.signal })
       .then((response) =>
         this.HTTP_STATUS_CODES_SUCCESS.includes(response.status)
           ? response.text().then((body) => new Fragment(response.status, body, this.src))
           : null
       )
       .catch((e: Error) => {
-        console.error(
-          `Unable to load fragment ${url} for include ${this.id}: ${e?.message}${e?.cause ? ` (${e.cause})` : ''}`
-        );
+        if (e.name === 'AbortError') {
+          console.error(
+            `Unable to load fragment ${url} for include ${this.id}: ${requestTimeoutMillis}ms timeout exceeded`
+          );
+        } else {
+          console.error(
+            `Unable to load fragment ${url} for include ${this.id}: ${e?.message}${e?.cause ? ` (${e.cause})` : ''}`
+          );
+        }
+
         return null;
-      });
+      })
+      .finally(() => clearTimeout(timeoutId));
   }
 
   private parseTimeout(timeoutAsString?: string): number | undefined {

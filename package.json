@@ -20,7 +20,9 @@
   ],
   "keywords": [
     "ssi",
-    "uicomposition"
+    "server-side-includes",
+    "ui-composition",
+    "dynamic-ui-composition"
   ],
   "author": "Torsten Blasche <dev@t-blasche.de>",
   "license": "Apache-2.0",
