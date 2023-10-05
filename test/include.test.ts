@@ -213,3 +213,109 @@ test('should set fragment status code for successfully resolved fallback-src of 
   expect(fragment.content).toBe('fragment from fallback-src');
   expect(fragment.statusCode).toBe(206);
 });
+
+test('should set fragment status code and body of errored src', async () => {
+  // given
+  server = Fastify();
+  server.get('/src', function (request, reply) {
+    reply.status(503).send('fragment from src');
+  });
+  await server.listen({ port: 3000 });
+
+  // when
+  const fragment = await new Include(
+    new Map([
+      ['src', serverAddress('/src')],
+      ['primary', 'primary']
+    ])
+  ).resolve(config);
+
+  // then
+  expect(fragment.content).toBe('fragment from src');
+  expect(fragment.statusCode).toBe(503);
+});
+
+test('should set fragment status code of errored src also if fallback-src errored for primary include', async () => {
+  // given
+  server = Fastify();
+  server.get('/src', function (request, reply) {
+    reply.status(503).send('fragment from src');
+  });
+  server.get('/fallback-src', function (request, reply) {
+    reply.status(500).send('fragment from fallback_src');
+  });
+  await server.listen({ port: 3000 });
+
+  // when
+  const fragment = await new Include(
+    new Map([
+      ['src', serverAddress('/src')],
+      ['fallback-src', serverAddress('/fallback-src')],
+      ['primary', '']
+    ])
+  ).resolve(config);
+
+  // then
+  expect(fragment.content).toBe('fragment from src');
+  expect(fragment.statusCode).toBe(503);
+});
+
+test('should reset errored fragment of primary include for consecutive resolving', async () => {
+  // given
+  server = Fastify();
+  let reqCounter = 0;
+  server.get('/src', function (request, reply) {
+    if (reqCounter++ === 0) {
+      reply.status(503).send('fragment from src');
+    } else {
+      reply.status(504).send('fragment from src 2nd call');
+    }
+  });
+  server.get('/fallback-src', function (request, reply) {
+    reply.status(500).send('fragment from fallback-src');
+  });
+  await server.listen({ port: 3000 });
+  const include = new Include(
+    new Map([
+      ['src', serverAddress('/src')],
+      ['fallback-src', serverAddress('/fallback-src')],
+      ['primary', '']
+    ])
+  );
+
+  // when
+  const fragment = await include.resolve(config);
+
+  // then
+  expect(fragment.content).toBe('fragment from src');
+  expect(fragment.statusCode).toBe(503);
+
+  // when
+  const fragment2 = await include.resolve(config);
+
+  // then
+  expect(fragment2.content).toBe('fragment from src 2nd call');
+  expect(fragment2.statusCode).toBe(504);
+});
+
+test('should ignore fallback content and set fragment status code and body of errored src if primary', async () => {
+  // given
+  server = Fastify();
+  server.get('/src', function (request, reply) {
+    reply.status(503).send('fragment from src');
+  });
+  await server.listen({ port: 3000 });
+
+  // when
+  const fragment = await new Include(
+    new Map([
+      ['src', serverAddress('/src')],
+      ['primary', '']
+    ]),
+    'fallback content'
+  ).resolve(config);
+
+  // then
+  expect(fragment.content).toBe('fragment from src');
+  expect(fragment.statusCode).toBe(503);
+});

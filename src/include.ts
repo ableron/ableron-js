@@ -41,6 +41,13 @@ export class Include {
   private readonly HTTP_STATUS_CODES_SUCCESS: number[] = [200, 203, 204, 206];
 
   /**
+   * HTTP status codes indicating cacheable responses.
+   *
+   * @link <a href="https://www.rfc-editor.org/rfc/rfc9110#section-15.1">RFC 9110 Section 15.1. Overview of Status Codes</a>
+   */
+  private readonly HTTP_STATUS_CODES_CACHEABLE: number[] = [200, 203, 204, 206, 300, 404, 405, 410, 414, 501];
+
+  /**
    * Raw include tag.
    */
   private readonly rawIncludeTag: string;
@@ -84,6 +91,11 @@ export class Include {
    * Fallback content to use in case the include could not be resolved.
    */
   private readonly fallbackContent: string;
+
+  /**
+   * Recorded response of the errored primary fragment.
+   */
+  private erroredPrimaryFragment: Fragment | null = null;
 
   /**
    * Constructs a new Include.
@@ -142,12 +154,15 @@ export class Include {
   }
 
   resolve(config: AbleronConfig): Promise<Fragment> {
+    this.erroredPrimaryFragment = null;
+
     return this.load(this.src, this.getRequestTimeout(this.srcTimeoutMillis, config))
       .then((fragment) =>
         fragment === null
           ? this.load(this.fallbackSrc, this.getRequestTimeout(this.fallbackSrcTimeoutMillis, config))
           : fragment
       )
+      .then((fragment) => (fragment === null && this.erroredPrimaryFragment ? this.erroredPrimaryFragment : fragment))
       .then((fragment) => (fragment === null ? new Fragment(200, this.fallbackContent) : fragment));
   }
 
@@ -156,20 +171,43 @@ export class Include {
       return Promise.resolve(null);
     }
 
-    return this.performRequest(url, requestTimeoutMillis);
+    return this.performRequest(url, requestTimeoutMillis)
+      .then(async (response) => {
+        if (!response) {
+          return null;
+        }
+
+        const responseBody = await response.text();
+
+        if (!this.HTTP_STATUS_CODES_CACHEABLE.includes(response.status)) {
+          console.error(`Fragment ${this.id} returned status code ${response.status}`);
+          this.recordErroredPrimaryFragment(new Fragment(response.status, responseBody, url));
+          return null;
+        }
+
+        return new Fragment(response.status, responseBody, url);
+      })
+      .then((fragment) => {
+        if (!fragment) {
+          return null;
+        }
+
+        if (!this.HTTP_STATUS_CODES_SUCCESS.includes(fragment.statusCode)) {
+          console.error(`Fragment ${this.id} returned status code ${fragment.statusCode}`);
+          this.recordErroredPrimaryFragment(fragment);
+          return null;
+        }
+
+        return fragment;
+      });
   }
 
-  private performRequest(url: string, requestTimeoutMillis: number): Promise<Fragment | null> {
+  private performRequest(url: string, requestTimeoutMillis: number): Promise<Response | null> {
     console.debug(`Loading fragment ${url} for include ${this.id} with timeout ${requestTimeoutMillis}ms`);
     const abortController = new AbortController();
     const timeoutId = setTimeout(() => abortController.abort(), requestTimeoutMillis);
 
     return fetch(url, { signal: abortController.signal })
-      .then((response) =>
-        this.HTTP_STATUS_CODES_SUCCESS.includes(response.status)
-          ? response.text().then((body) => new Fragment(response.status, body, this.src))
-          : null
-      )
       .catch((e: Error) => {
         if (e.name === 'AbortError') {
           console.error(
@@ -184,6 +222,12 @@ export class Include {
         return null;
       })
       .finally(() => clearTimeout(timeoutId));
+  }
+
+  private recordErroredPrimaryFragment(fragment: Fragment) {
+    if (this.primary && this.erroredPrimaryFragment === null) {
+      this.erroredPrimaryFragment = fragment;
+    }
   }
 
   private parseTimeout(timeoutAsString?: string): number | undefined {
