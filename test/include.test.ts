@@ -319,3 +319,38 @@ test('should ignore fallback content and set fragment status code and body of er
   expect(fragment.content).toBe('fragment from src');
   expect(fragment.statusCode).toBe(503);
 });
+
+test('should not follow redirects when resolving URLs', async () => {
+  // given
+  server = Fastify();
+  server.get('/src', function (request, reply) {
+    reply.status(302).header('Location', serverAddress('/src-after-redirect')).send();
+  });
+  server.get('/src-after-redirect', function (request, reply) {
+    reply.status(200).send('fragment from src after redirect');
+  });
+  await server.listen({ port: 3000 });
+
+  // when
+  const fragment = await new Include(new Map([['src', serverAddress('/src')]]), 'fallback content').resolve(config);
+
+  // then
+  expect(fragment.content).toBe('fallback content');
+});
+
+test('should apply request timeout', async () => {
+  // given
+  server = Fastify();
+  const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay));
+  server.get('/src', async function (request, reply) {
+    await sleep(2000);
+    reply.status(200).send('fragment from src');
+  });
+  await server.listen({ port: 3000 });
+
+  // when
+  const fragment = await new Include(new Map([['src', serverAddress('/src')]]), 'fallback content').resolve(config);
+
+  // then
+  expect(fragment.content).toBe('fallback content');
+});

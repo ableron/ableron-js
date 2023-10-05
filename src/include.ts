@@ -204,11 +204,9 @@ export class Include {
 
   private performRequest(url: string, requestTimeoutMillis: number): Promise<Response | null> {
     console.debug(`Loading fragment ${url} for include ${this.id} with timeout ${requestTimeoutMillis}ms`);
-    const abortController = new AbortController();
-    const timeoutId = setTimeout(() => abortController.abort(), requestTimeoutMillis);
 
-    return fetch(url, { signal: abortController.signal })
-      .catch((e: Error) => {
+    return fetch(new Request(url, { redirect: 'error' }), { signal: AbortSignal.timeout(requestTimeoutMillis) }).catch(
+      (e: Error) => {
         if (e.name === 'AbortError') {
           console.error(
             `Unable to load fragment ${url} for include ${this.id}: ${requestTimeoutMillis}ms timeout exceeded`
@@ -220,8 +218,8 @@ export class Include {
         }
 
         return null;
-      })
-      .finally(() => clearTimeout(timeoutId));
+      }
+    );
   }
 
   private recordErroredPrimaryFragment(fragment: Fragment) {
