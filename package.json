@@ -6,7 +6,7 @@
   "module": "dist/esm/index.js",
   "types": "dist/types/index.d.js",
   "scripts": {
-    "build": "npm run clean && tsc -p tsconfig.json && tsc -p tsconfig-esm.json && tsc -p tsconfig-types.json",
+    "build": "npm run clean && tsc",
     "clean": "rimraf dist",
     "lint": "eslint \"src/**/*.ts\" --fix",
     "test": "jest --no-cache --runInBand",
