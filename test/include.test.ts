@@ -1,6 +1,7 @@
 import { Include } from '../src/include';
 import Fastify, { FastifyInstance } from 'fastify';
 import { AbleronConfig } from '../src';
+import { TransclusionProcessor } from '../src/transclusion-processor';
 
 let server: FastifyInstance | undefined;
 
@@ -16,7 +17,10 @@ afterEach(async () => {
 
 function serverAddress(path: string): string {
   if (server) {
-    return 'http://' + server.addresses()[0].address + ':' + server.addresses()[0].port + '/' + path.replace(/^\//, '');
+    const address = ['127.0.0.1', '::1'].includes(server.addresses()[0].address)
+      ? 'localhost'
+      : server.addresses()[0].address;
+    return 'http://' + address + ':' + server.addresses()[0].port + '/' + path.replace(/^\//, '');
   }
 
   return 'undefined';
@@ -25,6 +29,7 @@ function serverAddress(path: string): string {
 const config = new AbleronConfig({
   fragmentRequestTimeoutMillis: 1000
 });
+const fragmentCache = new TransclusionProcessor(config).getFragmentCache();
 
 test('should set raw attributes in constructor', () => {
   // given
@@ -112,7 +117,7 @@ test('should resolve include with URL provided via src attribute', async () => {
   await server.listen({ port: 3000 });
 
   // when
-  const fragment = await new Include(new Map([['src', serverAddress('/')]])).resolve(config);
+  const fragment = await new Include(new Map([['src', serverAddress('/')]])).resolve(config, fragmentCache);
 
   // then
   expect(fragment.content).toBe('response');
@@ -135,7 +140,7 @@ test('should resolve include with URL provided via fallback-src attribute if src
       ['src', serverAddress('/src')],
       ['fallback-src', serverAddress('/fallback-src')]
     ])
-  ).resolve(config);
+  ).resolve(config, fragmentCache);
 
   // then
   expect(fragment.content).toBe('fragment from fallback-src');
@@ -159,7 +164,7 @@ test('should resolve include with fallback content if src and fallback-src could
       ['fallback-src', serverAddress('/fallback-src')]
     ]),
     'fallback content'
-  ).resolve(config);
+  ).resolve(config, fragmentCache);
 
   // then
   expect(fragment.content).toBe('fallback content');
@@ -167,7 +172,7 @@ test('should resolve include with fallback content if src and fallback-src could
 
 test('should resolve include to empty string if src, fallback src and fallback content are not present', async () => {
   // when
-  const fragment = await new Include().resolve(config);
+  const fragment = await new Include().resolve(config, fragmentCache);
 
   // then
   expect(fragment.content).toBe('');
@@ -182,7 +187,7 @@ test('should set fragment status code for successfully resolved src', async () =
   await server.listen({ port: 3000 });
 
   // when
-  const fragment = await new Include(new Map([['src', serverAddress('/src')]])).resolve(config);
+  const fragment = await new Include(new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
 
   // then
   expect(fragment.content).toBe('fragment from src');
@@ -207,7 +212,7 @@ test('should set fragment status code for successfully resolved fallback-src of 
       ['fallback-src', serverAddress('/fallback-src')],
       ['primary', '']
     ])
-  ).resolve(config);
+  ).resolve(config, fragmentCache);
 
   // then
   expect(fragment.content).toBe('fragment from fallback-src');
@@ -228,7 +233,7 @@ test('should set fragment status code and body of errored src', async () => {
       ['src', serverAddress('/src')],
       ['primary', 'primary']
     ])
-  ).resolve(config);
+  ).resolve(config, fragmentCache);
 
   // then
   expect(fragment.content).toBe('fragment from src');
@@ -253,7 +258,7 @@ test('should set fragment status code of errored src also if fallback-src errore
       ['fallback-src', serverAddress('/fallback-src')],
       ['primary', '']
     ])
-  ).resolve(config);
+  ).resolve(config, fragmentCache);
 
   // then
   expect(fragment.content).toBe('fragment from src');
@@ -284,14 +289,14 @@ test('should reset errored fragment of primary include for consecutive resolving
   );
 
   // when
-  const fragment = await include.resolve(config);
+  const fragment = await include.resolve(config, fragmentCache);
 
   // then
   expect(fragment.content).toBe('fragment from src');
   expect(fragment.statusCode).toBe(503);
 
   // when
-  const fragment2 = await include.resolve(config);
+  const fragment2 = await include.resolve(config, fragmentCache);
 
   // then
   expect(fragment2.content).toBe('fragment from src 2nd call');
@@ -313,7 +318,7 @@ test('should ignore fallback content and set fragment status code and body of er
       ['primary', '']
     ]),
     'fallback content'
-  ).resolve(config);
+  ).resolve(config, fragmentCache);
 
   // then
   expect(fragment.content).toBe('fragment from src');
@@ -332,7 +337,10 @@ test('should not follow redirects when resolving URLs', async () => {
   await server.listen({ port: 3000 });
 
   // when
-  const fragment = await new Include(new Map([['src', serverAddress('/src')]]), 'fallback content').resolve(config);
+  const fragment = await new Include(new Map([['src', serverAddress('/src')]]), 'fallback content').resolve(
+    config,
+    fragmentCache
+  );
 
   // then
   expect(fragment.content).toBe('fallback content');
@@ -349,7 +357,10 @@ test('should apply request timeout', async () => {
   await server.listen({ port: 3000 });
 
   // when
-  const fragment = await new Include(new Map([['src', serverAddress('/src')]]), 'fallback content').resolve(config);
+  const fragment = await new Include(new Map([['src', serverAddress('/src')]]), 'fallback content').resolve(
+    config,
+    fragmentCache
+  );
 
   // then
   expect(fragment.content).toBe('fallback content');

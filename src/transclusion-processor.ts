@@ -1,6 +1,8 @@
 import { AbleronConfig } from './ableron-config';
 import { TransclusionResult } from './transclusion-result';
 import { Include } from './include';
+import { LRUCache } from 'lru-cache';
+import { Fragment } from './fragment';
 
 export class TransclusionProcessor {
   /**
@@ -15,8 +17,15 @@ export class TransclusionProcessor {
 
   private readonly ableronConfig: AbleronConfig;
 
+  private readonly fragmentCache: LRUCache<string, Fragment>;
+
   constructor(ableronConfig: AbleronConfig) {
     this.ableronConfig = ableronConfig;
+    this.fragmentCache = this.buildFragmentCache(this.ableronConfig.cacheMaxSizeInBytes);
+  }
+
+  getFragmentCache(): LRUCache<string, Fragment> {
+    return this.fragmentCache;
   }
 
   findIncludes(content: string): Include[] {
@@ -42,13 +51,19 @@ export class TransclusionProcessor {
       Array.from(this.findIncludes(content)).map(async (include) => {
         const includeResolveStartTime = Date.now();
         await include
-          .resolve(this.ableronConfig)
+          .resolve(this.ableronConfig, this.fragmentCache)
           .then((fragment) => {
             const includeResolveTimeMillis = Date.now() - includeResolveStartTime;
             console.debug('Resolved include %s in %dms', include.getId(), includeResolveTimeMillis);
             transclusionResult.addResolvedInclude(include, fragment, includeResolveTimeMillis);
           })
-          .catch((error) => console.log('Unable to resolve include %s: %s', include.getId(), error));
+          .catch((error) =>
+            console.error(
+              `Unable to resolve include ${include.getId()}: ${error?.message}${
+                error?.cause ? ` (${error.cause})` : ''
+              }`
+            )
+          );
       })
     );
     transclusionResult.setProcessingTimeMillis(Date.now() - startTime);
@@ -64,5 +79,14 @@ export class TransclusionProcessor {
     }
 
     return attributes;
+  }
+
+  private buildFragmentCache(cacheMaxSizeInBytes: number): LRUCache<string, Fragment> {
+    return new LRUCache({
+      max: 1000,
+      maxSize: cacheMaxSizeInBytes,
+      sizeCalculation: (fragment, key) => fragment.content.length,
+      ttl: 24 * 60 * 60 * 1000
+    });
   }
 }

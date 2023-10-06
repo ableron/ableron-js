@@ -1,6 +1,7 @@
 import { Fragment } from './fragment';
 import * as crypto from 'crypto';
 import { AbleronConfig } from './ableron-config';
+import { LRUCache } from 'lru-cache';
 
 export class Include {
   /**
@@ -153,7 +154,7 @@ export class Include {
     return this.fallbackContent;
   }
 
-  resolve(config: AbleronConfig): Promise<Fragment> {
+  resolve(config: AbleronConfig, fragmentCache: LRUCache<string, Fragment>): Promise<Fragment> {
     this.erroredPrimaryFragment = null;
 
     return this.load(this.src, this.getRequestTimeout(this.srcTimeoutMillis, config))
@@ -205,21 +206,31 @@ export class Include {
   private performRequest(url: string, requestTimeoutMillis: number): Promise<Response | null> {
     console.debug(`Loading fragment ${url} for include ${this.id} with timeout ${requestTimeoutMillis}ms`);
 
-    return fetch(new Request(url, { redirect: 'error' }), { signal: AbortSignal.timeout(requestTimeoutMillis) }).catch(
-      (e: Error) => {
-        if (e.name === 'AbortError') {
+    try {
+      return fetch(new Request(url, { redirect: 'error' }), {
+        signal: AbortSignal.timeout(requestTimeoutMillis)
+      }).catch((e: Error) => {
+        if (e.name === 'TimeoutError') {
           console.error(
             `Unable to load fragment ${url} for include ${this.id}: ${requestTimeoutMillis}ms timeout exceeded`
           );
         } else {
           console.error(
-            `Unable to load fragment ${url} for include ${this.id}: ${e?.message}${e?.cause ? ` (${e.cause})` : ''}`
+            `Unable to load fragment ${url} for include ${this.id}: ${e?.message}${e?.cause ? ` (${e?.cause})` : ''}`
           );
         }
 
         return null;
-      }
-    );
+      });
+    } catch (e) {
+      const error: Error = e as Error;
+      console.error(
+        `Unable to load fragment ${url} for include ${this.id}: ${error.message}${
+          error.cause ? ` (${error.cause})` : ''
+        }`
+      );
+      return Promise.resolve(null);
+    }
   }
 
   private recordErroredPrimaryFragment(fragment: Fragment) {
