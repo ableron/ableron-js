@@ -2,6 +2,7 @@ import { Fragment } from './fragment';
 import * as crypto from 'crypto';
 import { AbleronConfig } from './ableron-config';
 import { LRUCache } from 'lru-cache';
+import { HttpUtil } from './http-util';
 
 export class Include {
   /**
@@ -157,50 +158,64 @@ export class Include {
   resolve(config: AbleronConfig, fragmentCache: LRUCache<string, Fragment>): Promise<Fragment> {
     this.erroredPrimaryFragment = null;
 
-    return this.load(this.src, this.getRequestTimeout(this.srcTimeoutMillis, config))
+    return this.load(this.src, this.getRequestTimeout(this.srcTimeoutMillis, config), fragmentCache)
       .then((fragment) =>
         fragment === null
-          ? this.load(this.fallbackSrc, this.getRequestTimeout(this.fallbackSrcTimeoutMillis, config))
+          ? this.load(this.fallbackSrc, this.getRequestTimeout(this.fallbackSrcTimeoutMillis, config), fragmentCache)
           : fragment
       )
       .then((fragment) => (fragment === null && this.erroredPrimaryFragment ? this.erroredPrimaryFragment : fragment))
       .then((fragment) => (fragment === null ? new Fragment(200, this.fallbackContent) : fragment));
   }
 
-  private load(url: string | undefined, requestTimeoutMillis: number): Promise<Fragment | null> {
+  private load(
+    url: string | undefined,
+    requestTimeoutMillis: number,
+    fragmentCache: LRUCache<string, Fragment>
+  ): Promise<Fragment | null> {
     if (url === undefined) {
       return Promise.resolve(null);
     }
 
-    return this.performRequest(url, requestTimeoutMillis)
-      .then(async (response) => {
-        if (!response) {
-          return null;
-        }
+    const foundFragment: Promise<Fragment | null> = fragmentCache.has(url)
+      ? Promise.resolve(fragmentCache.get(url) as Fragment)
+      : this.performRequest(url, requestTimeoutMillis).then(async (response) => {
+          if (!response) {
+            return null;
+          }
 
-        const responseBody = await response.text();
+          const responseBody = await response.text();
 
-        if (!this.HTTP_STATUS_CODES_CACHEABLE.includes(response.status)) {
-          console.error(`Fragment ${this.id} returned status code ${response.status}`);
-          this.recordErroredPrimaryFragment(new Fragment(response.status, responseBody, url));
-          return null;
-        }
+          if (!this.HTTP_STATUS_CODES_CACHEABLE.includes(response.status)) {
+            console.error(`Fragment ${this.id} returned status code ${response.status}`);
+            this.recordErroredPrimaryFragment(new Fragment(response.status, responseBody, url));
+            return null;
+          }
 
-        return new Fragment(response.status, responseBody, url);
-      })
-      .then((fragment) => {
-        if (!fragment) {
-          return null;
-        }
+          const fragmentExpirationTime = HttpUtil.calculateResponseExpirationTimeByHeaders(response.headers);
+          const fragment = new Fragment(response.status, responseBody, url, fragmentExpirationTime);
+          const fragmentTtl = fragmentExpirationTime.getTime() - new Date().getTime();
 
-        if (!this.HTTP_STATUS_CODES_SUCCESS.includes(fragment.statusCode)) {
-          console.error(`Fragment ${this.id} returned status code ${fragment.statusCode}`);
-          this.recordErroredPrimaryFragment(fragment);
-          return null;
-        }
+          if (fragmentTtl > 0) {
+            fragmentCache.set(url, fragment, { ttl: fragmentTtl });
+          }
 
-        return fragment;
-      });
+          return fragment;
+        });
+
+    return foundFragment.then((fragment) => {
+      if (!fragment) {
+        return null;
+      }
+
+      if (!this.HTTP_STATUS_CODES_SUCCESS.includes(fragment.statusCode)) {
+        console.error(`Fragment ${this.id} returned status code ${fragment.statusCode}`);
+        this.recordErroredPrimaryFragment(fragment);
+        return null;
+      }
+
+      return fragment;
+    });
   }
 
   private performRequest(url: string, requestTimeoutMillis: number): Promise<Response | null> {

@@ -2,14 +2,21 @@ import { Include } from '../src/include';
 import Fastify, { FastifyInstance } from 'fastify';
 import { AbleronConfig } from '../src';
 import { TransclusionProcessor } from '../src/transclusion-processor';
+import { Fragment } from '../src/fragment';
 
 let server: FastifyInstance | undefined;
+const config = new AbleronConfig({
+  fragmentRequestTimeoutMillis: 1000
+});
+const fragmentCache = new TransclusionProcessor(config).getFragmentCache();
 
 beforeEach(() => {
   server = undefined;
 });
 
 afterEach(async () => {
+  fragmentCache.clear();
+
   if (server) {
     await server.close();
   }
@@ -25,11 +32,6 @@ function serverAddress(path: string): string {
 
   return 'undefined';
 }
-
-const config = new AbleronConfig({
-  fragmentRequestTimeoutMillis: 1000
-});
-const fragmentCache = new TransclusionProcessor(config).getFragmentCache();
 
 test('should set raw attributes in constructor', () => {
   // given
@@ -344,6 +346,27 @@ test('should not follow redirects when resolving URLs', async () => {
 
   // then
   expect(fragment.content).toBe('fallback content');
+});
+
+test.each([
+  [new Date(new Date().getTime() + 5000), 'fragment from cache'],
+  [new Date(new Date().getTime() - 5000), 'fragment from src']
+])('should use cached fragment if not expired', async (expirationTime: Date, expectedFragmentContent: string) => {
+  // given
+  server = Fastify();
+  server.get('/src', function (request, reply) {
+    reply.status(200).send('fragment from src');
+  });
+  await server.listen({ port: 3000 });
+
+  // when
+  fragmentCache.set(serverAddress('/src'), new Fragment(200, 'fragment from cache', undefined, expirationTime), {
+    ttl: expirationTime.getTime() - new Date().getTime()
+  });
+  const fragment = await new Include(new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
+
+  // then
+  expect(fragment.content).toBe(expectedFragmentContent);
 });
 
 test('should apply request timeout', async () => {
