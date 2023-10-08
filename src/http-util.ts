@@ -1,18 +1,15 @@
-import { CaseInsensitiveMap } from './case-insensitive-map';
-
 export class HttpUtil {
   private static HEADER_AGE: string = 'Age';
   private static HEADER_CACHE_CONTROL: string = 'Cache-Control';
   private static HEADER_DATE: string = 'Date';
   private static HEADER_EXPIRES: string = 'Expires';
 
-  static calculateResponseExpirationTimeByHeaders(headers: Headers): Date {
+  static calculateResponseExpirationTime(headers: Headers): Date {
     const cacheControlHeaderValue = headers.get(this.HEADER_CACHE_CONTROL);
     const cacheControlDirectives =
-      cacheControlHeaderValue !== null && cacheControlHeaderValue.length
-        ? cacheControlHeaderValue[0].split(',').map((directive) => directive.trim().toLowerCase())
+      cacheControlHeaderValue !== null
+        ? cacheControlHeaderValue.split(',').map((directive) => directive.trim().toLowerCase())
         : [];
-
     const cacheLifetimeBySharedCacheMaxAge = this.getCacheLifetimeBySharedCacheMaxAge(cacheControlDirectives);
 
     if (cacheLifetimeBySharedCacheMaxAge !== undefined) {
@@ -22,7 +19,7 @@ export class HttpUtil {
     const ageHeaderValue = headers.get(this.HEADER_AGE);
     const cacheLifetimeByMaxAge = this.getCacheLifetimeByMaxAge(
       cacheControlDirectives,
-      ageHeaderValue && ageHeaderValue.length ? ageHeaderValue[0] : undefined
+      ageHeaderValue !== null ? ageHeaderValue : undefined
     );
 
     if (cacheLifetimeByMaxAge !== undefined) {
@@ -32,46 +29,8 @@ export class HttpUtil {
     const expiresHeaderValue = headers.get(this.HEADER_EXPIRES);
     const dateHeaderValue = headers.get(this.HEADER_DATE);
     const cacheLifetimeByExpires = this.getCacheLifetimeByExpiresHeader(
-      expiresHeaderValue && expiresHeaderValue.length ? expiresHeaderValue[0] : undefined,
-      dateHeaderValue && dateHeaderValue.length ? dateHeaderValue[0] : undefined
-    );
-
-    if (cacheLifetimeByExpires !== undefined) {
-      return cacheLifetimeByExpires;
-    }
-
-    return new Date(0);
-  }
-
-  static calculateResponseExpirationTime(caseSensitiveResponseHeaders: Map<string, string[]>): Date {
-    const responseHeaders = new CaseInsensitiveMap(caseSensitiveResponseHeaders);
-    const cacheControlHeaderValue = responseHeaders.get(this.HEADER_CACHE_CONTROL);
-    const cacheControlDirectives =
-      cacheControlHeaderValue !== undefined && cacheControlHeaderValue.length
-        ? cacheControlHeaderValue[0].split(',').map((directive) => directive.trim().toLowerCase())
-        : [];
-
-    const cacheLifetimeBySharedCacheMaxAge = this.getCacheLifetimeBySharedCacheMaxAge(cacheControlDirectives);
-
-    if (cacheLifetimeBySharedCacheMaxAge !== undefined) {
-      return cacheLifetimeBySharedCacheMaxAge;
-    }
-
-    const ageHeaderValue = responseHeaders.get(this.HEADER_AGE);
-    const cacheLifetimeByMaxAge = this.getCacheLifetimeByMaxAge(
-      cacheControlDirectives,
-      ageHeaderValue && ageHeaderValue.length ? ageHeaderValue[0] : undefined
-    );
-
-    if (cacheLifetimeByMaxAge !== undefined) {
-      return cacheLifetimeByMaxAge;
-    }
-
-    const expiresHeaderValue = responseHeaders.get(this.HEADER_EXPIRES);
-    const dateHeaderValue = responseHeaders.get(this.HEADER_DATE);
-    const cacheLifetimeByExpires = this.getCacheLifetimeByExpiresHeader(
-      expiresHeaderValue && expiresHeaderValue.length ? expiresHeaderValue[0] : undefined,
-      dateHeaderValue && dateHeaderValue.length ? dateHeaderValue[0] : undefined
+      expiresHeaderValue !== null ? expiresHeaderValue : undefined,
+      dateHeaderValue !== null ? dateHeaderValue : undefined
     );
 
     if (cacheLifetimeByExpires !== undefined) {

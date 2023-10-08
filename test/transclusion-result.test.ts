@@ -74,27 +74,27 @@ test.each([
 );
 
 test.each([
-  [new Date(0), new Map(), 'no-store'],
-  [new Date(new Date().getTime() - 5000), new Map(), 'no-store'],
-  [new Date(), new Map(), 'no-store'],
-  [new Date(new Date().getTime() + 300000), new Map(), 'no-store'],
-  [new Date(0), new Map([['Cache-Control', ['no-cache']]]), 'no-store'],
-  [new Date(new Date().getTime() - 5000), new Map([['Cache-Control', ['no-cache']]]), 'no-store'],
-  [new Date(), new Map([['Cache-Control', ['no-cache']]]), 'no-store'],
-  [new Date(new Date().getTime() + 300000), new Map([['Cache-Control', ['no-cache']]]), 'no-store'],
-  [new Date(0), new Map([['Cache-Control', ['max-age=0']]]), 'no-store'],
-  [new Date(new Date().getTime() - 5000), new Map([['Cache-Control', ['max-age=0']]]), 'no-store'],
-  [new Date(), new Map([['Cache-Control', ['max-age=0']]]), 'no-store'],
-  [new Date(new Date().getTime() + 300000), new Map([['Cache-Control', ['max-age=0']]]), 'no-store'],
-  [new Date(0), new Map([['Cache-Control', ['max-age=120']]]), 'no-store'],
-  [new Date(new Date().getTime() - 5000), new Map([['Cache-Control', ['max-age=120']]]), 'no-store'],
-  [new Date(), new Map([['Cache-Control', ['max-age=120']]]), 'no-store'],
-  [new Date(new Date().getTime() + 300000), new Map([['Cache-Control', ['max-age=120']]]), 'max-age=120'],
-  [new Date(new Date().getTime() + 300000), new Map([['Cache-Control', ['max-age=300']]]), 'max-age=300'],
-  [new Date(new Date().getTime() + 300000), new Map([['Cache-Control', ['max-age=600']]]), 'max-age=300']
+  [new Date(0), new Headers(), 'no-store'],
+  [new Date(new Date().getTime() - 5000), new Headers(), 'no-store'],
+  [new Date(), new Headers(), 'no-store'],
+  [new Date(new Date().getTime() + 300000), new Headers(), 'no-store'],
+  [new Date(0), new Headers([['Cache-Control', 'no-cache']]), 'no-store'],
+  [new Date(new Date().getTime() - 5000), new Headers([['Cache-Control', 'no-cache']]), 'no-store'],
+  [new Date(), new Headers([['Cache-Control', 'no-cache']]), 'no-store'],
+  [new Date(new Date().getTime() + 300000), new Headers([['Cache-Control', 'no-cache']]), 'no-store'],
+  [new Date(0), new Headers([['Cache-Control', 'max-age=0']]), 'no-store'],
+  [new Date(new Date().getTime() - 5000), new Headers([['Cache-Control', 'max-age=0']]), 'no-store'],
+  [new Date(), new Headers([['Cache-Control', 'max-age=0']]), 'no-store'],
+  [new Date(new Date().getTime() + 300000), new Headers([['Cache-Control', 'max-age=0']]), 'no-store'],
+  [new Date(0), new Headers([['Cache-Control', 'max-age=120']]), 'no-store'],
+  [new Date(new Date().getTime() - 5000), new Headers([['Cache-Control', 'max-age=120']]), 'no-store'],
+  [new Date(), new Headers([['Cache-Control', 'max-age=120']]), 'no-store'],
+  [new Date(new Date().getTime() + 300000), new Headers([['Cache-Control', 'max-age=120']]), 'max-age=120'],
+  [new Date(new Date().getTime() + 300000), new Headers([['Cache-Control', 'max-age=300']]), 'max-age=300'],
+  [new Date(new Date().getTime() + 300000), new Headers([['Cache-Control', 'max-age=600']]), 'max-age=300']
 ])(
   'should calculate cache control header value based on given response headers',
-  (fragmentExpirationTime: Date, responseHeaders: Map<string, string[]>, expectedCacheControlHeaderValue: string) => {
+  (fragmentExpirationTime: Date, responseHeaders: Headers, expectedCacheControlHeaderValue: string) => {
     // given
     const transclusionResult = new TransclusionResult('content');
     transclusionResult.addResolvedInclude(new Include(), new Fragment(200, '', undefined, fragmentExpirationTime), 0);
@@ -107,7 +107,7 @@ test.each([
 );
 
 test('should handle missing content expiration time when calculating cache control header value', () => {
-  expect(new TransclusionResult('').calculateCacheControlHeaderValueByResponseHeaders(new Map())).toBe('no-store');
+  expect(new TransclusionResult('').calculateCacheControlHeaderValueByResponseHeaders(new Headers())).toBe('no-store');
 });
 
 test('should not append stats to content by default', () => {

@@ -192,7 +192,7 @@ export class Include {
             return null;
           }
 
-          const fragmentExpirationTime = HttpUtil.calculateResponseExpirationTimeByHeaders(response.headers);
+          const fragmentExpirationTime = HttpUtil.calculateResponseExpirationTime(response.headers);
           const fragment = new Fragment(response.status, responseBody, url, fragmentExpirationTime);
           const fragmentTtl = fragmentExpirationTime.getTime() - new Date().getTime();
 

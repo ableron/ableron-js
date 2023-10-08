@@ -107,8 +107,8 @@ export class TransclusionResult {
    *
    * @return The Cache-Control header value. Either "no-store" or "max-age=xxx"
    */
-  calculateCacheControlHeaderValueByResponseHeaders(responseHeaders: Map<string, string[]>) {
-    const pageExpirationTime: Date = HttpUtil.calculateResponseExpirationTime(responseHeaders);
+  calculateCacheControlHeaderValueByResponseHeaders(headers: Headers) {
+    const pageExpirationTime: Date = HttpUtil.calculateResponseExpirationTime(headers);
     const pageMaxAge: number =
       pageExpirationTime > new Date() ? Math.ceil((pageExpirationTime.getTime() - new Date().getTime()) / 1000) : 0;
     return this.calculateCacheControlHeaderValue(pageMaxAge);
