@@ -85,7 +85,7 @@ export class TransclusionProcessor {
     return new LRUCache({
       max: 1000,
       maxSize: cacheMaxSizeInBytes,
-      sizeCalculation: (fragment, key) => fragment.content.length,
+      sizeCalculation: (fragment, key) => fragment.content.length || 1,
       ttl: 24 * 60 * 60 * 1000
     });
   }

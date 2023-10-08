@@ -369,6 +369,57 @@ test.each([
   expect(fragment.content).toBe(expectedFragmentContent);
 });
 
+test.each([
+  [100, 'fragment', false, ':('],
+  [200, 'fragment', true, 'fragment'],
+  [202, 'fragment', false, ':('],
+  [203, 'fragment', true, 'fragment'],
+  [204, '', true, ''],
+  [205, 'fragment', false, ':('],
+  [206, 'fragment', true, 'fragment'],
+  [300, 'fragment', true, ':('],
+  [302, 'fragment', false, ':('],
+  [400, 'fragment', false, ':('],
+  [404, 'fragment', true, ':('],
+  [405, 'fragment', true, ':('],
+  [410, 'fragment', true, ':('],
+  [414, 'fragment', true, ':('],
+  [500, 'fragment', false, ':('],
+  [501, 'fragment', true, ':('],
+  [502, 'fragment', false, ':('],
+  [503, 'fragment', false, ':('],
+  [504, 'fragment', false, ':('],
+  [505, 'fragment', false, ':('],
+  [506, 'fragment', false, ':('],
+  [507, 'fragment', false, ':('],
+  [508, 'fragment', false, ':('],
+  [509, 'fragment', false, ':('],
+  [510, 'fragment', false, ':('],
+  [511, 'fragment', false, ':(']
+])(
+  'should cache fragment if status code is defined as cacheable in RFC 7231 - Status %p',
+  async (responseStatus: number, srcFragment: string, expectedFragmentCached: boolean, expectedFragment: string) => {
+    // given
+    server = Fastify();
+    server.get('/src', function (request, reply) {
+      reply.status(responseStatus).header('Cache-Control', 'max-age=7200').send(srcFragment);
+    });
+    await server.listen({ port: 3000 });
+
+    // when
+    const fragment = await new Include(new Map([['src', serverAddress('/src')]]), ':(').resolve(config, fragmentCache);
+
+    // then
+    expect(fragment.content).toBe(expectedFragment);
+
+    if (expectedFragmentCached) {
+      expect(fragmentCache.get(serverAddress('/src'))).toBeDefined();
+    } else {
+      expect(fragmentCache.get(serverAddress('/src'))).toBeUndefined();
+    }
+  }
+);
+
 test('should apply request timeout', async () => {
   // given
   server = Fastify();
