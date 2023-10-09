@@ -420,6 +420,236 @@ test.each([
   }
 );
 
+test('should cache fragment for s-maxage seconds if directive is present', async () => {
+  // given
+  server = Fastify();
+  server.get('/src', function (request, reply) {
+    reply
+      .status(200)
+      .header('Cache-Control', 'max-age=3600, s-maxage=604800 , public')
+      .header('Expires', 'Wed, 21 Oct 2015 07:28:00 GMT')
+      .send('fragment from src');
+  });
+  await server.listen({ port: 3000 });
+
+  // when
+  const fragment = await new Include(new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
+  const cachedFragment = fragmentCache.get(serverAddress('/src')) as Fragment;
+
+  // then
+  expect(fragment.content).toBe('fragment from src');
+  expect(cachedFragment).toBeDefined();
+  expect(cachedFragment.expirationTime < new Date(new Date().getTime() + 604800000 + 1000)).toBeTruthy();
+  expect(cachedFragment.expirationTime > new Date(new Date().getTime() + 604800000 - 1000)).toBeTruthy();
+});
+
+test('should cache fragment for max-age seconds if directive is present', async () => {
+  // given
+  server = Fastify();
+  server.get('/src', function (request, reply) {
+    reply
+      .status(200)
+      .header('Cache-Control', 'max-age=3600')
+      .header('Expires', 'Wed, 21 Oct 2015 07:28:00 GMT')
+      .send('fragment from src');
+  });
+  await server.listen({ port: 3000 });
+
+  // when
+  const fragment = await new Include(new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
+  const cachedFragment = fragmentCache.get(serverAddress('/src')) as Fragment;
+
+  // then
+  expect(fragment.content).toBe('fragment from src');
+  expect(cachedFragment).toBeDefined();
+  expect(cachedFragment.expirationTime < new Date(new Date().getTime() + 3600000 + 1000)).toBeTruthy();
+  expect(cachedFragment.expirationTime > new Date(new Date().getTime() + 3600000 - 1000)).toBeTruthy();
+});
+
+test('should treat http header names as case insensitive', async () => {
+  // given
+  server = Fastify();
+  server.get('/src', function (request, reply) {
+    reply.status(200).header('cache-control', 'max-age=3600').send('fragment from src');
+  });
+  await server.listen({ port: 3000 });
+
+  // when
+  const fragment = await new Include(new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
+  const cachedFragment = fragmentCache.get(serverAddress('/src')) as Fragment;
+
+  // then
+  expect(fragment.content).toBe('fragment from src');
+  expect(cachedFragment).toBeDefined();
+  expect(cachedFragment.expirationTime < new Date(new Date().getTime() + 3600000 + 1000)).toBeTruthy();
+  expect(cachedFragment.expirationTime > new Date(new Date().getTime() + 3600000 - 1000)).toBeTruthy();
+});
+
+test('should cache fragment for max-age seconds minus Age seconds if directive is present and Age header is set', async () => {
+  // given
+  server = Fastify();
+  server.get('/src', function (request, reply) {
+    reply
+      .status(200)
+      .header('Cache-Control', 'max-age=3600')
+      .header('Age', '600')
+      .header('Expires', 'Wed, 21 Oct 2015 07:28:00 GMT')
+      .send('fragment from src');
+  });
+  await server.listen({ port: 3000 });
+
+  // when
+  const fragment = await new Include(new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
+  const cachedFragment = fragmentCache.get(serverAddress('/src')) as Fragment;
+
+  // then
+  expect(fragment.content).toBe('fragment from src');
+  expect(cachedFragment).toBeDefined();
+  expect(cachedFragment.expirationTime < new Date(new Date().getTime() + 3000000 + 1000)).toBeTruthy();
+  expect(cachedFragment.expirationTime > new Date(new Date().getTime() + 3000000 - 1000)).toBeTruthy();
+});
+
+test('should use absolute value of Age header for cache expiration calculation', async () => {
+  // given
+  server = Fastify();
+  server.get('/src', function (request, reply) {
+    reply
+      .status(200)
+      .header('Cache-Control', 'max-age=3600')
+      .header('Age', '-100')
+      .header('Expires', 'Wed, 21 Oct 2015 07:28:00 GMT')
+      .send('fragment from src');
+  });
+  await server.listen({ port: 3000 });
+
+  // when
+  const fragment = await new Include(new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
+  const cachedFragment = fragmentCache.get(serverAddress('/src')) as Fragment;
+
+  // then
+  expect(fragment.content).toBe('fragment from src');
+  expect(cachedFragment).toBeDefined();
+  expect(cachedFragment.expirationTime < new Date(new Date().getTime() + 3500000 + 1000)).toBeTruthy();
+  expect(cachedFragment.expirationTime > new Date(new Date().getTime() + 3500000 - 1000)).toBeTruthy();
+});
+
+test('should cache fragment based on Expires header and current time if Cache-Control header and Date header are not present', async () => {
+  // given
+  server = Fastify();
+  server.get('/src', function (request, reply) {
+    reply
+      .status(200)
+      .header('Cache-Control', 'public')
+      .header('Expires', 'Wed, 12 Oct 2050 07:28:00 GMT')
+      .send('fragment from src');
+  });
+  await server.listen({ port: 3000 });
+
+  // when
+  const fragment = await new Include(new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
+  const cachedFragment = fragmentCache.get(serverAddress('/src')) as Fragment;
+
+  // then
+  expect(fragment.content).toBe('fragment from src');
+  expect(cachedFragment).toBeDefined();
+  expect(cachedFragment.expirationTime.toUTCString()).toBe('Wed, 12 Oct 2050 07:28:00 GMT');
+});
+
+test('should handle Expires header with value 0', async () => {
+  // given
+  server = Fastify();
+  server.get('/src', function (request, reply) {
+    reply.status(200).header('Expires', '0').send('fragment from src');
+  });
+  await server.listen({ port: 3000 });
+
+  // when
+  const fragment = await new Include(new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
+
+  // then
+  expect(fragment.content).toBe('fragment from src');
+  expect(fragmentCache.get(serverAddress('/src'))).toBeUndefined();
+});
+
+test('should cache fragment based on Expires and Date header if Cache-Control header is not present', async () => {
+  // given
+  server = Fastify();
+  server.get('/src', function (request, reply) {
+    reply
+      .status(200)
+      .header('Date', 'Wed, 05 Oct 2050 07:28:00 GMT')
+      .header('Expires', 'Wed, 12 Oct 2050 07:28:00 GMT')
+      .send('fragment from src');
+  });
+  await server.listen({ port: 3000 });
+
+  // when
+  const fragment = await new Include(new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
+  const cachedFragment = fragmentCache.get(serverAddress('/src')) as Fragment;
+
+  // then
+  expect(fragment.content).toBe('fragment from src');
+  expect(cachedFragment).toBeDefined();
+  expect(cachedFragment.expirationTime < new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000 + 1000)).toBeTruthy();
+  expect(cachedFragment.expirationTime > new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000 - 1000)).toBeTruthy();
+});
+
+test('should not cache fragment if Cache-Control header is set but without max-age directives', async () => {
+  // given
+  server = Fastify();
+  server.get('/src', function (request, reply) {
+    reply.status(200).header('Cache-Control', 'no-cache,no-store,must-revalidate').send('fragment from src');
+  });
+  await server.listen({ port: 3000 });
+
+  // when
+  const fragment = await new Include(new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
+
+  // then
+  expect(fragment.content).toBe('fragment from src');
+  expect(fragmentCache.get(serverAddress('/src'))).toBeUndefined();
+});
+
+test.each([
+  ['Cache-Control', 's-maxage=not-numeric', 'X-Dummy', 'dummy'],
+  ['Cache-Control', 'max-age=not-numeric', 'X-Dummy', 'dummy'],
+  ['Cache-Control', 'max-age=3600', 'Age', 'not-numeric'],
+  ['Expires', 'not-numeric', 'X-Dummy', 'dummy'],
+  ['Expires', 'Wed, 12 Oct 2050 07:28:00 GMT', 'Date', 'not-a-date']
+])(
+  'should not crash when cache headers contain invalid values',
+  async (header1Name: string, header1Value: string, header2Name: string, header2Value: string) => {
+    // given
+    server = Fastify();
+    server.get('/src', function (request, reply) {
+      reply.status(200).header(header1Name, header1Value).header(header2Name, header2Value).send('fragment from src');
+    });
+    await server.listen({ port: 3000 });
+
+    // when
+    const fragment = await new Include(new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
+
+    // then
+    expect(fragment.content).toBe('fragment from src');
+  }
+);
+
+test('should not cache fragment if no expiration time is indicated via response header', async () => {
+  // given
+  server = Fastify();
+  server.get('/src', function (request, reply) {
+    reply.status(200).send('fragment from src');
+  });
+  await server.listen({ port: 3000 });
+
+  // when
+  const fragment = await new Include(new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
+
+  // then
+  expect(fragment.content).toBe('fragment from src');
+  expect(fragmentCache.get(serverAddress('/src'))).toBeUndefined();
+});
+
 test('should apply request timeout', async () => {
   // given
   server = Fastify();
