@@ -12,7 +12,7 @@ export class AbleronConfig {
   /**
    * Request headers that are passed to fragment requests if present.
    */
-  readonly fragmentRequestHeadersToPass = [
+  readonly fragmentRequestHeadersToPass: string[] = [
     'Accept-Language',
     'Correlation-ID',
     'Forwarded',
@@ -29,12 +29,12 @@ export class AbleronConfig {
   /**
    * Response headers of primary fragments to pass to the page response if present.
    */
-  readonly primaryFragmentResponseHeadersToPass = ['Content-Language', 'Location', 'Refresh'];
+  readonly primaryFragmentResponseHeadersToPass: string[] = ['Content-Language', 'Location', 'Refresh'];
 
   /**
    * Maximum size in bytes the fragment cache may have.
    */
-  readonly cacheMaxSizeInBytes = 1024 * 1024 * 10;
+  readonly cacheMaxSizeInBytes: number = 1024 * 1024 * 10;
 
   /**
    * Whether to append UI composition stats as HTML comment to the content.

@@ -703,7 +703,7 @@ test('should pass allowed request headers to fragment requests', async () => {
   // given
   server = Fastify();
   let lastRecordedRequestHeaders;
-  server.get('/src', async function (request, reply) {
+  server.get('/src', function (request, reply) {
     lastRecordedRequestHeaders = request.headers;
     reply.status(204).send();
   });
@@ -718,4 +718,137 @@ test('should pass allowed request headers to fragment requests', async () => {
 
   // then
   expect(new Headers(lastRecordedRequestHeaders).get('X-test')).toBe('Foo');
+});
+
+test('should treat fragment request headers allow list as case insensitive', async () => {
+  // given
+  server = Fastify();
+  let lastRecordedRequestHeaders;
+  server.get('/src', function (request, reply) {
+    lastRecordedRequestHeaders = request.headers;
+    reply.status(204).send();
+  });
+  await server.listen();
+
+  // when
+  await new Include(new Map([['src', serverAddress('/src')]])).resolve(
+    new AbleronConfig({ fragmentRequestHeadersToPass: ['X-TeSt'] }),
+    fragmentCache,
+    new Headers([['x-tEsT', 'Foo']])
+  );
+
+  // then
+  expect(new Headers(lastRecordedRequestHeaders).get('X-Test')).toBe('Foo');
+});
+
+test('should not pass non-allowed request headers to fragment requests', async () => {
+  // given
+  server = Fastify();
+  let lastRecordedRequestHeaders;
+  server.get('/src', function (request, reply) {
+    lastRecordedRequestHeaders = request.headers;
+    reply.status(204).send();
+  });
+  await server.listen();
+
+  // when
+  await new Include(new Map([['src', serverAddress('/src')]])).resolve(
+    new AbleronConfig({ fragmentRequestHeadersToPass: [] }),
+    fragmentCache,
+    new Headers([['X-Test', 'Foo']])
+  );
+
+  // then
+  expect(new Headers(lastRecordedRequestHeaders).get('X-Test')).toBeNull();
+});
+
+test('should pass default User-Agent header to fragment requests', async () => {
+  // given
+  server = Fastify();
+  let lastRecordedRequestHeaders;
+  server.get('/src', function (request, reply) {
+    lastRecordedRequestHeaders = request.headers;
+    reply.status(204).send();
+  });
+  await server.listen();
+
+  // when
+  await new Include(new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
+
+  // then
+  expect(new Headers(lastRecordedRequestHeaders).get('User-Agent')).toBe('undici');
+});
+
+test('should pass provided User-Agent header to fragment requests by default', async () => {
+  // given
+  server = Fastify();
+  let lastRecordedRequestHeaders;
+  server.get('/src', function (request, reply) {
+    lastRecordedRequestHeaders = request.headers;
+    reply.status(204).send();
+  });
+  await server.listen();
+
+  // when
+  await new Include(new Map([['src', serverAddress('/src')]])).resolve(
+    config,
+    fragmentCache,
+    new Headers([['user-agent', 'test']])
+  );
+
+  // then
+  expect(new Headers(lastRecordedRequestHeaders).get('User-Agent')).toBe('test');
+});
+
+test('should pass allowed response headers of primary fragment to transclusion result', async () => {
+  // given
+  server = Fastify();
+  server.get('/src', function (request, reply) {
+    reply.status(200).header('X-Test', 'Test').send();
+  });
+  await server.listen();
+
+  // when
+  const fragment = await new Include(new Map([['src', serverAddress('/src')]])).resolve(
+    new AbleronConfig({ primaryFragmentResponseHeadersToPass: ['X-Test'] }),
+    fragmentCache
+  );
+
+  // then
+  expect(fragment.responseHeaders).toEqual(new Headers([['x-test', 'Test']]));
+});
+
+test('should not pass allowed response headers of non-primary fragment to transclusion result', async () => {
+  // given
+  server = Fastify();
+  server.get('/src', function (request, reply) {
+    reply.status(200).header('X-Test', 'Test').send();
+  });
+  await server.listen();
+
+  // when
+  const fragment = await new Include(new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
+
+  // then
+  expect(fragment.responseHeaders).toEqual(new Headers());
+});
+
+test('should treat fragment response headers allow list as case insensitive', async () => {
+  // given
+  server = Fastify();
+  server.get('/src', function (request, reply) {
+    reply.status(200).header('x-test', 'Test').send();
+  });
+  await server.listen();
+
+  // when
+  const fragment = await new Include(
+    new Map([
+      ['src', serverAddress('/src')],
+      ['primary', '']
+    ])
+  ).resolve(new AbleronConfig({ primaryFragmentResponseHeadersToPass: ['X-TeSt'] }), fragmentCache);
+
+  // then
+  expect(fragment.responseHeaders.get('x-test')).toBe('Test');
 });
