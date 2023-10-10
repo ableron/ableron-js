@@ -274,3 +274,100 @@ test('should populate TransclusionResult with primary include status code', asyn
   expect(result.getStatusCodeOverride()).toBe(301);
   expect(result.getResponseHeadersToPass()).toEqual(new Headers([['location', '/foobar']]));
 });
+
+test('should set content expiration time to lowest fragment expiration time', async () => {
+  // given
+  server = Fastify();
+  server.get('/header', function (request, reply) {
+    reply.status(200).header('Cache-Control', 'max-age=120').send('header-fragment');
+  });
+  server.get('/footer', function (request, reply) {
+    reply.status(200).header('Cache-Control', 'max-age=60').send('footer-fragment');
+  });
+  server.get('/main', function (request, reply) {
+    reply.status(200).header('Cache-Control', 'max-age=30').send('main-fragment');
+  });
+  await server.listen();
+
+  // when
+  const result = await transclusionProcessor.resolveIncludes(
+    `<ableron-include src="${serverAddress('/header')}"/>\n` +
+      `<ableron-include src="${serverAddress('/main')}"/>\n` +
+      `<ableron-include src="${serverAddress('/footer')}"/>`,
+    new Headers()
+  );
+
+  // then
+  expect(result.getContent()).toBe('header-fragment\n' + 'main-fragment\n' + 'footer-fragment');
+  expect((result.getContentExpirationTime() as Date) < new Date(new Date().getTime() + 31000)).toBe(true);
+  expect((result.getContentExpirationTime() as Date) > new Date(new Date().getTime() + 27000)).toBe(true);
+});
+
+test('should set content expiration time to past if a fragment must not be cached', async () => {
+  // given
+  server = Fastify();
+  server.get('/header', function (request, reply) {
+    reply.status(200).header('Cache-Control', 'max-age=120').send('header-fragment');
+  });
+  server.get('/footer', function (request, reply) {
+    reply.status(200).header('Cache-Control', 'max-age=60').send('footer-fragment');
+  });
+  server.get('/main', function (request, reply) {
+    reply.status(200).header('Cache-Control', 'no-store, no-cache, must-revalidate').send('main-fragment');
+  });
+  await server.listen();
+
+  // when
+  const result = await transclusionProcessor.resolveIncludes(
+    `<ableron-include src="${serverAddress('/header')}"/>\n` +
+      `<ableron-include src="${serverAddress('/main')}"/>\n` +
+      `<ableron-include src="${serverAddress('/footer')}"/>`,
+    new Headers()
+  );
+
+  // then
+  expect(result.getContent()).toBe('header-fragment\n' + 'main-fragment\n' + 'footer-fragment');
+  expect(result.getContentExpirationTime() as Date).toEqual(new Date(0));
+});
+
+test('should prevent caching if no fragment provides explicit caching information', async () => {
+  // given
+  server = Fastify();
+  server.get('/header', function (request, reply) {
+    reply.status(200).send('header-fragment');
+  });
+  server.get('/footer', function (request, reply) {
+    reply.status(200).send('footer-fragment');
+  });
+  server.get('/main', function (request, reply) {
+    reply.status(200).send('main-fragment');
+  });
+  await server.listen();
+
+  // when
+  const result = await transclusionProcessor.resolveIncludes(
+    `<ableron-include src="${serverAddress('/header')}"/>\n` +
+      `<ableron-include src="${serverAddress('/main')}"/>\n` +
+      `<ableron-include src="${serverAddress('/footer')}"/>`,
+    new Headers()
+  );
+
+  // then
+  expect(result.getContent()).toBe('header-fragment\n' + 'main-fragment\n' + 'footer-fragment');
+  expect(result.getContentExpirationTime() as Date).toEqual(new Date(0));
+});
+
+test('should replace identical includes', async () => {
+  // when
+  const result = await transclusionProcessor.resolveIncludes(
+    `<ableron-include src="foo-bar"><!-- #1 --></ableron-include>\n` +
+      `<ableron-include src="foo-bar"><!-- #1 --></ableron-include>\n` +
+      `<ableron-include src="foo-bar"><!-- #1 --></ableron-include>\n` +
+      `<ableron-include src="foo-bar"><!-- #2 --></ableron-include>`,
+    new Headers()
+  );
+
+  // then
+  expect(result.getContent()).toBe('<!-- #1 -->\n' + '<!-- #1 -->\n' + '<!-- #1 -->\n' + '<!-- #2 -->');
+  expect(result.getContentExpirationTime() as Date).toEqual(new Date(0));
+});

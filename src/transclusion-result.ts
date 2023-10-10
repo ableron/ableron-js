@@ -71,7 +71,7 @@ export class TransclusionResult {
       this.contentExpirationTime = fragment.expirationTime;
     }
 
-    this.content = this.content.replace(include.getRawIncludeTag(), fragment.content);
+    this.content = this.content.replaceAll(include.getRawIncludeTag(), fragment.content);
     this.processedIncludesCount++;
     this.resolvedIncludesLog.push(
       `Resolved include ${include.getId()} with ${this.getFragmentDebugInfo(fragment)} in ${includeResolveTimeMillis}ms`
