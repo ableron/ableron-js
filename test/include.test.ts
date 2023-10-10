@@ -698,3 +698,24 @@ test.each([
     expect(fragment.content).toBe(expectedFragmentContent);
   }
 );
+
+test('should pass allowed request headers to fragment requests', async () => {
+  // given
+  server = Fastify();
+  let lastRecordedRequestHeaders;
+  server.get('/src', async function (request, reply) {
+    lastRecordedRequestHeaders = request.headers;
+    reply.status(204).send();
+  });
+  await server.listen();
+
+  // when
+  await new Include(new Map([['src', serverAddress('/src')]])).resolve(
+    new AbleronConfig({ fragmentRequestHeadersToPass: ['X-Test'] }),
+    fragmentCache,
+    new Headers([['X-Test', 'Foo']])
+  );
+
+  // then
+  expect(new Headers(lastRecordedRequestHeaders).get('X-test')).toBe('Foo');
+});

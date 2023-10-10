@@ -7,7 +7,7 @@ export class TransclusionResult {
   private contentExpirationTime: Date | undefined;
   private hasPrimaryInclude: boolean = false;
   private statusCodeOverride: number | undefined;
-  private readonly responseHeadersToPass: Map<string, string[]> = new Map<string, string[]>();
+  private readonly responseHeadersToPass: Headers = new Headers();
   private readonly appendStatsToContent: boolean;
   private processedIncludesCount: number = 0;
   private processingTimeMillis: number = 0;
@@ -34,7 +34,7 @@ export class TransclusionResult {
     return this.statusCodeOverride;
   }
 
-  getResponseHeadersToPass(): Map<string, string[]> {
+  getResponseHeadersToPass(): Headers {
     return this.responseHeadersToPass;
   }
 
@@ -60,7 +60,9 @@ export class TransclusionResult {
       } else {
         this.hasPrimaryInclude = true;
         this.statusCodeOverride = fragment.statusCode;
-        fragment.responseHeaders.forEach((value, key) => this.responseHeadersToPass.set(key, value));
+        fragment.responseHeaders.forEach((headerValue, headerName) =>
+          this.responseHeadersToPass.set(headerName, headerValue)
+        );
         this.resolvedIncludesLog.push(`Primary include with status code ${fragment.statusCode}`);
       }
     }

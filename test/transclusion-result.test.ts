@@ -11,7 +11,7 @@ test('should return reasonable defaults', () => {
   expect(transclusionResult.getContentExpirationTime()).toBeUndefined();
   expect(transclusionResult.getHasPrimaryInclude()).toBe(false);
   expect(transclusionResult.getStatusCodeOverride()).toBeUndefined();
-  expect(transclusionResult.getResponseHeadersToPass()).toEqual(new Map());
+  expect(transclusionResult.getResponseHeadersToPass()).toEqual(new Headers());
   expect(transclusionResult.getProcessedIncludesCount()).toBe(0);
   expect(transclusionResult.getProcessingTimeMillis()).toBe(0);
 });
@@ -31,7 +31,7 @@ test('should handle resolved include correctly', () => {
   // given
   const transclusionResult = new TransclusionResult('content: <include>');
   const include = new Include(new Map([['primary', '']]), 'fallback', '<include>');
-  const fragment = new Fragment(404, 'not found', undefined, new Date(0), new Map([['X-Test', ['Foo']]]));
+  const fragment = new Fragment(404, 'not found', undefined, new Date(0), new Headers([['X-Test', 'Foo']]));
 
   // when
   transclusionResult.addResolvedInclude(include, fragment, 0);
@@ -41,7 +41,7 @@ test('should handle resolved include correctly', () => {
   expect(transclusionResult.getContentExpirationTime()).toEqual(new Date(0));
   expect(transclusionResult.getHasPrimaryInclude()).toBe(true);
   expect(transclusionResult.getStatusCodeOverride()).toBe(404);
-  expect(transclusionResult.getResponseHeadersToPass()).toEqual(new Map([['X-Test', ['Foo']]]));
+  expect(transclusionResult.getResponseHeadersToPass()).toEqual(new Headers([['X-Test', 'Foo']]));
   expect(transclusionResult.getProcessedIncludesCount()).toBe(1);
   expect(transclusionResult.getProcessingTimeMillis()).toBe(0);
 });

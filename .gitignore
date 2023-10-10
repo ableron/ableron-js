@@ -10,5 +10,6 @@
 .project
 
 # Build
+/coverage/
 /dist/
 /node_modules/

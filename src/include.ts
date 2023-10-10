@@ -155,13 +155,33 @@ export class Include {
     return this.fallbackContent;
   }
 
-  resolve(config: AbleronConfig, fragmentCache: LRUCache<string, Fragment>): Promise<Fragment> {
+  resolve(
+    config: AbleronConfig,
+    fragmentCache: LRUCache<string, Fragment>,
+    fragmentRequestHeaders?: Headers
+  ): Promise<Fragment> {
+    const filteredFragmentRequestHeaders = this.filterHeaders(
+      fragmentRequestHeaders || new Headers(),
+      config.fragmentRequestHeadersToPass
+    );
     this.erroredPrimaryFragment = null;
 
-    return this.load(this.src, this.getRequestTimeout(this.srcTimeoutMillis, config), fragmentCache)
+    return this.load(
+      this.src,
+      filteredFragmentRequestHeaders,
+      this.getRequestTimeout(this.srcTimeoutMillis, config),
+      fragmentCache,
+      config
+    )
       .then((fragment) =>
         fragment === null
-          ? this.load(this.fallbackSrc, this.getRequestTimeout(this.fallbackSrcTimeoutMillis, config), fragmentCache)
+          ? this.load(
+              this.fallbackSrc,
+              filteredFragmentRequestHeaders,
+              this.getRequestTimeout(this.fallbackSrcTimeoutMillis, config),
+              fragmentCache,
+              config
+            )
           : fragment
       )
       .then((fragment) => (fragment === null && this.erroredPrimaryFragment ? this.erroredPrimaryFragment : fragment))
@@ -170,8 +190,10 @@ export class Include {
 
   private load(
     url: string | undefined,
+    requestHeaders: Headers,
     requestTimeoutMillis: number,
-    fragmentCache: LRUCache<string, Fragment>
+    fragmentCache: LRUCache<string, Fragment>,
+    config: AbleronConfig
   ): Promise<Fragment | null> {
     if (url === undefined) {
       return Promise.resolve(null);
@@ -179,7 +201,7 @@ export class Include {
 
     const foundFragment: Promise<Fragment | null> = fragmentCache.has(url)
       ? Promise.resolve(fragmentCache.get(url) as Fragment)
-      : this.performRequest(url, requestTimeoutMillis).then(async (response) => {
+      : this.performRequest(url, requestHeaders, requestTimeoutMillis).then(async (response) => {
           if (!response) {
             return null;
           }
@@ -188,12 +210,26 @@ export class Include {
 
           if (!this.HTTP_STATUS_CODES_CACHEABLE.includes(response.status)) {
             console.error(`Fragment ${this.id} returned status code ${response.status}`);
-            this.recordErroredPrimaryFragment(new Fragment(response.status, responseBody, url));
+            this.recordErroredPrimaryFragment(
+              new Fragment(
+                response.status,
+                responseBody,
+                url,
+                undefined,
+                this.filterHeaders(response.headers, config.primaryFragmentResponseHeadersToPass)
+              )
+            );
             return null;
           }
 
           const fragmentExpirationTime = HttpUtil.calculateResponseExpirationTime(response.headers);
-          const fragment = new Fragment(response.status, responseBody, url, fragmentExpirationTime);
+          const fragment = new Fragment(
+            response.status,
+            responseBody,
+            url,
+            fragmentExpirationTime,
+            this.filterHeaders(response.headers, config.primaryFragmentResponseHeadersToPass)
+          );
           const fragmentTtl = fragmentExpirationTime.getTime() - new Date().getTime();
 
           if (fragmentTtl > 0) {
@@ -218,11 +254,12 @@ export class Include {
     });
   }
 
-  private performRequest(url: string, requestTimeoutMillis: number): Promise<Response | null> {
+  private performRequest(url: string, requestHeaders: Headers, requestTimeoutMillis: number): Promise<Response | null> {
     console.debug(`Loading fragment ${url} for include ${this.id} with timeout ${requestTimeoutMillis}ms`);
 
     try {
-      return fetch(new Request(url, { redirect: 'error' }), {
+      requestHeaders.set('Accept-Encoding', 'gzip');
+      return fetch(new Request(url, { headers: requestHeaders, redirect: 'error' }), {
         signal: AbortSignal.timeout(requestTimeoutMillis)
       }).catch((e: Error) => {
         if (e.name === 'TimeoutError') {
@@ -248,10 +285,20 @@ export class Include {
     }
   }
 
-  private recordErroredPrimaryFragment(fragment: Fragment) {
+  private recordErroredPrimaryFragment(fragment: Fragment): void {
     if (this.primary && this.erroredPrimaryFragment === null) {
       this.erroredPrimaryFragment = fragment;
     }
+  }
+
+  private filterHeaders(headersToFilter: Headers, allowedHeaders: string[]): Headers {
+    const filteredHeaders = new Headers();
+    allowedHeaders.forEach((allowedHeaderName) => {
+      if (headersToFilter.has(allowedHeaderName)) {
+        filteredHeaders.set(allowedHeaderName, headersToFilter.get(allowedHeaderName) as string);
+      }
+    });
+    return filteredHeaders;
   }
 
   private parseTimeout(timeoutAsString?: string): number | undefined {
