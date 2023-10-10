@@ -259,7 +259,7 @@ export class Include {
 
     try {
       requestHeaders.set('Accept-Encoding', 'gzip');
-      return fetch(new Request(url, { headers: requestHeaders, redirect: 'error' }), {
+      return fetch(new Request(url, { headers: requestHeaders, redirect: 'manual' }), {
         signal: AbortSignal.timeout(requestTimeoutMillis)
       }).catch((e: Error) => {
         if (e.name === 'TimeoutError') {

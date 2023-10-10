@@ -1,7 +1,35 @@
 import { TransclusionProcessor } from '../src/transclusion-processor';
 import { AbleronConfig } from '../src';
+import Fastify, { FastifyInstance } from 'fastify';
 
-const transclusionProcessor = new TransclusionProcessor(new AbleronConfig());
+let server: FastifyInstance | undefined;
+const config = new AbleronConfig({
+  fragmentRequestTimeoutMillis: 1000
+});
+const transclusionProcessor = new TransclusionProcessor(config);
+
+beforeEach(() => {
+  server = undefined;
+});
+
+afterEach(async () => {
+  transclusionProcessor.getFragmentCache().clear();
+
+  if (server) {
+    await server.close();
+  }
+});
+
+function serverAddress(path: string): string {
+  if (server) {
+    const address = ['127.0.0.1', '::1'].includes(server.addresses()[0].address)
+      ? 'localhost'
+      : server.addresses()[0].address;
+    return 'http://' + address + ':' + server.addresses()[0].port + '/' + path.replace(/^\//, '');
+  }
+
+  return 'undefined';
+}
 
 test.each([
   ['<ableron-include src="test"/>', '<ableron-include src="test"/>'],
@@ -198,7 +226,7 @@ test('should populate TransclusionResult', async () => {
       '<ableron-include src="https://foo.bar/baz?test=789"><!-- failed loading 3rd include --></ableron-include>\n' +
       '</body>\n' +
       '</html>',
-    new Map()
+    new Headers()
   );
 
   // then
@@ -216,4 +244,33 @@ test('should populate TransclusionResult', async () => {
       '</body>\n' +
       '</html>'
   );
+});
+
+test('should populate TransclusionResult with primary include status code', async () => {
+  // given
+  server = Fastify();
+  server.get('/header', function (request, reply) {
+    reply.status(200).send('header-fragment');
+  });
+  server.get('/footer', function (request, reply) {
+    reply.status(200).send('footer-fragment');
+  });
+  server.get('/main', function (request, reply) {
+    reply.status(301).header('Location', '/foobar').send('main-fragment');
+  });
+  await server.listen();
+
+  // when
+  const result = await transclusionProcessor.resolveIncludes(
+    `<ableron-include src="${serverAddress('/header')}" />\n` +
+      `<ableron-include src="${serverAddress('/main')}" primary="primary"><!-- failure --></ableron-include>\n` +
+      `<ableron-include src="${serverAddress('/footer')}" />`,
+    new Headers()
+  );
+
+  // then
+  expect(result.getContent()).toBe('header-fragment\n' + 'main-fragment\n' + 'footer-fragment');
+  expect(result.getHasPrimaryInclude()).toBe(true);
+  expect(result.getStatusCodeOverride()).toBe(301);
+  expect(result.getResponseHeadersToPass()).toEqual(new Headers([['location', '/foobar']]));
 });

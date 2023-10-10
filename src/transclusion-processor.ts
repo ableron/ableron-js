@@ -43,14 +43,13 @@ export class TransclusionProcessor {
         ];
   }
 
-  async resolveIncludes(content: string, presentRequestHeaders: Map<string, string[]>): Promise<TransclusionResult> {
+  async resolveIncludes(content: string, presentRequestHeaders: Headers): Promise<TransclusionResult> {
     const startTime = Date.now();
     const transclusionResult = new TransclusionResult(content, this.ableronConfig.statsAppendToContent);
-    //TODO: Promise.all() + await include.resolve() does not make sense
     await Promise.all(
-      Array.from(this.findIncludes(content)).map(async (include) => {
+      Array.from(this.findIncludes(content)).map((include) => {
         const includeResolveStartTime = Date.now();
-        await include
+        return include
           .resolve(this.ableronConfig, this.fragmentCache)
           .then((fragment) => {
             const includeResolveTimeMillis = Date.now() - includeResolveStartTime;

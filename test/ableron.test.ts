@@ -9,7 +9,7 @@ test.each([
     const ableron = new Ableron(new AbleronConfig(ableronConfig));
     const result = await ableron.resolveIncludes(
       '<ableron-include src="https://foo-bar">fallback</ableron-include>',
-      new Map<string, string[]>()
+      new Headers()
     );
     expect(result.getContent()).toBe(expectedResult);
     expect(result.getProcessedIncludesCount()).toBe(expectedProcessedIncludesCount);

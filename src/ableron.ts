@@ -11,7 +11,7 @@ export class Ableron {
     this.transclusionProcessor = new TransclusionProcessor(ableronConfig);
   }
 
-  async resolveIncludes(content: string, presentRequestHeaders: Map<string, string[]>): Promise<TransclusionResult> {
+  async resolveIncludes(content: string, presentRequestHeaders: Headers): Promise<TransclusionResult> {
     if (this.ableronConfig.enabled) {
       const transclusionResult = await this.transclusionProcessor.resolveIncludes(content, presentRequestHeaders);
       console.debug(
