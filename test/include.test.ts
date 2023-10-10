@@ -116,7 +116,7 @@ test('should resolve include with URL provided via src attribute', async () => {
   server.get('/', function (request, reply) {
     reply.status(200).send('response');
   });
-  await server.listen({ port: 3000 });
+  await server.listen();
 
   // when
   const fragment = await new Include(new Map([['src', serverAddress('/')]])).resolve(config, fragmentCache);
@@ -134,7 +134,7 @@ test('should resolve include with URL provided via fallback-src attribute if src
   server.get('/fallback-src', function (request, reply) {
     reply.status(200).send('fragment from fallback-src');
   });
-  await server.listen({ port: 3000 });
+  await server.listen();
 
   // when
   const fragment = await new Include(
@@ -157,7 +157,7 @@ test('should resolve include with fallback content if src and fallback-src could
   server.get('/fallback-src', function (request, reply) {
     reply.status(500).send('fragment from fallback-src');
   });
-  await server.listen({ port: 3000 });
+  await server.listen();
 
   // when
   const fragment = await new Include(
@@ -186,7 +186,7 @@ test('should set fragment status code for successfully resolved src', async () =
   server.get('/src', function (request, reply) {
     reply.status(206).send('fragment from src');
   });
-  await server.listen({ port: 3000 });
+  await server.listen();
 
   // when
   const fragment = await new Include(new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
@@ -205,7 +205,7 @@ test('should set fragment status code for successfully resolved fallback-src of 
   server.get('/fallback-src', function (request, reply) {
     reply.status(206).send('fragment from fallback-src');
   });
-  await server.listen({ port: 3000 });
+  await server.listen();
 
   // when
   const fragment = await new Include(
@@ -227,7 +227,7 @@ test('should set fragment status code and body of errored src', async () => {
   server.get('/src', function (request, reply) {
     reply.status(503).send('fragment from src');
   });
-  await server.listen({ port: 3000 });
+  await server.listen();
 
   // when
   const fragment = await new Include(
@@ -251,7 +251,7 @@ test('should set fragment status code of errored src also if fallback-src errore
   server.get('/fallback-src', function (request, reply) {
     reply.status(500).send('fragment from fallback_src');
   });
-  await server.listen({ port: 3000 });
+  await server.listen();
 
   // when
   const fragment = await new Include(
@@ -281,7 +281,7 @@ test('should reset errored fragment of primary include for consecutive resolving
   server.get('/fallback-src', function (request, reply) {
     reply.status(500).send('fragment from fallback-src');
   });
-  await server.listen({ port: 3000 });
+  await server.listen();
   const include = new Include(
     new Map([
       ['src', serverAddress('/src')],
@@ -311,7 +311,7 @@ test('should ignore fallback content and set fragment status code and body of er
   server.get('/src', function (request, reply) {
     reply.status(503).send('fragment from src');
   });
-  await server.listen({ port: 3000 });
+  await server.listen();
 
   // when
   const fragment = await new Include(
@@ -336,7 +336,7 @@ test('should not follow redirects when resolving URLs', async () => {
   server.get('/src-after-redirect', function (request, reply) {
     reply.status(200).send('fragment from src after redirect');
   });
-  await server.listen({ port: 3000 });
+  await server.listen();
 
   // when
   const fragment = await new Include(new Map([['src', serverAddress('/src')]]), 'fallback content').resolve(
@@ -357,7 +357,7 @@ test.each([
   server.get('/src', function (request, reply) {
     reply.status(200).send('fragment from src');
   });
-  await server.listen({ port: 3000 });
+  await server.listen();
 
   // when
   fragmentCache.set(serverAddress('/src'), new Fragment(200, 'fragment from cache', undefined, expirationTime), {
@@ -404,7 +404,7 @@ test.each([
     server.get('/src', function (request, reply) {
       reply.status(responseStatus).header('Cache-Control', 'max-age=7200').send(srcFragment);
     });
-    await server.listen({ port: 3000 });
+    await server.listen();
 
     // when
     const fragment = await new Include(new Map([['src', serverAddress('/src')]]), ':(').resolve(config, fragmentCache);
@@ -430,7 +430,7 @@ test('should cache fragment for s-maxage seconds if directive is present', async
       .header('Expires', 'Wed, 21 Oct 2015 07:28:00 GMT')
       .send('fragment from src');
   });
-  await server.listen({ port: 3000 });
+  await server.listen();
 
   // when
   const fragment = await new Include(new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
@@ -453,7 +453,7 @@ test('should cache fragment for max-age seconds if directive is present', async 
       .header('Expires', 'Wed, 21 Oct 2015 07:28:00 GMT')
       .send('fragment from src');
   });
-  await server.listen({ port: 3000 });
+  await server.listen();
 
   // when
   const fragment = await new Include(new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
@@ -472,7 +472,7 @@ test('should treat http header names as case insensitive', async () => {
   server.get('/src', function (request, reply) {
     reply.status(200).header('cache-control', 'max-age=3600').send('fragment from src');
   });
-  await server.listen({ port: 3000 });
+  await server.listen();
 
   // when
   const fragment = await new Include(new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
@@ -496,7 +496,7 @@ test('should cache fragment for max-age seconds minus Age seconds if directive i
       .header('Expires', 'Wed, 21 Oct 2015 07:28:00 GMT')
       .send('fragment from src');
   });
-  await server.listen({ port: 3000 });
+  await server.listen();
 
   // when
   const fragment = await new Include(new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
@@ -520,7 +520,7 @@ test('should use absolute value of Age header for cache expiration calculation',
       .header('Expires', 'Wed, 21 Oct 2015 07:28:00 GMT')
       .send('fragment from src');
   });
-  await server.listen({ port: 3000 });
+  await server.listen();
 
   // when
   const fragment = await new Include(new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
@@ -543,7 +543,7 @@ test('should cache fragment based on Expires header and current time if Cache-Co
       .header('Expires', 'Wed, 12 Oct 2050 07:28:00 GMT')
       .send('fragment from src');
   });
-  await server.listen({ port: 3000 });
+  await server.listen();
 
   // when
   const fragment = await new Include(new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
@@ -561,7 +561,7 @@ test('should handle Expires header with value 0', async () => {
   server.get('/src', function (request, reply) {
     reply.status(200).header('Expires', '0').send('fragment from src');
   });
-  await server.listen({ port: 3000 });
+  await server.listen();
 
   // when
   const fragment = await new Include(new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
@@ -581,7 +581,7 @@ test('should cache fragment based on Expires and Date header if Cache-Control he
       .header('Expires', 'Wed, 12 Oct 2050 07:28:00 GMT')
       .send('fragment from src');
   });
-  await server.listen({ port: 3000 });
+  await server.listen();
 
   // when
   const fragment = await new Include(new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
@@ -600,7 +600,7 @@ test('should not cache fragment if Cache-Control header is set but without max-a
   server.get('/src', function (request, reply) {
     reply.status(200).header('Cache-Control', 'no-cache,no-store,must-revalidate').send('fragment from src');
   });
-  await server.listen({ port: 3000 });
+  await server.listen();
 
   // when
   const fragment = await new Include(new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
@@ -624,7 +624,7 @@ test.each([
     server.get('/src', function (request, reply) {
       reply.status(200).header(header1Name, header1Value).header(header2Name, header2Value).send('fragment from src');
     });
-    await server.listen({ port: 3000 });
+    await server.listen();
 
     // when
     const fragment = await new Include(new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
@@ -640,7 +640,7 @@ test('should not cache fragment if no expiration time is indicated via response 
   server.get('/src', function (request, reply) {
     reply.status(200).send('fragment from src');
   });
-  await server.listen({ port: 3000 });
+  await server.listen();
 
   // when
   const fragment = await new Include(new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
@@ -658,7 +658,7 @@ test('should apply request timeout', async () => {
     await sleep(2000);
     reply.status(200).send('fragment from src');
   });
-  await server.listen({ port: 3000 });
+  await server.listen();
 
   // when
   const fragment = await new Include(new Map([['src', serverAddress('/src')]]), 'fallback content').resolve(
@@ -669,3 +669,32 @@ test('should apply request timeout', async () => {
   // then
   expect(fragment.content).toBe('fallback content');
 });
+
+test.each([
+  ['src', new Map(), ''],
+  ['src', new Map([['src-timeout-millis', '2000']]), 'fragment'],
+  ['src', new Map([['fallback-src-timeout-millis', '2000']]), ''],
+  ['fallback-src', new Map(), ''],
+  ['fallback-src', new Map([['fallback-src-timeout-millis', '2000']]), 'fragment'],
+  ['fallback-src', new Map([['src-timeout-millis', '2000']]), '']
+])(
+  'should favor include tag specific request timeout over global one - %p, %p',
+  async (srcAttributeName: string, timeoutAttribute: Map<string, string>, expectedFragmentContent: string) => {
+    // given
+    server = Fastify();
+    const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay));
+    server.get('/', async function (request, reply) {
+      await sleep(1200);
+      reply.status(200).send('fragment');
+    });
+    await server.listen();
+
+    // when
+    const rawAttributes = new Map([[srcAttributeName, serverAddress('/')]]);
+    timeoutAttribute.forEach((value, key) => rawAttributes.set(key, value));
+    const fragment = await new Include(new Map(rawAttributes)).resolve(config, fragmentCache);
+
+    // then
+    expect(fragment.content).toBe(expectedFragmentContent);
+  }
+);
