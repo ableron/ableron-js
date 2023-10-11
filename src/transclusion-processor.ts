@@ -1,7 +1,7 @@
 import { AbleronConfig } from './ableron-config';
 import { TransclusionResult } from './transclusion-result';
 import { Include } from './include';
-import { LRUCache } from 'lru-cache';
+import TTLCache from '@isaacs/ttlcache';
 import { Fragment } from './fragment';
 
 export class TransclusionProcessor {
@@ -17,14 +17,14 @@ export class TransclusionProcessor {
 
   private readonly ableronConfig: AbleronConfig;
 
-  private readonly fragmentCache: LRUCache<string, Fragment>;
+  private readonly fragmentCache: TTLCache<string, Fragment>;
 
   constructor(ableronConfig: AbleronConfig) {
     this.ableronConfig = ableronConfig;
-    this.fragmentCache = this.buildFragmentCache(this.ableronConfig.cacheMaxSizeInBytes);
+    this.fragmentCache = this.buildFragmentCache();
   }
 
-  getFragmentCache(): LRUCache<string, Fragment> {
+  getFragmentCache(): TTLCache<string, Fragment> {
     return this.fragmentCache;
   }
 
@@ -50,7 +50,7 @@ export class TransclusionProcessor {
       Array.from(this.findIncludes(content)).map((include) => {
         const includeResolveStartTime = Date.now();
         return include
-          .resolve(this.ableronConfig, this.fragmentCache)
+          .resolve(this.ableronConfig, this.fragmentCache, presentRequestHeaders)
           .then((fragment) => {
             const includeResolveTimeMillis = Date.now() - includeResolveStartTime;
             console.debug('Resolved include %s in %dms', include.getId(), includeResolveTimeMillis);
@@ -80,12 +80,7 @@ export class TransclusionProcessor {
     return attributes;
   }
 
-  private buildFragmentCache(cacheMaxSizeInBytes: number): LRUCache<string, Fragment> {
-    return new LRUCache({
-      max: 1000,
-      maxSize: cacheMaxSizeInBytes,
-      sizeCalculation: (fragment, key) => fragment.content.length || 1,
-      ttl: 24 * 60 * 60 * 1000
-    });
+  private buildFragmentCache(): TTLCache<string, Fragment> {
+    return new TTLCache({ max: 1000, ttl: 24 * 60 * 60 * 1000, checkAgeOnGet: false });
   }
 }

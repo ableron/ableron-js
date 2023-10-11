@@ -1,8 +1,8 @@
 import { Fragment } from './fragment';
 import * as crypto from 'crypto';
 import { AbleronConfig } from './ableron-config';
-import { LRUCache } from 'lru-cache';
 import { HttpUtil } from './http-util';
+import TTLCache from '@isaacs/ttlcache';
 
 export class Include {
   /**
@@ -48,6 +48,8 @@ export class Include {
    * @link <a href="https://www.rfc-editor.org/rfc/rfc9110#section-15.1">RFC 9110 Section 15.1. Overview of Status Codes</a>
    */
   private readonly HTTP_STATUS_CODES_CACHEABLE: number[] = [200, 203, 204, 206, 300, 404, 405, 410, 414, 501];
+
+  private readonly SEVEN_DAYS_IN_MILLISECONDS: number = 7 * 24 * 60 * 60 * 1000;
 
   /**
    * Raw include tag.
@@ -157,7 +159,7 @@ export class Include {
 
   resolve(
     config: AbleronConfig,
-    fragmentCache: LRUCache<string, Fragment>,
+    fragmentCache: TTLCache<string, Fragment>,
     fragmentRequestHeaders?: Headers
   ): Promise<Fragment> {
     const filteredFragmentRequestHeaders = this.filterHeaders(
@@ -192,7 +194,7 @@ export class Include {
     url: string | undefined,
     requestHeaders: Headers,
     requestTimeoutMillis: number,
-    fragmentCache: LRUCache<string, Fragment>,
+    fragmentCache: TTLCache<string, Fragment>,
     config: AbleronConfig
   ): Promise<Fragment | null> {
     if (url === undefined) {
@@ -233,7 +235,7 @@ export class Include {
           const fragmentTtl = fragmentExpirationTime.getTime() - new Date().getTime();
 
           if (fragmentTtl > 0) {
-            fragmentCache.set(url, fragment, { ttl: fragmentTtl });
+            fragmentCache.set(url, fragment, { ttl: Math.min(fragmentTtl, this.SEVEN_DAYS_IN_MILLISECONDS) });
           }
 
           return fragment;
@@ -259,9 +261,13 @@ export class Include {
 
     try {
       requestHeaders.set('Accept-Encoding', 'gzip');
-      return fetch(new Request(url, { headers: requestHeaders, redirect: 'manual' }), {
-        signal: AbortSignal.timeout(requestTimeoutMillis)
-      }).catch((e: Error) => {
+      return fetch(
+        new Request(url, {
+          headers: requestHeaders,
+          redirect: 'manual',
+          signal: AbortSignal.timeout(requestTimeoutMillis)
+        })
+      ).catch((e: Error) => {
         if (e.name === 'TimeoutError') {
           console.error(
             `Unable to load fragment ${url} for include ${this.id}: ${requestTimeoutMillis}ms timeout exceeded`

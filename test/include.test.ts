@@ -353,6 +353,7 @@ test.each([
   [new Date(new Date().getTime() - 5000), 'fragment from src']
 ])('should use cached fragment if not expired', async (expirationTime: Date, expectedFragmentContent: string) => {
   // given
+  const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay));
   server = Fastify();
   server.get('/src', function (request, reply) {
     reply.status(200).send('fragment from src');
@@ -361,8 +362,9 @@ test.each([
 
   // when
   fragmentCache.set(serverAddress('/src'), new Fragment(200, 'fragment from cache', undefined, expirationTime), {
-    ttl: expirationTime.getTime() - new Date().getTime()
+    ttl: Math.max(1, expirationTime.getTime() - new Date().getTime())
   });
+  await sleep(2);
   const fragment = await new Include(new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
 
   // then

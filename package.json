@@ -1,16 +1,16 @@
 {
   "name": "ableron",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "JavaScript Library for Ableron Server Side UI Composition",
-  "main": "dist/cjs/index.js",
-  "module": "dist/esm/index.js",
-  "types": "dist/types/index.d.js",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.js",
   "scripts": {
     "build": "npm run clean && tsc",
     "clean": "rimraf dist",
     "lint": "eslint \"src/**/*.ts\" --fix",
-    "test": "jest --no-cache --runInBand",
-    "test:cov": "jest --coverage --no-cache --runInBand"
+    "test": "jest --no-cache",
+    "test:cov": "jest --coverage --no-cache"
   },
   "publishConfig": {
     "access": "public"
@@ -19,6 +19,7 @@
     "dist"
   ],
   "keywords": [
+    "ableron",
     "ssi",
     "server-side-includes",
     "ui-composition",
@@ -35,7 +36,7 @@
     "url": "https://github.com/ableron/ableron-js/issues"
   },
   "dependencies": {
-    "lru-cache": "^10.0.1",
+    "@isaacs/ttlcache": "^1.4.1",
     "rimraf": "^5.0.5"
   },
   "devDependencies": {

@@ -32,11 +32,6 @@ export class AbleronConfig {
   readonly primaryFragmentResponseHeadersToPass: string[] = ['Content-Language', 'Location', 'Refresh'];
 
   /**
-   * Maximum size in bytes the fragment cache may have.
-   */
-  readonly cacheMaxSizeInBytes: number = 1024 * 1024 * 10;
-
-  /**
    * Whether to append UI composition stats as HTML comment to the content.
    */
   readonly statsAppendToContent: boolean = false;
