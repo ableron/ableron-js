@@ -3,10 +3,7 @@ import { AbleronConfig } from '../src';
 import Fastify, { FastifyInstance } from 'fastify';
 
 let server: FastifyInstance | undefined;
-const config = new AbleronConfig({
-  fragmentRequestTimeoutMillis: 1000
-});
-const transclusionProcessor = new TransclusionProcessor(config);
+const transclusionProcessor = new TransclusionProcessor(new AbleronConfig());
 
 beforeEach(() => {
   server = undefined;
@@ -144,17 +141,17 @@ test('should find all includes in input content', () => {
   expect(
     transclusionProcessor
       .findIncludes(
-        '<html>' +
-          '<head>' +
-          '<ableron-include src="https://foo.bar/baz?test=123" />' +
-          '<title>Foo</title>' +
-          '<ableron-include foo="bar" src="https://foo.bar/baz?test=456"/>' +
-          '</head>' +
-          '<body>' +
-          '<ableron-include src="https://foo.bar/baz?test=789" fallback-src="https://example.com"/>' +
-          '<ableron-include src="https://foo.bar/baz?test=789" fallback-src="https://example.com">fallback</ableron-include>' +
-          '</body>' +
-          '</html>'
+        `<html>
+        <head>
+        <ableron-include src="https://foo.bar/baz?test=123" />
+        <title>Foo</title>
+        <ableron-include foo="bar" src="https://foo.bar/baz?test=456"/>
+        </head>
+        <body>
+        <ableron-include src="https://foo.bar/baz?test=789" fallback-src="https://example.com"/>
+        <ableron-include src="https://foo.bar/baz?test=789" fallback-src="https://example.com">fallback</ableron-include>
+        </body>
+        </html>`
       )
       .map((include) => include.getRawIncludeTag())
   ).toEqual([
@@ -169,19 +166,19 @@ test('should treat multiple identical includes as one include', () => {
   expect(
     transclusionProcessor
       .findIncludes(
-        '<html>' +
-          '<head>' +
-          '  <ableron-include src="https://foo.bar/baz?test=123"/>' +
-          '  <ableron-include src="https://foo.bar/baz?test=123"/>' +
-          '  <title>Foo</title>' +
-          '  <ableron-include foo="bar" src="https://foo.bar/baz?test=456"></ableron-include>' +
-          '  <ableron-include foo="bar" src="https://foo.bar/baz?test=456"></ableron-include>' +
-          '  </head>' +
-          '  <body>' +
-          '  <ableron-include src="...">...</ableron-include>' +
-          '<ableron-include src="...">...</ableron-include>' +
-          '</body>' +
-          '</html>'
+        `<html>
+        <head>
+          <ableron-include src="https://foo.bar/baz?test=123"/>
+          <ableron-include src="https://foo.bar/baz?test=123"/>
+          <title>Foo</title>
+          <ableron-include foo="bar" src="https://foo.bar/baz?test=456"></ableron-include>
+          <ableron-include foo="bar" src="https://foo.bar/baz?test=456"></ableron-include>
+          </head>
+          <body>
+          <ableron-include src="...">...</ableron-include>
+        <ableron-include src="...">...</ableron-include>
+        </body>
+        </html>`
       )
       .map((include) => include.getRawIncludeTag())
   ).toEqual([
@@ -216,16 +213,16 @@ test('should perform search for includes in big input string', () => {
 test('should populate TransclusionResult', async () => {
   // when
   const result = await transclusionProcessor.resolveIncludes(
-    '<html>\n' +
-      '<head>\n' +
-      '  <ableron-include src="https://foo.bar/baz?test=123"><!-- failed loading 1st include --></ableron-include>\n' +
-      '<title>Foo</title>\n' +
-      '<ableron-include foo="bar" src="https://foo.bar/baz?test=456"><!-- failed loading 2nd include --></ableron-include>\n' +
-      '</head>\n' +
-      '<body>\n' +
-      '<ableron-include src="https://foo.bar/baz?test=789"><!-- failed loading 3rd include --></ableron-include>\n' +
-      '</body>\n' +
-      '</html>',
+    `<html>
+    <head>
+      <ableron-include src="https://foo.bar/baz?test=123"><!-- failed loading 1st include --></ableron-include>
+    <title>Foo</title>
+    <ableron-include foo="bar" src="https://foo.bar/baz?test=456"><!-- failed loading 2nd include --></ableron-include>
+    </head>
+    <body>
+    <ableron-include src="https://foo.bar/baz?test=789"><!-- failed loading 3rd include --></ableron-include>
+    </body>
+    </html>`,
     new Headers()
   );
 
@@ -233,16 +230,16 @@ test('should populate TransclusionResult', async () => {
   expect(result.getProcessedIncludesCount()).toBe(3);
   expect(result.getProcessingTimeMillis()).toBeGreaterThanOrEqual(1);
   expect(result.getContent()).toBe(
-    '<html>\n' +
-      '<head>\n' +
-      '  <!-- failed loading 1st include -->\n' +
-      '<title>Foo</title>\n' +
-      '<!-- failed loading 2nd include -->\n' +
-      '</head>\n' +
-      '<body>\n' +
-      '<!-- failed loading 3rd include -->\n' +
-      '</body>\n' +
-      '</html>'
+    `<html>
+    <head>
+      <!-- failed loading 1st include -->
+    <title>Foo</title>
+    <!-- failed loading 2nd include -->
+    </head>
+    <body>
+    <!-- failed loading 3rd include -->
+    </body>
+    </html>`
   );
 });
 
@@ -262,14 +259,18 @@ test('should populate TransclusionResult with primary include status code', asyn
 
   // when
   const result = await transclusionProcessor.resolveIncludes(
-    `<ableron-include src="${serverAddress('/header')}" />\n` +
-      `<ableron-include src="${serverAddress('/main')}" primary="primary"><!-- failure --></ableron-include>\n` +
-      `<ableron-include src="${serverAddress('/footer')}" />`,
+    `<ableron-include src="${serverAddress('/header')}" />
+    <ableron-include src="${serverAddress('/main')}" primary="primary"><!-- failure --></ableron-include>
+    <ableron-include src="${serverAddress('/footer')}" />`,
     new Headers()
   );
 
   // then
-  expect(result.getContent()).toBe('header-fragment\n' + 'main-fragment\n' + 'footer-fragment');
+  expect(result.getContent()).toBe(
+    `header-fragment
+    main-fragment
+    footer-fragment`
+  );
   expect(result.getHasPrimaryInclude()).toBe(true);
   expect(result.getStatusCodeOverride()).toBe(301);
   expect(result.getResponseHeadersToPass()).toEqual(new Headers([['location', '/foobar']]));
@@ -291,14 +292,18 @@ test('should set content expiration time to lowest fragment expiration time', as
 
   // when
   const result = await transclusionProcessor.resolveIncludes(
-    `<ableron-include src="${serverAddress('/header')}"/>\n` +
-      `<ableron-include src="${serverAddress('/main')}"/>\n` +
-      `<ableron-include src="${serverAddress('/footer')}"/>`,
+    `<ableron-include src="${serverAddress('/header')}"/>
+    <ableron-include src="${serverAddress('/main')}"/>
+    <ableron-include src="${serverAddress('/footer')}"/>`,
     new Headers()
   );
 
   // then
-  expect(result.getContent()).toBe('header-fragment\n' + 'main-fragment\n' + 'footer-fragment');
+  expect(result.getContent()).toBe(
+    `header-fragment
+    main-fragment
+    footer-fragment`
+  );
   expect((result.getContentExpirationTime() as Date) < new Date(new Date().getTime() + 31000)).toBe(true);
   expect((result.getContentExpirationTime() as Date) > new Date(new Date().getTime() + 27000)).toBe(true);
 });
@@ -319,14 +324,18 @@ test('should set content expiration time to past if a fragment must not be cache
 
   // when
   const result = await transclusionProcessor.resolveIncludes(
-    `<ableron-include src="${serverAddress('/header')}"/>\n` +
-      `<ableron-include src="${serverAddress('/main')}"/>\n` +
-      `<ableron-include src="${serverAddress('/footer')}"/>`,
+    `<ableron-include src="${serverAddress('/header')}"/>
+    <ableron-include src="${serverAddress('/main')}"/>
+    <ableron-include src="${serverAddress('/footer')}"/>`,
     new Headers()
   );
 
   // then
-  expect(result.getContent()).toBe('header-fragment\n' + 'main-fragment\n' + 'footer-fragment');
+  expect(result.getContent()).toBe(
+    `header-fragment
+    main-fragment
+    footer-fragment`
+  );
   expect(result.getContentExpirationTime() as Date).toEqual(new Date(0));
 });
 
@@ -346,28 +355,161 @@ test('should prevent caching if no fragment provides explicit caching informatio
 
   // when
   const result = await transclusionProcessor.resolveIncludes(
-    `<ableron-include src="${serverAddress('/header')}"/>\n` +
-      `<ableron-include src="${serverAddress('/main')}"/>\n` +
-      `<ableron-include src="${serverAddress('/footer')}"/>`,
+    `<ableron-include src="${serverAddress('/header')}"/>
+    <ableron-include src="${serverAddress('/main')}"/>
+    <ableron-include src="${serverAddress('/footer')}"/>`,
     new Headers()
   );
 
   // then
-  expect(result.getContent()).toBe('header-fragment\n' + 'main-fragment\n' + 'footer-fragment');
+  expect(result.getContent()).toBe(
+    `header-fragment
+    main-fragment
+    footer-fragment`
+  );
   expect(result.getContentExpirationTime() as Date).toEqual(new Date(0));
 });
 
 test('should replace identical includes', async () => {
   // when
   const result = await transclusionProcessor.resolveIncludes(
-    `<ableron-include src="foo-bar"><!-- #1 --></ableron-include>\n` +
-      `<ableron-include src="foo-bar"><!-- #1 --></ableron-include>\n` +
-      `<ableron-include src="foo-bar"><!-- #1 --></ableron-include>\n` +
-      `<ableron-include src="foo-bar"><!-- #2 --></ableron-include>`,
+    `<ableron-include src="foo-bar"><!-- #1 --></ableron-include>
+      <ableron-include src="foo-bar"><!-- #1 --></ableron-include>
+      <ableron-include src="foo-bar"><!-- #1 --></ableron-include>
+      <ableron-include src="foo-bar"><!-- #2 --></ableron-include>`,
     new Headers()
   );
 
   // then
-  expect(result.getContent()).toBe('<!-- #1 -->\n' + '<!-- #1 -->\n' + '<!-- #1 -->\n' + '<!-- #2 -->');
+  expect(result.getContent()).toBe(
+    `<!-- #1 -->
+      <!-- #1 -->
+      <!-- #1 -->
+      <!-- #2 -->`
+  );
   expect(result.getContentExpirationTime() as Date).toEqual(new Date(0));
+});
+
+test.each([
+  ['invalid src url', '<ableron-include src=",._">fallback</ableron-include>', 'fallback'],
+  ['invalid src timeout', '<ableron-include src-timeout-millis="5s">fallback</ableron-include>', 'fallback'],
+  [
+    'invalid fallback-src timeout',
+    '<ableron-include fallback-src-timeout-millis="5s">fallback</ableron-include>',
+    'fallback'
+  ]
+])('should replace identical includes', async (scenarioName: string, includeTag: string, expectedResult: string) => {
+  // when
+  const result = await transclusionProcessor.resolveIncludes(
+    '<ableron-include >before</ableron-include>' + includeTag + '<ableron-include >after</ableron-include>',
+    new Headers()
+  );
+
+  // then
+  expect(result.getContent()).toBe('before' + expectedResult + 'after');
+});
+
+// test('should perform only one request per URL', async () => {
+//   // given
+//   server = Fastify();
+//   let counter = 1;
+//   const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay));
+//   server.get('/1', async function (request, reply) {
+//     await sleep(200);
+//     reply.status(200).send('fragment-' + counter++);
+//   });
+//   await server.listen();
+//
+//   // when
+//   const result = await transclusionProcessor.resolveIncludes(
+//     `<html>
+//      <head>
+//        <ableron-include src="${serverAddress('/1')}"><!-- failed loading 1st fragment --></ableron-include>
+//        <title>Foo</title>
+//        <ableron-include src="${serverAddress('/1')}"><!-- failed loading 2nd fragment --></ableron-include>
+//      </head>
+//      <body>
+//        <ableron-include src="${serverAddress('/1')}"><!-- failed loading 3rd fragment --></ableron-include>
+//        <ableron-include src="${serverAddress('/expect-404')}"><!-- failed loading 4th fragment --></ableron-include>
+//      </body>
+//      </html>`,
+//     new Headers()
+//   );
+//
+//   // then
+//   expect(result.getContent()).toBe(
+//     `<html>
+//      <head>
+//        fragment-1
+//        <title>Foo</title>
+//        fragment-1
+//      </head>
+//      <body>
+//        fragment-1
+//        <!-- failed loading 4th fragment -->
+//      </body>
+//      </html>`
+//   );
+// });
+
+test('should resolve includes in parallel', async () => {
+  // given
+  server = Fastify();
+  const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay));
+  server.get('/503', async function (request, reply) {
+    await sleep(2000);
+    reply.status(503).send('fragment-1');
+  });
+  server.get('/1000ms-delay', async function (request, reply) {
+    await sleep(1000);
+    reply.status(200).send('fragment-2');
+  });
+  server.get('/2000ms-delay', async function (request, reply) {
+    await sleep(2000);
+    reply.status(200).send('fragment-3');
+  });
+  server.get('/2100ms-delay', async function (request, reply) {
+    await sleep(2100);
+    reply.status(200).send('fragment-4');
+  });
+  server.get('/2200ms-delay', async function (request, reply) {
+    await sleep(2200);
+    reply.status(200).send('fragment-5');
+  });
+  await server.listen();
+
+  // when
+  const result = await transclusionProcessor.resolveIncludes(
+    `<html>
+     <head>
+       <ableron-include src="${serverAddress('/503')}"><!-- failed loading fragment #1 --></ableron-include>
+       <title>Foo</title>
+       <ableron-include src="${serverAddress('/1000ms-delay')}"><!-- failed loading fragment #2 --></ableron-include>
+     </head>
+     <body>
+       <ableron-include src="${serverAddress('/2000ms-delay')}"><!-- failed loading fragment #3 --></ableron-include>
+       <ableron-include src="${serverAddress('/2100ms-delay')}"><!-- failed loading fragment #4 --></ableron-include>
+       <ableron-include src="${serverAddress('/2200ms-delay')}"><!-- failed loading fragment #5 --></ableron-include>
+       <ableron-include src="${serverAddress('/expect-404')}"><!-- failed loading fragment #6 --></ableron-include>
+     </body>
+     </html>`,
+    new Headers()
+  );
+
+  // then
+  expect(result.getContent()).toBe(
+    `<html>
+     <head>
+       <!-- failed loading fragment #1 -->
+       <title>Foo</title>
+       fragment-2
+     </head>
+     <body>
+       fragment-3
+       fragment-4
+       fragment-5
+       <!-- failed loading fragment #6 -->
+     </body>
+     </html>`
+  );
 });
