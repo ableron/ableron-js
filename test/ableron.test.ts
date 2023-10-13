@@ -6,12 +6,35 @@ test.each([
 ])(
   'should perform transclusion only if enabled',
   async (ableronConfig: Partial<AbleronConfig>, expectedResult: string, expectedProcessedIncludesCount: number) => {
-    const ableron = new Ableron(new AbleronConfig(ableronConfig));
-    const result = await ableron.resolveIncludes(
+    // when
+    const result = await new Ableron(new AbleronConfig(ableronConfig)).resolveIncludes(
       '<ableron-include src="https://foo-bar">fallback</ableron-include>',
       new Headers()
     );
+
+    // then
     expect(result.getContent()).toBe(expectedResult);
     expect(result.getProcessedIncludesCount()).toBe(expectedProcessedIncludesCount);
   }
 );
+
+test('should accept provided external logger', async () => {
+  // given
+  const logMessages: any[] = [];
+  const logger = {
+    error: function _() {},
+    warn: function _() {},
+    info: function _() {},
+    log: function _() {},
+    debug: function _(data: any) {
+      logMessages.push(data);
+    }
+  };
+  const ableron = new Ableron(new AbleronConfig(), logger);
+
+  // when
+  await ableron.resolveIncludes('', new Headers());
+
+  // then
+  expect(logMessages).toEqual(['Ableron UI composition processed 0 include(s) in 0ms']);
+});

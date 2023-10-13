@@ -1,6 +1,7 @@
 import { Include } from './include';
 import { Fragment } from './fragment';
 import { HttpUtil } from './http-util';
+import { AbstractLogger } from './abstract-logger';
 
 export class TransclusionResult {
   private content: string;
@@ -12,8 +13,10 @@ export class TransclusionResult {
   private processedIncludesCount: number = 0;
   private processingTimeMillis: number = 0;
   private readonly resolvedIncludesLog: string[] = [];
+  private readonly logger: AbstractLogger;
 
-  constructor(content: string, appendStatsToContent: boolean = false) {
+  constructor(content: string, appendStatsToContent: boolean = false, logger?: AbstractLogger) {
+    this.logger = logger || new AbstractLogger();
     this.content = content;
     this.appendStatsToContent = appendStatsToContent;
   }
@@ -53,7 +56,7 @@ export class TransclusionResult {
   addResolvedInclude(include: Include, fragment: Fragment, includeResolveTimeMillis: number): void {
     if (include.isPrimary()) {
       if (this.hasPrimaryInclude) {
-        console.warn('Only one primary include per page allowed. Multiple found');
+        this.logger.warn('Only one primary include per page allowed. Multiple found');
         this.resolvedIncludesLog.push(
           `Ignoring primary include with status code ${fragment.statusCode} because there is already another primary include`
         );

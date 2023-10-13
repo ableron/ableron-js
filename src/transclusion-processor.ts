@@ -3,6 +3,7 @@ import { TransclusionResult } from './transclusion-result';
 import { Include } from './include';
 import TTLCache from '@isaacs/ttlcache';
 import { Fragment } from './fragment';
+import { AbstractLogger } from './abstract-logger';
 
 export class TransclusionProcessor {
   /**
@@ -19,7 +20,10 @@ export class TransclusionProcessor {
 
   private readonly fragmentCache: TTLCache<string, Fragment>;
 
-  constructor(ableronConfig: AbleronConfig) {
+  private readonly logger: AbstractLogger;
+
+  constructor(ableronConfig: AbleronConfig, logger?: AbstractLogger) {
+    this.logger = logger || new AbstractLogger();
     this.ableronConfig = ableronConfig;
     this.fragmentCache = this.buildFragmentCache();
   }
@@ -37,7 +41,7 @@ export class TransclusionProcessor {
           ...new Map(
             Array.from(content.matchAll(this.INCLUDE_PATTERN)).map((match) => [
               match[0],
-              new Include(this.parseAttributes(match[2]), match[5], match[0])
+              new Include(this.parseAttributes(match[2]), match[5], match[0], this.logger)
             ])
           ).values()
         ];
@@ -45,7 +49,7 @@ export class TransclusionProcessor {
 
   async resolveIncludes(content: string, presentRequestHeaders: Headers): Promise<TransclusionResult> {
     const startTime = Date.now();
-    const transclusionResult = new TransclusionResult(content, this.ableronConfig.statsAppendToContent);
+    const transclusionResult = new TransclusionResult(content, this.ableronConfig.statsAppendToContent, this.logger);
     await Promise.all(
       Array.from(this.findIncludes(content)).map((include) => {
         const includeResolveStartTime = Date.now();
@@ -53,11 +57,11 @@ export class TransclusionProcessor {
           .resolve(this.ableronConfig, this.fragmentCache, presentRequestHeaders)
           .then((fragment) => {
             const includeResolveTimeMillis = Date.now() - includeResolveStartTime;
-            console.debug('Resolved include %s in %dms', include.getId(), includeResolveTimeMillis);
+            this.logger.debug('Resolved include %s in %dms', include.getId(), includeResolveTimeMillis);
             transclusionResult.addResolvedInclude(include, fragment, includeResolveTimeMillis);
           })
           .catch((error) =>
-            console.error(
+            this.logger.error(
               `Unable to resolve include ${include.getId()}: ${error?.message}${
                 error?.cause ? ` (${error.cause})` : ''
               }`

@@ -3,6 +3,7 @@ import * as crypto from 'crypto';
 import { AbleronConfig } from './ableron-config';
 import { HttpUtil } from './http-util';
 import TTLCache from '@isaacs/ttlcache';
+import { AbstractLogger } from './abstract-logger';
 
 export class Include {
   /**
@@ -101,14 +102,15 @@ export class Include {
    */
   private erroredPrimaryFragment: Fragment | null = null;
 
-  /**
-   * Constructs a new Include.
-   *
-   * @param rawAttributes Raw attributes of the include tag
-   * @param fallbackContent Fallback content to use in case the include could not be resolved
-   * @param rawIncludeTag Raw include tag
-   */
-  constructor(rawAttributes?: Map<string, string>, fallbackContent?: string, rawIncludeTag?: string) {
+  private readonly logger: AbstractLogger;
+
+  constructor(
+    rawAttributes?: Map<string, string>,
+    fallbackContent?: string,
+    rawIncludeTag?: string,
+    logger?: AbstractLogger
+  ) {
+    this.logger = logger || new AbstractLogger();
     this.rawIncludeTag = rawIncludeTag !== undefined ? rawIncludeTag : '';
     this.rawAttributes = rawAttributes !== undefined ? rawAttributes : new Map<string, string>();
     this.id = this.buildIncludeId(this.rawAttributes.get(this.ATTR_ID));
@@ -211,7 +213,7 @@ export class Include {
           const responseBody = await response.text();
 
           if (!this.HTTP_STATUS_CODES_CACHEABLE.includes(response.status)) {
-            console.error(`Fragment ${this.id} returned status code ${response.status}`);
+            this.logger.error(`Fragment ${this.id} returned status code ${response.status}`);
             this.recordErroredPrimaryFragment(
               new Fragment(
                 response.status,
@@ -247,7 +249,7 @@ export class Include {
       }
 
       if (!this.HTTP_STATUS_CODES_SUCCESS.includes(fragment.statusCode)) {
-        console.error(`Fragment ${this.id} returned status code ${fragment.statusCode}`);
+        this.logger.error(`Fragment ${this.id} returned status code ${fragment.statusCode}`);
         this.recordErroredPrimaryFragment(fragment);
         return null;
       }
@@ -257,7 +259,7 @@ export class Include {
   }
 
   private performRequest(url: string, requestHeaders: Headers, requestTimeoutMillis: number): Promise<Response | null> {
-    console.debug(`Loading fragment ${url} for include ${this.id} with timeout ${requestTimeoutMillis}ms`);
+    this.logger.debug(`Loading fragment ${url} for include ${this.id} with timeout ${requestTimeoutMillis}ms`);
 
     try {
       requestHeaders.set('Accept-Encoding', 'gzip');
@@ -269,11 +271,11 @@ export class Include {
         })
       ).catch((e: Error) => {
         if (e.name === 'TimeoutError') {
-          console.error(
+          this.logger.error(
             `Unable to load fragment ${url} for include ${this.id}: ${requestTimeoutMillis}ms timeout exceeded`
           );
         } else {
-          console.error(
+          this.logger.error(
             `Unable to load fragment ${url} for include ${this.id}: ${e?.message}${e?.cause ? ` (${e?.cause})` : ''}`
           );
         }
@@ -282,7 +284,7 @@ export class Include {
       });
     } catch (e) {
       const error: Error = e as Error;
-      console.error(
+      this.logger.error(
         `Unable to load fragment ${url} for include ${this.id}: ${error.message}${
           error.cause ? ` (${error.cause})` : ''
         }`
@@ -315,7 +317,7 @@ export class Include {
     const parsedTimeout = Number(timeoutAsString);
 
     if (isNaN(parsedTimeout)) {
-      console.error(`Invalid request timeout: ${timeoutAsString}`);
+      this.logger.error(`Invalid request timeout: ${timeoutAsString}`);
       return undefined;
     }
 
