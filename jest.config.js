@@ -5,7 +5,7 @@ module.exports = {
     '^.+\\.(ts|tsx)$': [
       'ts-jest',
       {
-        tsconfig: 'tsconfig-esm.json'
+        tsconfig: 'tsconfig.json'
       }
     ]
   }

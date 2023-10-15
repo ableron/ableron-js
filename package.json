@@ -26,7 +26,7 @@
   "scripts": {
     "clean": "rimraf dist",
     "build": "npm run clean && npm run build:esm && npm run build:cjs && npm run build:types",
-    "build:esm": "tsc -p tsconfig-esm.json && move-file dist/esm/index.js dist/esm/index.mjs",
+    "build:esm": "tsc -p tsconfig.json && move-file dist/esm/index.js dist/esm/index.mjs",
     "build:cjs": "tsc -p tsconfig-cjs.json",
     "build:types": "tsc -p tsconfig-types.json",
     "lint": "eslint \"src/**/*.ts\" --fix",

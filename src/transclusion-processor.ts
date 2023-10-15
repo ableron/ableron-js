@@ -52,21 +52,25 @@ export class TransclusionProcessor {
     const transclusionResult = new TransclusionResult(content, this.ableronConfig.statsAppendToContent, this.logger);
     await Promise.all(
       Array.from(this.findIncludes(content)).map((include) => {
-        const includeResolveStartTime = Date.now();
-        return include
-          .resolve(this.ableronConfig, this.fragmentCache, presentRequestHeaders)
-          .then((fragment) => {
-            const includeResolveTimeMillis = Date.now() - includeResolveStartTime;
-            this.logger.debug('Resolved include %s in %dms', include.getId(), includeResolveTimeMillis);
-            transclusionResult.addResolvedInclude(include, fragment, includeResolveTimeMillis);
-          })
-          .catch((error) =>
-            this.logger.error(
-              `Unable to resolve include ${include.getId()}: ${error?.message}${
-                error?.cause ? ` (${error.cause})` : ''
-              }`
-            )
+        try {
+          const includeResolveStartTime = Date.now();
+          return include
+            .resolve(this.ableronConfig, this.fragmentCache, presentRequestHeaders)
+            .then((fragment) => {
+              const includeResolveTimeMillis = Date.now() - includeResolveStartTime;
+              this.logger.debug('Resolved include %s in %dms', include.getId(), includeResolveTimeMillis);
+              transclusionResult.addResolvedInclude(include, fragment, includeResolveTimeMillis);
+            })
+            .catch((error) =>
+              this.logger.error(
+                `Unable to add resolved include ${include.getId()} to transclusion result: ${error?.message}`
+              )
+            );
+        } catch (e: any) {
+          this.logger.error(
+            `Unable to resolve include ${include.getId()}: ${e?.message}${e?.cause ? ` (${e.cause})` : ''}`
           );
+        }
       })
     );
     transclusionResult.setProcessingTimeMillis(Date.now() - startTime);
