@@ -94,4 +94,20 @@ export class HttpUtil {
 
     return isNaN(expires.getTime()) ? undefined : expires;
   }
+
+  static normalizeHeaders(headers: Headers | { [key: string]: string | string[] }): Headers {
+    if (typeof headers.entries === 'function') {
+      return headers as Headers;
+    }
+
+    const transformedHeaders = new Headers();
+
+    for (const [name, value] of Object.entries(headers)) {
+      if (value) {
+        transformedHeaders.set(name, value);
+      }
+    }
+
+    return transformedHeaders;
+  }
 }

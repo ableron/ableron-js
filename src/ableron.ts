@@ -2,6 +2,7 @@ import { AbleronConfig } from './ableron-config';
 import { TransclusionProcessor } from './transclusion-processor';
 import { TransclusionResult } from './transclusion-result';
 import { AbstractLogger } from './abstract-logger';
+import { HttpUtil } from './http-util';
 
 export class Ableron {
   private readonly logger: AbstractLogger;
@@ -14,9 +15,15 @@ export class Ableron {
     this.transclusionProcessor = new TransclusionProcessor(ableronConfig);
   }
 
-  async resolveIncludes(content: string, presentRequestHeaders: Headers): Promise<TransclusionResult> {
+  async resolveIncludes(
+    content: string,
+    presentRequestHeaders: Headers | { [key: string]: string | string[] }
+  ): Promise<TransclusionResult> {
     if (this.ableronConfig.enabled) {
-      const transclusionResult = await this.transclusionProcessor.resolveIncludes(content, presentRequestHeaders);
+      const transclusionResult = await this.transclusionProcessor.resolveIncludes(
+        content,
+        HttpUtil.normalizeHeaders(presentRequestHeaders)
+      );
       this.logger.debug(
         `Ableron UI composition processed ${transclusionResult.getProcessedIncludesCount()} include(s) in ${transclusionResult.getProcessingTimeMillis()}ms`
       );
