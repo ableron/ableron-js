@@ -1,5 +1,5 @@
 {
-  "include": ["src/**/*"],
+  "include": ["../src/**/*"],
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,

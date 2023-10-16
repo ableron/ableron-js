@@ -4,6 +4,6 @@
     "declaration": true,
     "emitDeclarationOnly": true,
     "moduleResolution": "node",
-    "outDir": "dist/types"
+    "outDir": "../dist/types"
   }
 }

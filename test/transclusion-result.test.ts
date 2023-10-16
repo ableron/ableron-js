@@ -46,6 +46,23 @@ test('should handle resolved include correctly', () => {
   expect(transclusionResult.getProcessingTimeMillis()).toBe(0);
 });
 
+test('should handle unresolvable include correctly', () => {
+  // given
+  const transclusionResult = new TransclusionResult('content: <include>');
+
+  // when
+  transclusionResult.addUnresolvableInclude(new Include(new Map(), 'fallback', '<include>'));
+
+  // then
+  expect(transclusionResult.getContent()).toBe('content: fallback');
+  expect(transclusionResult.getContentExpirationTime()).toEqual(new Date(0));
+  expect(transclusionResult.getHasPrimaryInclude()).toBe(false);
+  expect(transclusionResult.getStatusCodeOverride()).toBeUndefined();
+  expect(transclusionResult.getResponseHeadersToPass()).toEqual(new Headers());
+  expect(transclusionResult.getProcessedIncludesCount()).toBe(1);
+  expect(transclusionResult.getProcessingTimeMillis()).toBe(0);
+});
+
 test.each([
   [new Date(0), undefined, 'no-store'],
   [new Date(new Date().getTime() - 5000), undefined, 'no-store'],

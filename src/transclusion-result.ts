@@ -12,7 +12,7 @@ export class TransclusionResult {
   private readonly appendStatsToContent: boolean;
   private processedIncludesCount: number = 0;
   private processingTimeMillis: number = 0;
-  private readonly resolvedIncludesLog: string[] = [];
+  private readonly statMessages: string[] = [];
   private readonly logger: AbstractLogger;
 
   constructor(content: string, appendStatsToContent: boolean = false, logger?: AbstractLogger) {
@@ -57,7 +57,7 @@ export class TransclusionResult {
     if (include.isPrimary()) {
       if (this.hasPrimaryInclude) {
         this.logger.warn('Only one primary include per page allowed. Multiple found');
-        this.resolvedIncludesLog.push(
+        this.statMessages.push(
           `Ignoring primary include with status code ${fragment.statusCode} because there is already another primary include`
         );
       } else {
@@ -66,7 +66,7 @@ export class TransclusionResult {
         fragment.responseHeaders.forEach((headerValue, headerName) =>
           this.responseHeadersToPass.set(headerName, headerValue)
         );
-        this.resolvedIncludesLog.push(`Primary include with status code ${fragment.statusCode}`);
+        this.statMessages.push(`Primary include with status code ${fragment.statusCode}`);
       }
     }
 
@@ -76,9 +76,16 @@ export class TransclusionResult {
 
     this.content = this.content.replaceAll(include.getRawIncludeTag(), fragment.content);
     this.processedIncludesCount++;
-    this.resolvedIncludesLog.push(
+    this.statMessages.push(
       `Resolved include ${include.getId()} with ${this.getFragmentDebugInfo(fragment)} in ${includeResolveTimeMillis}ms`
     );
+  }
+
+  addUnresolvableInclude(include: Include): void {
+    this.content = this.content.replaceAll(include.getRawIncludeTag(), include.getFallbackContent());
+    this.contentExpirationTime = new Date(0);
+    this.processedIncludesCount++;
+    this.statMessages.push(`Unable to resolve include ${include.getId()}: Using fallback content`);
   }
 
   /**
@@ -133,7 +140,7 @@ export class TransclusionResult {
 
   private getStats(): string {
     let stats = `\n<!-- Ableron stats:\nProcessed ${this.processedIncludesCount} include(s) in ${this.processingTimeMillis}ms\n`;
-    this.resolvedIncludesLog.forEach((logEntry) => (stats = stats + logEntry + '\n'));
+    this.statMessages.forEach((logEntry) => (stats = stats + logEntry + '\n'));
     return stats + '-->';
   }
 }

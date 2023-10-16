@@ -1,6 +1,6 @@
 {
   "name": "ableron",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "JavaScript Library for Ableron Server Side UI Composition",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.mjs",
@@ -27,8 +27,8 @@
     "clean": "rimraf dist",
     "build": "npm run clean && npm run build:esm && npm run build:cjs && npm run build:types",
     "build:esm": "tsc -p tsconfig.json && move-file dist/esm/index.js dist/esm/index.mjs",
-    "build:cjs": "tsc -p tsconfig-cjs.json",
-    "build:types": "tsc -p tsconfig-types.json",
+    "build:cjs": "tsc -p tsconfig/tsconfig-cjs.json",
+    "build:types": "tsc -p tsconfig/tsconfig-types.json",
     "lint": "eslint \"src/**/*.ts\" --fix",
     "test": "jest --no-cache",
     "test:cov": "jest --coverage --no-cache"
@@ -58,11 +58,11 @@
   },
   "devDependencies": {
     "@types/jest": "^29.5.5",
-    "@typescript-eslint/eslint-plugin": "^6.7.5",
-    "@typescript-eslint/parser": "^6.7.5",
+    "@typescript-eslint/eslint-plugin": "^6.8.0",
+    "@typescript-eslint/parser": "^6.8.0",
     "eslint": "^8.51.0",
     "eslint-config-prettier": "^9.0.0",
-    "fastify": "^4.24.1",
+    "fastify": "^4.24.2",
     "jest": "^29.7.0",
     "move-file-cli": "^3.0.0",
     "prettier": "3.0.3",
