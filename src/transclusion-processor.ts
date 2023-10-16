@@ -63,6 +63,7 @@ export class TransclusionProcessor {
           this.logger.error(
             `Unable to resolve include ${include.getId()}: ${e?.message}${e?.cause ? ` (${e.cause})` : ''}`
           );
+          transclusionResult.addUnresolvableInclude(include, e.message);
         }
       })
     );

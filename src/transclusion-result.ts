@@ -81,11 +81,11 @@ export class TransclusionResult {
     );
   }
 
-  addUnresolvableInclude(include: Include): void {
+  addUnresolvableInclude(include: Include, errorMessage?: string): void {
     this.content = this.content.replaceAll(include.getRawIncludeTag(), include.getFallbackContent());
     this.contentExpirationTime = new Date(0);
     this.processedIncludesCount++;
-    this.statMessages.push(`Unable to resolve include ${include.getId()}: Using fallback content`);
+    this.statMessages.push(`Unable to resolve include ${include.getId()}${errorMessage ? ': ' + errorMessage : ''}`);
   }
 
   /**

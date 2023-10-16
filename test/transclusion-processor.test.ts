@@ -513,3 +513,20 @@ test('should resolve includes in parallel', async () => {
      </html>`
   );
 });
+
+test('should handle unresolvable include', async () => {
+  // given
+  const transclusionProcessor = new TransclusionProcessor(new AbleronConfig({ statsAppendToContent: true }));
+  const presentRequestHeaders = jest.fn() as any as Headers;
+
+  // when
+  const result = await transclusionProcessor.resolveIncludes(
+    '<ableron-include ><!-- fallback content --></ableron-include>',
+    presentRequestHeaders
+  );
+
+  // then
+  expect(result.getContent()).toMatch(
+    /<!-- fallback content -->\n<!-- Ableron stats:\nProcessed 1 include\(s\) in \d+?ms\nUnable to resolve include ce164c3: headersToFilter\.has is not a function\n-->/gm
+  );
+});
