@@ -142,16 +142,25 @@ describe('normalizeHeaders', () => {
     // given
     const inputHeaders = new Headers([
       ['X-Foo', 'foo'],
-      ['X-Bar', 'bar']
+      ['X-Bar', 'bar'],
+      ['X-Baz', ''],
+      ['Set-Cookie', 'keya=valuea'],
+      ['Set-Cookie', 'keyb=valueb']
     ]);
 
     // when
     const result = HttpUtil.normalizeHeaders(inputHeaders);
 
     // then
-    expect(result).toBe(inputHeaders);
-    expect(result.get('x-foo')).toBe('foo');
-    expect(result.get('x-bar')).toBe('bar');
+    expect(Array.from(result)).toEqual(
+      expect.arrayContaining([
+        ['x-foo', 'foo'],
+        ['x-bar', 'bar'],
+        ['x-baz', ''],
+        ['set-cookie', 'keya=valuea'],
+        ['set-cookie', 'keyb=valueb']
+      ])
+    );
   });
 
   it('should handle input headers of type IncomingHttpHeaders', () => {
@@ -159,17 +168,17 @@ describe('normalizeHeaders', () => {
     const result = HttpUtil.normalizeHeaders({
       'X-Foo': 'foo',
       'X-Bar': 'bar',
-      'X-Baz': ''
+      'X-Baz': '',
+      'Set-Cookie': ['keya=valuea', 'keyb=valueb']
     });
 
     // then
-    expect(result).toEqual(
-      new Headers([
-        ['X-Foo', 'foo'],
-        ['X-Bar', 'bar']
+    expect(Array.from(result)).toEqual(
+      expect.arrayContaining([
+        ['x-foo', 'foo'],
+        ['x-bar', 'bar'],
+        ['set-cookie', 'keya=valuea,keyb=valueb']
       ])
     );
-    expect(result.get('x-foo')).toBe('foo');
-    expect(result.get('x-bar')).toBe('bar');
   });
 });
