@@ -152,6 +152,7 @@ describe('normalizeHeaders', () => {
     const result = HttpUtil.normalizeHeaders(inputHeaders);
 
     // then
+    // @ts-ignore
     expect(Array.from(result)).toEqual(
       expect.arrayContaining([
         ['x-foo', 'foo'],
@@ -173,11 +174,13 @@ describe('normalizeHeaders', () => {
     });
 
     // then
+    // @ts-ignore
     expect(Array.from(result)).toEqual(
       expect.arrayContaining([
         ['x-foo', 'foo'],
         ['x-bar', 'bar'],
-        ['set-cookie', 'keya=valuea,keyb=valueb']
+        ['set-cookie', 'keya=valuea'],
+        ['set-cookie', 'keyb=valueb']
       ])
     );
   });

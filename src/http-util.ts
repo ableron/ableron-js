@@ -4,7 +4,8 @@ export class HttpUtil {
   private static HEADER_DATE: string = 'Date';
   private static HEADER_EXPIRES: string = 'Expires';
 
-  static calculateResponseExpirationTime(headers: Headers): Date {
+  static calculateResponseExpirationTime(inputHeaders: Headers | { [key: string]: string | string[] | number }): Date {
+    const headers = this.normalizeHeaders(inputHeaders);
     const cacheControlHeaderValue = headers.get(this.HEADER_CACHE_CONTROL);
     const cacheControlDirectives =
       cacheControlHeaderValue !== null
@@ -95,7 +96,7 @@ export class HttpUtil {
     return isNaN(expires.getTime()) ? undefined : expires;
   }
 
-  static normalizeHeaders(headers: Headers | { [key: string]: string | string[] }): Headers {
+  static normalizeHeaders(headers: Headers | { [key: string]: string | string[] | number }): Headers {
     if (typeof headers.entries === 'function') {
       return headers as Headers;
     }
@@ -104,7 +105,13 @@ export class HttpUtil {
 
     for (const [name, value] of Object.entries(headers)) {
       if (value) {
-        transformedHeaders.set(name, value);
+        if (Array.isArray(value)) {
+          value.forEach((headerValue) => {
+            transformedHeaders.append(name, headerValue);
+          });
+        } else {
+          transformedHeaders.set(name, value.toString());
+        }
       }
     }
 
