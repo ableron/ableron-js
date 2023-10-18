@@ -31,7 +31,7 @@
     "build:types": "tsc -p tsconfig/tsconfig-types.json",
     "lint": "eslint \"src/**/*.ts\" --fix",
     "test": "jest --no-cache",
-    "test:cov": "jest --coverage --no-cache"
+    "test:cov": "jest --coverage --no-cache --silent"
   },
   "publishConfig": {
     "access": "public"
