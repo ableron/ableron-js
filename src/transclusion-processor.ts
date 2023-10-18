@@ -33,7 +33,7 @@ export class TransclusionProcessor {
   }
 
   findIncludes(content: string): Include[] {
-    const firstIncludePosition = content.indexOf('<ableron-include');
+    const firstIncludePosition = content.toString().indexOf('<ableron-include');
 
     return firstIncludePosition === -1
       ? []

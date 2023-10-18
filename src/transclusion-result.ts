@@ -98,7 +98,7 @@ export class TransclusionResult {
     const now = new Date();
 
     if (
-      this.contentExpirationTime == undefined ||
+      this.contentExpirationTime === undefined ||
       this.contentExpirationTime < now ||
       pageMaxAgeInSeconds === undefined ||
       pageMaxAgeInSeconds <= 0
@@ -119,7 +119,7 @@ export class TransclusionResult {
    *
    * @return The Cache-Control header value. Either "no-store" or "max-age=xxx"
    */
-  calculateCacheControlHeaderValueByResponseHeaders(headers: Headers) {
+  calculateCacheControlHeaderValueByResponseHeaders(headers: Headers | { [key: string]: string | string[] | number }) {
     const pageExpirationTime: Date = HttpUtil.calculateResponseExpirationTime(headers);
     const pageMaxAge: number =
       pageExpirationTime > new Date() ? Math.ceil((pageExpirationTime.getTime() - new Date().getTime()) / 1000) : 0;
