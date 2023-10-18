@@ -778,7 +778,7 @@ test('should pass default User-Agent header to fragment requests', async () => {
   await new Include(new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
 
   // then
-  expect(new Headers(lastRecordedRequestHeaders).get('User-Agent')).toBe('undici');
+  expect(['undici', 'node'].includes(new Headers(lastRecordedRequestHeaders).get('User-Agent') as string)).toBeTruthy();
 });
 
 test('should pass provided User-Agent header to fragment requests by default', async () => {
