@@ -1,6 +1,6 @@
 {
   "name": "ableron",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "JavaScript Library for Ableron Server Side UI Composition",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.mjs",
@@ -30,6 +30,7 @@
     "build:cjs": "tsc -p tsconfig/tsconfig-cjs.json",
     "build:types": "tsc -p tsconfig/tsconfig-types.json",
     "lint": "eslint \"src/**/*.ts\" --fix",
+    "prettier": "prettier . --write",
     "test": "jest --no-cache",
     "test:cov": "jest --coverage --no-cache --silent"
   },

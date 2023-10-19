@@ -54,11 +54,19 @@ export class TransclusionProcessor {
       Array.from(this.findIncludes(content)).map((include) => {
         try {
           const includeResolveStartTime = Date.now();
-          return include.resolve(this.ableronConfig, this.fragmentCache, presentRequestHeaders).then((fragment) => {
-            const includeResolveTimeMillis = Date.now() - includeResolveStartTime;
-            this.logger.debug('Resolved include %s in %dms', include.getId(), includeResolveTimeMillis);
-            transclusionResult.addResolvedInclude(include, fragment, includeResolveTimeMillis);
-          });
+          return include
+            .resolve(this.ableronConfig, this.fragmentCache, presentRequestHeaders)
+            .then((fragment) => {
+              const includeResolveTimeMillis = Date.now() - includeResolveStartTime;
+              this.logger.debug('Resolved include %s in %dms', include.getId(), includeResolveTimeMillis);
+              transclusionResult.addResolvedInclude(include, fragment, includeResolveTimeMillis);
+            })
+            .catch((e) => {
+              this.logger.error(
+                `Unable to resolve include ${include.getId()}: ${e?.message}${e?.cause ? ` (${e.cause})` : ''}`
+              );
+              transclusionResult.addUnresolvableInclude(include, e.message);
+            });
         } catch (e: any) {
           this.logger.error(
             `Unable to resolve include ${include.getId()}: ${e?.message}${e?.cause ? ` (${e.cause})` : ''}`
