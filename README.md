@@ -1,6 +1,7 @@
 # Ableron JavaScript Library
 
 [![Build Status](https://github.com/ableron/ableron-js/actions/workflows/test.yml/badge.svg)](https://github.com/ableron/ableron-js/actions/workflows/test.yml)
+[![npm version](https://badge.fury.io/js/ableron.svg)](https://badge.fury.io/js/ableron)
 
 JavaScript Library for Ableron Server Side UI Composition.
 
