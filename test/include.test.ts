@@ -4,6 +4,8 @@ import { AbleronConfig } from '../src';
 import { TransclusionProcessor } from '../src/transclusion-processor';
 import { Fragment } from '../src/fragment';
 
+const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay));
+
 let server: FastifyInstance | undefined;
 const config = new AbleronConfig({
   fragmentRequestTimeoutMillis: 1000
@@ -353,7 +355,6 @@ test.each([
   [new Date(new Date().getTime() - 5000), 'fragment from src']
 ])('should use cached fragment if not expired', async (expirationTime: Date, expectedFragmentContent: string) => {
   // given
-  const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay));
   server = Fastify();
   server.get('/src', function (request, reply) {
     reply.status(200).send('fragment from src');
@@ -655,7 +656,6 @@ test('should not cache fragment if no expiration time is indicated via response 
 test('should apply request timeout', async () => {
   // given
   server = Fastify();
-  const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay));
   server.get('/src', async function (request, reply) {
     await sleep(2000);
     reply.status(200).send('fragment from src');
@@ -684,7 +684,6 @@ test.each([
   async (srcAttributeName: string, timeoutAttribute: Map<string, string>, expectedFragmentContent: string) => {
     // given
     server = Fastify();
-    const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay));
     server.get('/', async function (request, reply) {
       await sleep(1200);
       reply.status(200).send('fragment');
@@ -853,4 +852,34 @@ test('should treat fragment response headers allow list as case insensitive', as
 
   // then
   expect(fragment.responseHeaders.get('x-test')).toBe('Test');
+});
+
+test('should collapse requests', async () => {
+  // given
+  server = Fastify();
+  let reqCounter = 0;
+  server.get('/src', async function (request, reply) {
+    await sleep(200);
+    reply
+      .status(200)
+      .header('Cache-Control', 'max-age=30')
+      .send('request ' + ++reqCounter);
+  });
+  await server.listen();
+  const include = new Include(new Map([['src', serverAddress('/src')]]));
+
+  // when
+  const fragment1 = include.resolve(config, fragmentCache);
+  const fragment2 = include.resolve(config, fragmentCache);
+  const fragment3 = include.resolve(config, fragmentCache);
+  const fragment4 = new Include(new Map([['src', serverAddress('/404')]]), '404 not found').resolve(
+    config,
+    fragmentCache
+  );
+
+  // then
+  expect((await fragment1).content).toBe('request 1');
+  expect((await fragment2).content).toBe('request 1');
+  expect((await fragment3).content).toBe('request 1');
+  expect((await fragment4).content).toBe('404 not found');
 });
