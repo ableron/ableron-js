@@ -104,6 +104,8 @@ export class Include {
 
   private readonly logger: AbstractLogger;
 
+  private static readonly runningFragmentRequests: Map<string, Promise<Fragment | null>> = new Map();
+
   constructor(
     rawAttributes?: Map<string, string>,
     fallbackContent?: string,
@@ -203,53 +205,60 @@ export class Include {
       return null;
     }
 
-    const fragmentFromCache = await this.getFragmentFromCache(fragmentCache, url);
-    let fragmentFromRequest: Fragment | null = null;
+    return this.getFragmentFromCache(fragmentCache, url, (resolveRunningFragmentRequest: any) =>
+      this.requestFragment(url, requestHeaders, requestTimeoutMillis, config).then((fragment) => {
+        if (fragment) {
+          const fragmentTtl = fragment.expirationTime.getTime() - new Date().getTime();
 
-    if (!fragmentFromCache) {
-      fragmentFromRequest = await this.requestFragment(url, requestHeaders, requestTimeoutMillis, config);
-
-      if (fragmentFromRequest) {
-        const fragmentTtl = fragmentFromRequest.expirationTime.getTime() - new Date().getTime();
-
-        if (fragmentTtl > 0) {
-          fragmentCache.set(url, fragmentFromRequest, { ttl: Math.min(fragmentTtl, this.SEVEN_DAYS_IN_MILLISECONDS) });
+          if (fragmentTtl > 0) {
+            fragmentCache.set(url, fragment, {
+              ttl: Math.min(fragmentTtl, this.SEVEN_DAYS_IN_MILLISECONDS)
+            });
+          }
         }
+
+        Include.runningFragmentRequests.delete(url);
+
+        if (resolveRunningFragmentRequest) {
+          resolveRunningFragmentRequest();
+        }
+
+        return fragment;
+      })
+    ).then((fragment) => {
+      if (fragment && !this.HTTP_STATUS_CODES_SUCCESS.includes(fragment.statusCode)) {
+        this.logger.error(`Fragment ${this.id} returned status code ${fragment.statusCode}`);
+        this.recordErroredPrimaryFragment(fragment);
+        return null;
       }
-    }
 
-    const fragment = fragmentFromCache || fragmentFromRequest;
-
-    if (fragment && !this.HTTP_STATUS_CODES_SUCCESS.includes(fragment.statusCode)) {
-      this.logger.error(`Fragment ${this.id} returned status code ${fragment.statusCode}`);
-      this.recordErroredPrimaryFragment(fragment);
-      return null;
-    }
-
-    return fragment;
+      return fragment;
+    });
   }
 
-  private async getFragmentFromCache(fragmentCache: TTLCache<string, Fragment>, url: string): Promise<Fragment | null> {
+  private async getFragmentFromCache(
+    fragmentCache: TTLCache<string, Fragment>,
+    url: string,
+    loadFragment: (resolveRunningFragmentRequest: any) => Promise<Fragment | null>
+  ): Promise<Fragment | null> {
     const fragmentFromCache = fragmentCache.get(url) as Fragment;
 
     if (fragmentFromCache) {
       return fragmentFromCache;
     }
 
-    const fragmentFromRunningRequest = Include.runningRequests.get(url);
+    let resolveRunningFragmentRequest: any;
+    const currentReq: Promise<Fragment | null> = new Promise((resolve) => (resolveRunningFragmentRequest = resolve));
+    const fetchFragmentPromise =
+      Include.runningFragmentRequests.get(url) || Include.runningFragmentRequests.set(url, currentReq);
 
-    if (fragmentFromRunningRequest) {
-      const resolvedFragmentFromRunningRequest = await fragmentFromRunningRequest;
-
-      if (resolvedFragmentFromRunningRequest) {
-        return resolvedFragmentFromRunningRequest;
-      }
+    if (fetchFragmentPromise.constructor.name === 'Promise') {
+      await fetchFragmentPromise;
+      return fragmentCache.get(url) || loadFragment(undefined);
     }
 
-    return null;
+    return loadFragment(resolveRunningFragmentRequest);
   }
-
-  private static runningRequests: Map<string, Promise<Fragment | null>> = new Map();
 
   private async requestFragment(
     url: string,
@@ -257,34 +266,59 @@ export class Include {
     requestTimeoutMillis: number,
     config: AbleronConfig
   ): Promise<Fragment | null> {
-    let resolveOuter: any;
-    const fragmentFromRunningRequest: Promise<Fragment | null> = new Promise((resolve) => (resolveOuter = resolve));
-
-    Include.runningRequests.set(url, fragmentFromRunningRequest);
     this.logger.debug(`Loading fragment ${url} for include ${this.id} with timeout ${requestTimeoutMillis}ms`);
-    let response: Promise<any>;
 
     try {
       requestHeaders.set('Accept-Encoding', 'gzip');
-      response = fetch(
+      return fetch(
         new Request(url, {
           headers: requestHeaders,
           redirect: 'manual',
           signal: AbortSignal.timeout(requestTimeoutMillis)
         })
-      ).catch((e: Error) => {
-        if (e.name === 'TimeoutError') {
-          this.logger.error(
-            `Unable to load fragment ${url} for include ${this.id}: ${requestTimeoutMillis}ms timeout exceeded`
-          );
-        } else {
-          this.logger.error(
-            `Unable to load fragment ${url} for include ${this.id}: ${e?.message}${e?.cause ? ` (${e?.cause})` : ''}`
-          );
-        }
+      )
+        .then(async (response: Response | null) => {
+          if (!response) {
+            return null;
+          }
 
-        return null;
-      });
+          const responseBody = await response.text();
+
+          if (!this.HTTP_STATUS_CODES_CACHEABLE.includes(response.status)) {
+            this.logger.error(`Fragment ${this.id} returned status code ${response.status}`);
+            this.recordErroredPrimaryFragment(
+              new Fragment(
+                response.status,
+                responseBody,
+                url,
+                undefined,
+                this.filterHeaders(response.headers, config.primaryFragmentResponseHeadersToPass)
+              )
+            );
+            return null;
+          }
+
+          return new Fragment(
+            response.status,
+            responseBody,
+            url,
+            HttpUtil.calculateResponseExpirationTime(response.headers),
+            this.filterHeaders(response.headers, config.primaryFragmentResponseHeadersToPass)
+          );
+        })
+        .catch((e: Error) => {
+          if (e.name === 'TimeoutError') {
+            this.logger.error(
+              `Unable to load fragment ${url} for include ${this.id}: ${requestTimeoutMillis}ms timeout exceeded`
+            );
+          } else {
+            this.logger.error(
+              `Unable to load fragment ${url} for include ${this.id}: ${e?.message}${e?.cause ? ` (${e?.cause})` : ''}`
+            );
+          }
+
+          return null;
+        });
     } catch (e) {
       const error: Error = e as Error;
       this.logger.error(
@@ -292,46 +326,8 @@ export class Include {
           error.cause ? ` (${error.cause})` : ''
         }`
       );
-      response = Promise.resolve(null);
+      return Promise.resolve(null);
     }
-
-    const fragment = await response
-      .then(async (response: Response | null) => {
-        if (!response) {
-          return null;
-        }
-
-        const responseBody = await response.text();
-
-        if (!this.HTTP_STATUS_CODES_CACHEABLE.includes(response.status)) {
-          this.logger.error(`Fragment ${this.id} returned status code ${response.status}`);
-          this.recordErroredPrimaryFragment(
-            new Fragment(
-              response.status,
-              responseBody,
-              url,
-              undefined,
-              this.filterHeaders(response.headers, config.primaryFragmentResponseHeadersToPass)
-            )
-          );
-          return null;
-        }
-
-        return new Fragment(
-          response.status,
-          responseBody,
-          url,
-          HttpUtil.calculateResponseExpirationTime(response.headers),
-          this.filterHeaders(response.headers, config.primaryFragmentResponseHeadersToPass)
-        );
-      })
-      .then((fragment) => {
-        Include.runningRequests.delete(url);
-        return fragment;
-      });
-
-    resolveOuter(fragment);
-    return fragment;
   }
 
   private recordErroredPrimaryFragment(fragment: Fragment): void {
