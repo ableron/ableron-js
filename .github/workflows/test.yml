@@ -10,7 +10,7 @@ jobs:
         os:
           - ubuntu-latest
           - windows-latest
-        node: [19.x, 21.x]
+        node: [19.x, 20.x, 21.x]
     steps:
       - name: Stop GitHub from converting line endings from lf to crlf on windows which breaks prettier code style check
         run: |
