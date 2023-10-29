@@ -1,10 +1,14 @@
+import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http2';
+
 export class HttpUtil {
   private static HEADER_AGE: string = 'Age';
   private static HEADER_CACHE_CONTROL: string = 'Cache-Control';
   private static HEADER_DATE: string = 'Date';
   private static HEADER_EXPIRES: string = 'Expires';
 
-  static calculateResponseExpirationTime(inputHeaders: Headers | { [key: string]: string | string[] | number }): Date {
+  static calculateResponseExpirationTime(
+    inputHeaders: Headers | IncomingHttpHeaders | OutgoingHttpHeaders | { [key: string]: string | string[] | number }
+  ): Date {
     const headers = this.normalizeHeaders(inputHeaders);
     const cacheControlHeaderValue = headers.get(this.HEADER_CACHE_CONTROL);
     const cacheControlDirectives =
@@ -96,7 +100,9 @@ export class HttpUtil {
     return isNaN(expires.getTime()) ? undefined : expires;
   }
 
-  static normalizeHeaders(headers: Headers | { [key: string]: string | string[] | number }): Headers {
+  static normalizeHeaders(
+    headers: Headers | IncomingHttpHeaders | OutgoingHttpHeaders | { [key: string]: string | string[] | number }
+  ): Headers {
     if (typeof headers.entries === 'function') {
       return headers as Headers;
     }

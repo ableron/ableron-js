@@ -3,6 +3,7 @@ import { TransclusionProcessor } from './transclusion-processor';
 import { TransclusionResult } from './transclusion-result';
 import { AbstractLogger } from './abstract-logger';
 import { HttpUtil } from './http-util';
+import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http2';
 
 export class Ableron {
   private readonly logger: AbstractLogger;
@@ -17,7 +18,7 @@ export class Ableron {
 
   async resolveIncludes(
     content: string,
-    presentRequestHeaders: Headers | { [key: string]: string | string[] }
+    presentRequestHeaders: Headers | IncomingHttpHeaders | OutgoingHttpHeaders | { [key: string]: string | string[] }
   ): Promise<TransclusionResult> {
     if (this.ableronConfig.enabled) {
       const transclusionResult = await this.transclusionProcessor.resolveIncludes(

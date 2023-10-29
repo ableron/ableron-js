@@ -2,6 +2,7 @@ import { Include } from './include';
 import { Fragment } from './fragment';
 import { HttpUtil } from './http-util';
 import { AbstractLogger } from './abstract-logger';
+import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http2';
 
 export class TransclusionResult {
   private content: string;
@@ -119,7 +120,9 @@ export class TransclusionResult {
    *
    * @return The Cache-Control header value. Either "no-store" or "max-age=xxx"
    */
-  calculateCacheControlHeaderValueByResponseHeaders(headers: Headers | { [key: string]: string | string[] | number }) {
+  calculateCacheControlHeaderValueByResponseHeaders(
+    headers: Headers | IncomingHttpHeaders | OutgoingHttpHeaders | { [key: string]: string | string[] | number }
+  ) {
     const pageExpirationTime: Date = HttpUtil.calculateResponseExpirationTime(headers);
     const pageMaxAge: number =
       pageExpirationTime > new Date() ? Math.ceil((pageExpirationTime.getTime() - new Date().getTime()) / 1000) : 0;
