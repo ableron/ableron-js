@@ -63,13 +63,17 @@ export class TransclusionProcessor {
             })
             .catch((e) => {
               this.logger.error(
-                `Unable to resolve include ${include.getId()}: ${e?.message}${e?.cause ? ` (${e.cause})` : ''}`
+                `Unable to resolve include ${include.getId()}: ${
+                  e.stack ? e.stack : e.message + (e.cause ? ` (${e.cause})` : '')
+                }`
               );
               transclusionResult.addUnresolvableInclude(include, e.message);
             });
         } catch (e: any) {
           this.logger.error(
-            `Unable to resolve include ${include.getId()}: ${e?.message}${e?.cause ? ` (${e.cause})` : ''}`
+            `Unable to resolve include ${include.getId()}: ${
+              e.stack ? e.stack : e.message + (e.cause ? ` (${e.cause})` : '')
+            }`
           );
           transclusionResult.addUnresolvableInclude(include, e.message);
         }
