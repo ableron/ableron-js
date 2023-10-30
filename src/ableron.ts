@@ -10,10 +10,14 @@ export class Ableron {
   private readonly ableronConfig: AbleronConfig;
   private readonly transclusionProcessor: TransclusionProcessor;
 
-  constructor(ableronConfig: AbleronConfig, logger?: AbstractLogger) {
+  constructor(ableronConfig: Partial<AbleronConfig>, logger?: AbstractLogger) {
     this.logger = logger || new AbstractLogger();
-    this.ableronConfig = ableronConfig;
-    this.transclusionProcessor = new TransclusionProcessor(ableronConfig);
+    this.ableronConfig = new AbleronConfig(ableronConfig);
+    this.transclusionProcessor = new TransclusionProcessor(this.ableronConfig);
+  }
+
+  getConfig() {
+    return this.ableronConfig;
   }
 
   async resolveIncludes(

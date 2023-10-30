@@ -38,3 +38,7 @@ test('should accept provided external logger', async () => {
   // then
   expect(logMessages[0]).toMatch(/^Ableron UI composition processed 0 include\(s\) in \d+ms$/);
 });
+
+test('should create complete config', () => {
+  expect(new Ableron({ enabled: false }).getConfig().fragmentRequestTimeoutMillis).toBe(3000);
+});
