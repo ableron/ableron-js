@@ -12,7 +12,46 @@ JavaScript Library for Ableron Server Side UI Composition.
 npm i @ableron/ableron
 ```
 
-### Configuration Options
+## Usage
+```ts
+import { Ableron } from '@ableron/ableron';
+
+const yourLoggerInstance = pinoWinstonMorganOrWhateverYouMayHave() || console;
+const ableron = new Ableron({}, yourLoggerInstance);
+const rawResponseBody = buildRawResponseBody();
+const req = yourNodeJsRequestObject();
+const res = yourNodeJsResponseObject();
+
+try {
+  ableron
+    .resolveIncludes(rawResponseBody, req.headers)
+    .then((transclusionResult) => {
+      transclusionResult.getResponseHeadersToPass()
+        .forEach((headerValue, headerName) => res.setHeader(headerName, headerValue));
+      res.setHeader(
+        'Cache-Control',
+        transclusionResult.calculateCacheControlHeaderValueByResponseHeaders(res.getHeaders())
+      );
+      res.setHeader('Content-Length', Buffer.byteLength(transclusionResult.getContent()));
+      res.status(transclusionResult.getStatusCodeOverride() || res.statusCode);
+      setFinalResponseBody(transclusionResult.getContent());
+    })
+    .catch((e) => {
+      logger.error(`Unable to perform ableron UI composition: ${e.stack || e.message}`);
+    });
+} catch (e) {
+  logger.error(`Unable to perform ableron UI composition: ${e.stack || e.message}`);
+}
+```
+
+## Configuration Options
+
+```ts
+import { Ableron } from '@ableron/ableron';
+const ableron = new Ableron({
+  // apply your configuration here
+});
+```
 
 - `enabled`: Whether UI composition is enabled. Defaults to `true`
 - `fragmentRequestTimeout`: Timeout for requesting fragments. Defaults to `3 seconds`
