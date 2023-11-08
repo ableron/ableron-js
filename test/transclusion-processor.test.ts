@@ -1,3 +1,4 @@
+import { beforeEach, afterEach, expect, test, vi } from 'vitest';
 import TransclusionProcessor from '../src/transclusion-processor.js';
 import { AbleronConfig } from '../src/index.js';
 import Fastify, { FastifyInstance } from 'fastify';
@@ -517,7 +518,7 @@ test('should resolve includes in parallel', async () => {
 test('should handle unresolvable include', async () => {
   // given
   const transclusionProcessor = new TransclusionProcessor(new AbleronConfig({ statsAppendToContent: true }));
-  const presentRequestHeaders = jest.fn() as any as Headers;
+  const presentRequestHeaders = vi.fn() as any as Headers;
 
   // when
   const result = await transclusionProcessor.resolveIncludes(

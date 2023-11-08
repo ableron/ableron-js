@@ -1,3 +1,4 @@
+import { expect, test } from 'vitest';
 import { Ableron, AbleronConfig } from '../src/index.js';
 
 test.each([

@@ -1,3 +1,4 @@
+import { expect, test } from 'vitest';
 import Fragment from '../src/fragment.js';
 
 test('should create expired fragment if expiration time is not provided', () => {

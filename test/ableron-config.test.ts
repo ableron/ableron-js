@@ -1,3 +1,4 @@
+import { expect, test } from 'vitest';
 import { AbleronConfig } from '../src/index.js';
 
 test('should have default value for each property', () => {

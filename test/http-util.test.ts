@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest';
 import HttpUtil from '../src/http-util.js';
 
 describe('calculateResponseExpirationTime', () => {
@@ -15,7 +16,7 @@ describe('calculateResponseExpirationTime', () => {
     expect(expirationTime > new Date(new Date().getTime() + 604800000 - 1000)).toBe(true);
   });
 
-  test.each([
+  it.each([
     [
       new Headers([
         ['Cache-Control', 'max-age=3600'],
@@ -112,7 +113,7 @@ describe('calculateResponseExpirationTime', () => {
     ).toEqual(new Date(0));
   });
 
-  test.each([
+  it.each([
     [new Headers([['Cache-Control', 's-maxage=not-numeric']])],
     [new Headers([['Cache-Control', 'max-age=not-numeric']])],
     [
