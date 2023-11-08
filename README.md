@@ -13,6 +13,7 @@ npm i @ableron/ableron
 ```
 
 ## Usage
+
 ```ts
 import { Ableron } from '@ableron/ableron';
 
@@ -26,7 +27,8 @@ try {
   ableron
     .resolveIncludes(rawResponseBody, req.headers)
     .then((transclusionResult) => {
-      transclusionResult.getResponseHeadersToPass()
+      transclusionResult
+        .getResponseHeadersToPass()
         .forEach((headerValue, headerName) => res.setHeader(headerName, headerValue));
       res.setHeader(
         'Cache-Control',
