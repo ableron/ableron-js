@@ -1,8 +1,8 @@
-import { Include } from '../src/include';
+import Include from '../src/include.js';
 import Fastify, { FastifyInstance } from 'fastify';
-import { AbleronConfig } from '../src';
-import { TransclusionProcessor } from '../src/transclusion-processor';
-import { Fragment } from '../src/fragment';
+import { AbleronConfig } from '../src/index.js';
+import TransclusionProcessor from '../src/transclusion-processor.js';
+import Fragment from '../src/fragment.js';
 
 const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay));
 

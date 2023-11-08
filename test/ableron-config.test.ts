@@ -1,4 +1,4 @@
-import { AbleronConfig } from '../src';
+import { AbleronConfig } from '../src/index.js';
 
 test('should have default value for each property', () => {
   // when

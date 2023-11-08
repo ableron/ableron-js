@@ -1,6 +1,6 @@
 import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http2';
 
-export class HttpUtil {
+export default class HttpUtil {
   private static HEADER_AGE: string = 'Age';
   private static HEADER_CACHE_CONTROL: string = 'Cache-Control';
   private static HEADER_DATE: string = 'Date';

@@ -1,6 +1,6 @@
-import { Ableron } from './ableron';
-import { AbleronConfig } from './ableron-config';
-import { AbstractLogger } from './abstract-logger';
-import { TransclusionResult } from './transclusion-result';
+import Ableron from './ableron.js';
+import AbleronConfig from './ableron-config.js';
+import AbstractLogger from './abstract-logger.js';
+import TransclusionResult from './transclusion-result.js';
 
 export { Ableron, AbleronConfig, AbstractLogger, TransclusionResult };

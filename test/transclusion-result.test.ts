@@ -1,6 +1,6 @@
-import { TransclusionResult } from '../src';
-import { Include } from '../src/include';
-import { Fragment } from '../src/fragment';
+import { TransclusionResult } from '../src/index.js';
+import Include from '../src/include.js';
+import Fragment from '../src/fragment.js';
 
 test('should return reasonable defaults', () => {
   // given

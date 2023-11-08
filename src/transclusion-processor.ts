@@ -1,11 +1,11 @@
-import { AbleronConfig } from './ableron-config';
-import { TransclusionResult } from './transclusion-result';
-import { Include } from './include';
+import AbleronConfig from './ableron-config.js';
+import TransclusionResult from './transclusion-result.js';
+import Include from './include.js';
 import TTLCache from '@isaacs/ttlcache';
-import { Fragment } from './fragment';
-import { AbstractLogger } from './abstract-logger';
+import Fragment from './fragment.js';
+import AbstractLogger from './abstract-logger.js';
 
-export class TransclusionProcessor {
+export default class TransclusionProcessor {
   /**
    * Regular expression for matching ableron includes.
    */

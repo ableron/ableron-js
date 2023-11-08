@@ -1,10 +1,10 @@
-import { Include } from './include';
-import { Fragment } from './fragment';
-import { HttpUtil } from './http-util';
-import { AbstractLogger } from './abstract-logger';
+import Include from './include.js';
+import Fragment from './fragment.js';
+import HttpUtil from './http-util.js';
+import AbstractLogger from './abstract-logger.js';
 import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http2';
 
-export class TransclusionResult {
+export default class TransclusionResult {
   private content: string;
   private contentExpirationTime: Date | undefined;
   private hasPrimaryInclude: boolean = false;

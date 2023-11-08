@@ -1,4 +1,4 @@
-import { HttpUtil } from '../src/http-util';
+import HttpUtil from '../src/http-util.js';
 
 describe('calculateResponseExpirationTime', () => {
   it('should calculate response expiration time based on s-maxage', () => {

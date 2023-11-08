@@ -1,11 +1,11 @@
-import { AbleronConfig } from './ableron-config';
-import { TransclusionProcessor } from './transclusion-processor';
-import { TransclusionResult } from './transclusion-result';
-import { AbstractLogger } from './abstract-logger';
-import { HttpUtil } from './http-util';
+import AbleronConfig from './ableron-config.js';
+import TransclusionProcessor from './transclusion-processor.js';
+import TransclusionResult from './transclusion-result.js';
+import AbstractLogger from './abstract-logger.js';
+import HttpUtil from './http-util.js';
 import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http2';
 
-export class Ableron {
+export default class Ableron {
   private readonly logger: AbstractLogger;
   private readonly ableronConfig: AbleronConfig;
   private readonly transclusionProcessor: TransclusionProcessor;

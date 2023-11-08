@@ -1,4 +1,4 @@
-import { Ableron, AbleronConfig } from '../src';
+import { Ableron, AbleronConfig } from '../src/index.js';
 
 test.each([
   [{ enabled: true }, 'fallback', 1],

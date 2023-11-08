@@ -1,11 +1,11 @@
-import { Fragment } from './fragment';
+import Fragment from './fragment.js';
 import * as crypto from 'crypto';
-import { AbleronConfig } from './ableron-config';
-import { HttpUtil } from './http-util';
+import AbleronConfig from './ableron-config.js';
+import HttpUtil from './http-util.js';
 import TTLCache from '@isaacs/ttlcache';
-import { AbstractLogger } from './abstract-logger';
+import AbstractLogger from './abstract-logger.js';
 
-export class Include {
+export default class Include {
   /**
    * Name of the attribute which contains the ID of the include - an optional unique name.
    */

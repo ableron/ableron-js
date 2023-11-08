@@ -1,4 +1,4 @@
-export class AbstractLogger {
+export default class AbstractLogger {
   error(data: any, ...args: any) {
     console.error(data, ...args);
   }

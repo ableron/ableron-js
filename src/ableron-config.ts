@@ -1,4 +1,4 @@
-export class AbleronConfig {
+export default class AbleronConfig {
   /**
    * Whether UI composition is enabled.
    */

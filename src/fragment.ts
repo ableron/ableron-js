@@ -1,4 +1,4 @@
-export class Fragment {
+export default class Fragment {
   readonly content: string;
   readonly expirationTime: Date;
   readonly isRemote: boolean;

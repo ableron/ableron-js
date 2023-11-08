@@ -1,5 +1,5 @@
-import { TransclusionProcessor } from '../src/transclusion-processor';
-import { AbleronConfig } from '../src';
+import TransclusionProcessor from '../src/transclusion-processor.js';
+import { AbleronConfig } from '../src/index.js';
 import Fastify, { FastifyInstance } from 'fastify';
 
 let server: FastifyInstance | undefined;
