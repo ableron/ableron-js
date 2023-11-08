@@ -14,7 +14,6 @@
   "scripts": {
     "clean": "rimraf dist",
     "build": "npm run clean && tsc",
-    "lint": "eslint \"src/**/*.ts\" --fix",
     "prettier": "prettier . --write",
     "test": "vitest"
   },
@@ -43,10 +42,6 @@
   },
   "devDependencies": {
     "@types/node": "20.8.10",
-    "@typescript-eslint/eslint-plugin": "6.9.1",
-    "@typescript-eslint/parser": "6.9.1",
-    "eslint": "8.52.0",
-    "eslint-config-prettier": "9.0.0",
     "fastify": "4.24.3",
     "prettier": "3.0.3",
     "rimraf": "5.0.5",
