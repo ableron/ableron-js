@@ -205,7 +205,9 @@ export default class Include {
       return null;
     }
 
-    return this.getFragmentFromCache(fragmentCache, url, (resolveRunningFragmentRequest: any) =>
+    const fragmentCacheKey = this.buildFragmentCacheKey(url, requestHeaders, config.cacheVaryByRequestHeaders);
+
+    return this.getFragmentFromCache(fragmentCache, fragmentCacheKey, (resolveRunningFragmentRequest: any) =>
       this.requestFragment(url, requestHeaders, requestTimeoutMillis)
         .then(async (response: Response | null) => {
           if (!response) {
@@ -241,13 +243,13 @@ export default class Include {
             const fragmentTtl = fragment.expirationTime.getTime() - new Date().getTime();
 
             if (fragmentTtl > 0) {
-              fragmentCache.set(url, fragment, {
+              fragmentCache.set(fragmentCacheKey, fragment, {
                 ttl: Math.min(fragmentTtl, this.SEVEN_DAYS_IN_MILLISECONDS)
               });
             }
           }
 
-          Include.runningFragmentRequests.delete(url);
+          Include.runningFragmentRequests.delete(fragmentCacheKey);
 
           if (resolveRunningFragmentRequest) {
             resolveRunningFragmentRequest();
@@ -268,10 +270,10 @@ export default class Include {
 
   private async getFragmentFromCache(
     fragmentCache: TTLCache<string, Fragment>,
-    url: string,
+    fragmentCacheKey: string,
     loadFragment: (resolveRunningFragmentRequest: any) => Promise<Fragment | null>
   ): Promise<Fragment | null> {
-    const fragmentFromCache = fragmentCache.get(url) as Fragment;
+    const fragmentFromCache = fragmentCache.get(fragmentCacheKey);
 
     if (fragmentFromCache) {
       return fragmentFromCache;
@@ -280,14 +282,29 @@ export default class Include {
     let resolveRunningFragmentRequest: any;
     const currentReq: Promise<Fragment | null> = new Promise((resolve) => (resolveRunningFragmentRequest = resolve));
     const fetchFragmentPromise =
-      Include.runningFragmentRequests.get(url) || Include.runningFragmentRequests.set(url, currentReq);
+      Include.runningFragmentRequests.get(fragmentCacheKey) ||
+      Include.runningFragmentRequests.set(fragmentCacheKey, currentReq);
 
     if (fetchFragmentPromise.constructor.name === 'Promise') {
       await fetchFragmentPromise;
-      return fragmentCache.get(url) || loadFragment(undefined);
+      return fragmentCache.get(fragmentCacheKey) || loadFragment(undefined);
     }
 
     return loadFragment(resolveRunningFragmentRequest);
+  }
+
+  private buildFragmentCacheKey(
+    fragmentUrl: string,
+    fragmentRequestHeaders: Headers,
+    cacheVaryByRequestHeaders: string[]
+  ): string {
+    let cacheKey = fragmentUrl;
+
+    cacheVaryByRequestHeaders.forEach((headerName) => {
+      cacheKey += '|' + headerName.toLowerCase() + '=' + (fragmentRequestHeaders.get(headerName)?.toLowerCase() || '');
+    });
+
+    return cacheKey;
   }
 
   private requestFragment(

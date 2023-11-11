@@ -73,4 +73,5 @@ const ableron = new Ableron({
   - `Content-Language`
   - `Location`
   - `Refresh`
+- `cacheVaryByRequestHeaders`: Fragment request headers which influence the requested fragment aside from its URL. Used to create fragment cache keys. Defaults to an empty list. Must be a subset of `fragmentRequestHeadersToPass`. Common example are headers used for steering A/B-tests
 - `statsAppendToContent`: Whether to append UI composition stats as HTML comment to the content. Defaults to `false`
