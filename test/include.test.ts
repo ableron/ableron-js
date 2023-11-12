@@ -916,7 +916,14 @@ describe('Include', () => {
     const fragment1 = await include.resolve(config, fragmentCache, new Headers([['X-AB-TEST', 'A']]));
     const fragment2 = await include.resolve(config, fragmentCache, new Headers([['X-AB-TEST', 'A']]));
     const fragment3 = await include.resolve(config, fragmentCache, new Headers([['X-AB-TEST', 'B']]));
-    const fragment4 = await include.resolve(config, fragmentCache, new Headers([['X-AB-TEST', 'B']]));
+    const fragment4 = await include.resolve(
+      config,
+      fragmentCache,
+      new Headers([
+        ['X-AB-TEST', 'B'],
+        ['X-Foo', 'Bar']
+      ])
+    );
     const fragment5 = await include.resolve(config, fragmentCache);
     const fragment6 = await include.resolve(config, fragmentCache, new Headers([['X-AB-TEST', 'A']]));
 
@@ -927,5 +934,67 @@ describe('Include', () => {
     expect(fragment4.content).toBe('request X-AB-Test=B | 2');
     expect(fragment5.content).toBe('request X-AB-Test=undefined | 3');
     expect(fragment6.content).toBe('request X-AB-Test=A | 1');
+  });
+
+  it('should use consistent order of cacheVaryByRequestHeaders for cache key generation', async () => {
+    // given
+    server = Fastify();
+    let reqCounter = 0;
+    server.get('/src', function (request, reply) {
+      reply
+        .status(200)
+        .header('Cache-Control', 'max-age=30')
+        .send('request ' + ++reqCounter);
+    });
+    await server.listen();
+    const config = new AbleronConfig({
+      fragmentRequestHeadersToPass: ['X-Test-A', 'X-Test-B', 'X-Test-C'],
+      cacheVaryByRequestHeaders: ['X-Test-A', 'X-Test-B', 'X-Test-C']
+    });
+    const include = new Include(new Map([['src', serverAddress('/src')]]));
+
+    // when
+    const fragment1 = await include.resolve(
+      config,
+      fragmentCache,
+      new Headers([
+        ['X-TEST-A', 'A'],
+        ['X-Test-B', 'B'],
+        ['X-Test-C', 'C']
+      ])
+    );
+    const fragment2 = await include.resolve(
+      config,
+      fragmentCache,
+      new Headers([
+        ['X-TEST-B', 'B'],
+        ['X-Test-A', 'A'],
+        ['X-Test-C', 'C']
+      ])
+    );
+    const fragment3 = await include.resolve(
+      config,
+      fragmentCache,
+      new Headers([
+        ['X-TEST-C', 'C'],
+        ['X-Test-B', 'B'],
+        ['X-Test-A', 'A']
+      ])
+    );
+    const fragment4 = await include.resolve(
+      config,
+      fragmentCache,
+      new Headers([
+        ['x-test-c', 'B'],
+        ['x-test-b', 'B'],
+        ['x-test-a', 'A']
+      ])
+    );
+
+    // then
+    expect(fragment1.content).toBe('request 1');
+    expect(fragment2.content).toBe('request 1');
+    expect(fragment3.content).toBe('request 1');
+    expect(fragment4.content).toBe('request 2');
   });
 });
