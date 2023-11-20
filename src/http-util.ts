@@ -11,69 +11,65 @@ export default class HttpUtil {
   ): Date {
     const headers = this.normalizeHeaders(inputHeaders);
     const cacheControlHeaderValue = headers.get(this.HEADER_CACHE_CONTROL);
-    const cacheControlDirectives =
-      cacheControlHeaderValue !== null
-        ? cacheControlHeaderValue.split(',').map((directive) => directive.trim().toLowerCase())
-        : [];
+    const cacheControlDirectives = cacheControlHeaderValue
+      ? cacheControlHeaderValue.split(',').map((directive) => directive.trim().toLowerCase())
+      : [];
     const cacheLifetimeBySharedCacheMaxAge = this.getCacheLifetimeBySharedCacheMaxAge(cacheControlDirectives);
 
-    if (cacheLifetimeBySharedCacheMaxAge !== undefined) {
+    if (cacheLifetimeBySharedCacheMaxAge) {
       return cacheLifetimeBySharedCacheMaxAge;
     }
 
-    const ageHeaderValue = headers.get(this.HEADER_AGE);
-    const cacheLifetimeByMaxAge = this.getCacheLifetimeByMaxAge(
-      cacheControlDirectives,
-      ageHeaderValue !== null ? ageHeaderValue : undefined
-    );
+    const cacheLifetimeByMaxAge = this.getCacheLifetimeByMaxAge(cacheControlDirectives, headers.get(this.HEADER_AGE));
 
-    if (cacheLifetimeByMaxAge !== undefined) {
+    if (cacheLifetimeByMaxAge) {
       return cacheLifetimeByMaxAge;
     }
 
-    const expiresHeaderValue = headers.get(this.HEADER_EXPIRES);
-    const dateHeaderValue = headers.get(this.HEADER_DATE);
     const cacheLifetimeByExpires = this.getCacheLifetimeByExpiresHeader(
-      expiresHeaderValue !== null ? expiresHeaderValue : undefined,
-      dateHeaderValue !== null ? dateHeaderValue : undefined
+      headers.get(this.HEADER_EXPIRES),
+      headers.get(this.HEADER_DATE)
     );
 
-    if (cacheLifetimeByExpires !== undefined) {
+    if (cacheLifetimeByExpires) {
       return cacheLifetimeByExpires;
     }
 
     return new Date(0);
   }
 
-  private static getCacheLifetimeBySharedCacheMaxAge(cacheControlDirectives: string[]): Date | undefined {
+  private static getCacheLifetimeBySharedCacheMaxAge(cacheControlDirectives: string[]): Date | null {
     const sharedCacheMaxAgeDirective = cacheControlDirectives.find(
       (directive) => directive.match(/^s-maxage=[1-9][0-9]*$/) != null
     );
 
-    if (sharedCacheMaxAgeDirective !== undefined) {
+    if (sharedCacheMaxAgeDirective) {
       const maxAge = Number(sharedCacheMaxAgeDirective.substring('s-maxage='.length));
       return new Date(new Date().getTime() + maxAge * 1000);
     }
 
-    return undefined;
+    return null;
   }
 
-  private static getCacheLifetimeByMaxAge(cacheControlDirectives: string[], ageHeaderValue?: string): Date | undefined {
+  private static getCacheLifetimeByMaxAge(
+    cacheControlDirectives: string[],
+    ageHeaderValue?: string | null
+  ): Date | null {
     const maxAgeDirective = cacheControlDirectives.find(
       (directive) => directive.match(/^max-age=[1-9][0-9]*$/) != null
     );
 
-    if (maxAgeDirective === undefined) {
-      return undefined;
+    if (!maxAgeDirective) {
+      return null;
     }
 
     let maxAge = Number(maxAgeDirective.substring('max-age='.length));
 
-    if (ageHeaderValue !== undefined) {
+    if (ageHeaderValue) {
       const age = Number(ageHeaderValue);
 
       if (isNaN(age)) {
-        return undefined;
+        return null;
       }
 
       maxAge = maxAge - Math.abs(age);
@@ -83,21 +79,23 @@ export default class HttpUtil {
   }
 
   private static getCacheLifetimeByExpiresHeader(
-    expiresHeaderValue?: string,
-    dateHeaderValue?: string
-  ): Date | undefined {
-    if (expiresHeaderValue === undefined) {
-      return undefined;
+    expiresHeaderValue?: string | null,
+    dateHeaderValue?: string | null
+  ): Date | null {
+    if (!expiresHeaderValue) {
+      return null;
     }
 
     let expires = expiresHeaderValue === '0' ? new Date(0) : new Date(expiresHeaderValue);
 
-    if (dateHeaderValue !== undefined && !isNaN(expires.getTime())) {
+    if (dateHeaderValue && !isNaN(expires.getTime())) {
       const date = new Date(dateHeaderValue);
-      return isNaN(date.getTime()) ? undefined : new Date(new Date().getTime() + (expires.getTime() - date.getTime()));
+      return isNaN(date.getTime()) ? null : new Date(new Date().getTime() + (expires.getTime() - date.getTime()));
     }
 
-    return isNaN(expires.getTime()) ? undefined : expires;
+    console.log('Expires: ' + expires.getTime());
+
+    return isNaN(expires.getTime()) ? null : expires;
   }
 
   static normalizeHeaders(
