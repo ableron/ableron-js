@@ -363,14 +363,13 @@ export default class Include {
   }
 
   private parseTimeout(timeoutAsString?: string): number | undefined {
-    if (timeoutAsString === undefined) {
-      return undefined;
-    }
-
     const parsedTimeout = Number(timeoutAsString);
 
     if (isNaN(parsedTimeout)) {
-      this.logger.error(`Invalid request timeout: ${timeoutAsString}`);
+      if (timeoutAsString) {
+        this.logger.error(`Invalid request timeout: ${timeoutAsString}`);
+      }
+
       return undefined;
     }
 
