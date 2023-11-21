@@ -93,8 +93,6 @@ export default class HttpUtil {
       return isNaN(date.getTime()) ? null : new Date(new Date().getTime() + (expires.getTime() - date.getTime()));
     }
 
-    console.log('Expires: ' + expires.getTime());
-
     return isNaN(expires.getTime()) ? null : expires;
   }
 
