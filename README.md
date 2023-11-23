@@ -46,7 +46,7 @@ try {
 }
 ```
 
-## Configuration Options
+## Configuration
 
 ```ts
 import { Ableron } from '@ableron/ableron';
