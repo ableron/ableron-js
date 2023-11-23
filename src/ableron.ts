@@ -16,6 +16,10 @@ export default class Ableron {
     this.transclusionProcessor = new TransclusionProcessor(this.ableronConfig);
   }
 
+  getLogger() {
+    return this.logger;
+  }
+
   getConfig() {
     return this.ableronConfig;
   }
