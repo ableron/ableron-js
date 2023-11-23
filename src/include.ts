@@ -104,8 +104,6 @@ export default class Include {
 
   private readonly logger: AbstractLogger;
 
-  private static readonly runningFragmentRequests: Map<string, Promise<Fragment | null>> = new Map();
-
   constructor(
     rawAttributes?: Map<string, string>,
     fallbackContent?: string,
@@ -206,58 +204,54 @@ export default class Include {
     }
 
     const fragmentCacheKey = this.buildFragmentCacheKey(url, requestHeaders, config.cacheVaryByRequestHeaders);
-
-    return this.getFragmentFromCache(fragmentCache, fragmentCacheKey, (resolveRunningFragmentRequest: any) =>
-      this.requestFragment(url, requestHeaders, requestTimeoutMillis)
-        .then(async (response: Response | null) => {
-          if (!response) {
-            return null;
-          }
-
-          const responseBody = await response.text();
-
-          if (!this.HTTP_STATUS_CODES_CACHEABLE.includes(response.status)) {
-            this.logger.error(`Fragment ${this.id} returned status code ${response.status}`);
-            this.recordErroredPrimaryFragment(
-              new Fragment(
-                response.status,
-                responseBody,
-                url,
-                undefined,
-                this.filterHeaders(response.headers, config.primaryFragmentResponseHeadersToPass)
-              )
-            );
-            return null;
-          }
-
-          return new Fragment(
-            response.status,
-            responseBody,
-            url,
-            HttpUtil.calculateResponseExpirationTime(response.headers),
-            this.filterHeaders(response.headers, config.primaryFragmentResponseHeadersToPass)
-          );
-        })
-        .then((fragment) => {
-          if (fragment) {
-            const fragmentTtl = fragment.expirationTime.getTime() - new Date().getTime();
-
-            if (fragmentTtl > 0) {
-              fragmentCache.set(fragmentCacheKey, fragment, {
-                ttl: Math.min(fragmentTtl, this.SEVEN_DAYS_IN_MILLISECONDS)
-              });
+    const fragmentFromCache = fragmentCache.get(fragmentCacheKey);
+    const fragment: Promise<Fragment | null> = fragmentFromCache
+      ? Promise.resolve(fragmentFromCache as Fragment)
+      : this.requestFragment(url, requestHeaders, requestTimeoutMillis)
+          .then(async (response: Response | null) => {
+            if (!response) {
+              return null;
             }
-          }
 
-          Include.runningFragmentRequests.delete(fragmentCacheKey);
+            const responseBody = await response.text();
 
-          if (resolveRunningFragmentRequest) {
-            resolveRunningFragmentRequest();
-          }
+            if (!this.HTTP_STATUS_CODES_CACHEABLE.includes(response.status)) {
+              this.logger.error(`Fragment ${this.id} returned status code ${response.status}`);
+              this.recordErroredPrimaryFragment(
+                new Fragment(
+                  response.status,
+                  responseBody,
+                  url,
+                  undefined,
+                  this.filterHeaders(response.headers, config.primaryFragmentResponseHeadersToPass)
+                )
+              );
+              return null;
+            }
 
-          return fragment;
-        })
-    ).then((fragment) => {
+            return new Fragment(
+              response.status,
+              responseBody,
+              url,
+              HttpUtil.calculateResponseExpirationTime(response.headers),
+              this.filterHeaders(response.headers, config.primaryFragmentResponseHeadersToPass)
+            );
+          })
+          .then((fragment) => {
+            if (fragment) {
+              const fragmentTtl = fragment.expirationTime.getTime() - new Date().getTime();
+
+              if (fragmentTtl > 0) {
+                fragmentCache.set(fragmentCacheKey, fragment, {
+                  ttl: Math.min(fragmentTtl, this.SEVEN_DAYS_IN_MILLISECONDS)
+                });
+              }
+            }
+
+            return fragment;
+          });
+
+    return fragment.then((fragment) => {
       if (fragment && !this.HTTP_STATUS_CODES_SUCCESS.includes(fragment.statusCode)) {
         this.logger.error(`Fragment ${this.id} returned status code ${fragment.statusCode}`);
         this.recordErroredPrimaryFragment(fragment);
@@ -266,45 +260,6 @@ export default class Include {
 
       return fragment;
     });
-  }
-
-  private async getFragmentFromCache(
-    fragmentCache: TTLCache<string, Fragment>,
-    fragmentCacheKey: string,
-    loadFragment: (resolveRunningFragmentRequest: any) => Promise<Fragment | null>
-  ): Promise<Fragment | null> {
-    const fragmentFromCache = fragmentCache.get(fragmentCacheKey);
-
-    if (fragmentFromCache) {
-      return fragmentFromCache;
-    }
-
-    let resolveRunningFragmentRequest: any;
-    const currentReq: Promise<Fragment | null> = new Promise((resolve) => (resolveRunningFragmentRequest = resolve));
-    const fetchFragmentPromise =
-      Include.runningFragmentRequests.get(fragmentCacheKey) ||
-      Include.runningFragmentRequests.set(fragmentCacheKey, currentReq);
-
-    if (fetchFragmentPromise.constructor.name === 'Promise') {
-      await fetchFragmentPromise;
-      return fragmentCache.get(fragmentCacheKey) || loadFragment(undefined);
-    }
-
-    return loadFragment(resolveRunningFragmentRequest);
-  }
-
-  private buildFragmentCacheKey(
-    fragmentUrl: string,
-    fragmentRequestHeaders: Headers,
-    cacheVaryByRequestHeaders: string[]
-  ): string {
-    let cacheKey = fragmentUrl;
-
-    cacheVaryByRequestHeaders.forEach((headerName) => {
-      cacheKey += '|' + headerName.toLowerCase() + '=' + (fragmentRequestHeaders.get(headerName)?.toLowerCase() || '');
-    });
-
-    return cacheKey;
   }
 
   private requestFragment(
@@ -316,13 +271,12 @@ export default class Include {
 
     try {
       requestHeaders.set('Accept-Encoding', 'gzip');
-      return fetch(
-        new Request(url, {
-          headers: requestHeaders,
-          redirect: 'manual',
-          signal: AbortSignal.timeout(requestTimeoutMillis)
-        })
-      ).catch((e: Error) => {
+
+      return fetch(url, {
+        headers: requestHeaders,
+        redirect: 'manual',
+        signal: AbortSignal.timeout(requestTimeoutMillis)
+      }).catch((e: Error) => {
         if (e.name === 'TimeoutError') {
           this.logger.error(
             `Unable to load fragment ${url} for include ${this.id}: ${requestTimeoutMillis}ms timeout exceeded`
@@ -390,5 +344,21 @@ export default class Include {
     }
 
     return crypto.createHash('sha1').update(this.rawIncludeTag).digest('hex').substring(0, 7);
+  }
+
+  private buildFragmentCacheKey(
+    fragmentUrl: string,
+    fragmentRequestHeaders: Headers,
+    cacheVaryByRequestHeaders: string[]
+  ): string {
+    let cacheKey = fragmentUrl;
+    cacheVaryByRequestHeaders.forEach((headerName) => {
+      const headerValue = fragmentRequestHeaders.get(headerName)?.toLowerCase() || null;
+
+      if (headerValue) {
+        cacheKey += '|' + headerName.toLowerCase() + '=' + headerValue;
+      }
+    });
+    return cacheKey;
   }
 }

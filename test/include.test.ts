@@ -402,7 +402,7 @@ describe('Include', () => {
     [510, 'fragment', false, ':('],
     [511, 'fragment', false, ':(']
   ])(
-    'should cache fragment if status code is defined as cacheable in RFC 7231 - Status %p',
+    'should cache fragment if status code is defined as cacheable in RFC 7231 - Status %i',
     async (responseStatus: number, srcFragment: string, expectedFragmentCached: boolean, expectedFragment: string) => {
       // given
       server = Fastify();
@@ -689,7 +689,7 @@ describe('Include', () => {
     ['fallback-src', new Map([['fallback-src-timeout-millis', '2000']]), 'fragment'],
     ['fallback-src', new Map([['src-timeout-millis', '2000']]), '']
   ])(
-    'should favor include tag specific request timeout over global one - %p, %p',
+    'should favor include tag specific request timeout over global one - %s, %o',
     async (srcAttributeName: string, timeoutAttribute: Map<string, string>, expectedFragmentContent: string) => {
       // given
       server = Fastify();
@@ -865,7 +865,7 @@ describe('Include', () => {
     expect(fragment.responseHeaders.get('x-test')).toBe('Test');
   });
 
-  it('should collapse requests', async () => {
+  it('should not collapse requests', async () => {
     // given
     server = Fastify();
     let reqCounter = 0;
@@ -888,11 +888,11 @@ describe('Include', () => {
       fragmentCache
     );
 
+    // and
+    await Promise.all([fragment1, fragment2, fragment3, fragment4]);
+
     // then
-    expect((await fragment1).content).toBe('request 1');
-    expect((await fragment2).content).toBe('request 1');
-    expect((await fragment3).content).toBe('request 1');
-    expect((await fragment4).content).toBe('404 not found');
+    expect(reqCounter).toBe(3);
   });
 
   it('should consider cacheVaryByRequestHeaders', async () => {
@@ -907,14 +907,30 @@ describe('Include', () => {
     });
     await server.listen();
     const config = new AbleronConfig({
-      fragmentRequestHeadersToPass: ['x-ab-TEST'],
-      cacheVaryByRequestHeaders: ['x-AB-test']
+      fragmentRequestHeadersToPass: ['x-ab-TEST', 'x-ab-TEST-1', 'x-ab-TEST-2'],
+      cacheVaryByRequestHeaders: ['x-AB-test', 'x-AB-test-1', 'x-AB-test-2']
     });
     const include = new Include(new Map([['src', serverAddress('/src')]]));
 
     // when
-    const fragment1 = await include.resolve(config, fragmentCache, new Headers([['X-AB-TEST', 'A']]));
-    const fragment2 = await include.resolve(config, fragmentCache, new Headers([['X-AB-TEST', 'A']]));
+    const fragment1 = await include.resolve(
+      config,
+      fragmentCache,
+      new Headers([
+        ['X-AB-TEST', 'A'],
+        ['X-AB-TEST-2', 'A'],
+        ['X-AB-TEST-1', 'A']
+      ])
+    );
+    const fragment2 = await include.resolve(
+      config,
+      fragmentCache,
+      new Headers([
+        ['X-AB-TEST', 'A'],
+        ['X-AB-TEST-1', 'A'],
+        ['X-AB-TEST-2', 'A']
+      ])
+    );
     const fragment3 = await include.resolve(config, fragmentCache, new Headers([['X-AB-TEST', 'B']]));
     const fragment4 = await include.resolve(
       config,
@@ -925,7 +941,32 @@ describe('Include', () => {
       ])
     );
     const fragment5 = await include.resolve(config, fragmentCache);
-    const fragment6 = await include.resolve(config, fragmentCache, new Headers([['X-AB-TEST', 'A']]));
+    const fragment6 = await include.resolve(
+      config,
+      fragmentCache,
+      new Headers([
+        ['X-AB-TEST-2', 'A'],
+        ['X-AB-TEST-1', 'A'],
+        ['X-AB-TEST', 'A']
+      ])
+    );
+    const fragment7 = await include.resolve(
+      config,
+      fragmentCache,
+      new Headers([
+        ['X-AB-TEST-2', ''],
+        ['X-AB-TEST-1', 'A'],
+        ['X-AB-TEST', 'A']
+      ])
+    );
+    const fragment8 = await include.resolve(
+      config,
+      fragmentCache,
+      new Headers([
+        ['X-AB-TEST-1', 'A'],
+        ['X-AB-TEST', 'A']
+      ])
+    );
 
     // then
     expect(fragment1.content).toBe('request X-AB-Test=A | 1');
@@ -934,6 +975,8 @@ describe('Include', () => {
     expect(fragment4.content).toBe('request X-AB-Test=B | 2');
     expect(fragment5.content).toBe('request X-AB-Test=undefined | 3');
     expect(fragment6.content).toBe('request X-AB-Test=A | 1');
+    expect(fragment7.content).toBe('request X-AB-Test=A | 4');
+    expect(fragment8.content).toBe('request X-AB-Test=A | 4');
   });
 
   it('should use consistent order of cacheVaryByRequestHeaders for cache key generation', async () => {
