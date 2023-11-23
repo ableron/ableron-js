@@ -1,17 +1,17 @@
 import AbleronConfig from './ableron-config.js';
 import TransclusionProcessor from './transclusion-processor.js';
 import TransclusionResult from './transclusion-result.js';
-import AbstractLogger from './abstract-logger.js';
 import HttpUtil from './http-util.js';
 import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http2';
+import { LoggerInterface, NoOpLogger } from './logger.js';
 
 export default class Ableron {
-  private readonly logger: AbstractLogger;
+  private readonly logger: LoggerInterface;
   private readonly ableronConfig: AbleronConfig;
   private readonly transclusionProcessor: TransclusionProcessor;
 
-  constructor(ableronConfig: Partial<AbleronConfig>, logger?: AbstractLogger) {
-    this.logger = logger || new AbstractLogger();
+  constructor(ableronConfig: Partial<AbleronConfig>, logger?: LoggerInterface) {
+    this.logger = logger || new NoOpLogger();
     this.ableronConfig = new AbleronConfig(ableronConfig);
     this.transclusionProcessor = new TransclusionProcessor(this.ableronConfig);
   }

@@ -1,8 +1,8 @@
 import Include from './include.js';
 import Fragment from './fragment.js';
 import HttpUtil from './http-util.js';
-import AbstractLogger from './abstract-logger.js';
 import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http2';
+import { LoggerInterface, NoOpLogger } from './logger.js';
 
 export default class TransclusionResult {
   private content: string;
@@ -14,10 +14,10 @@ export default class TransclusionResult {
   private processedIncludesCount: number = 0;
   private processingTimeMillis: number = 0;
   private readonly statMessages: string[] = [];
-  private readonly logger: AbstractLogger;
+  private readonly logger: LoggerInterface;
 
-  constructor(content: string, appendStatsToContent: boolean = false, logger?: AbstractLogger) {
-    this.logger = logger || new AbstractLogger();
+  constructor(content: string, appendStatsToContent: boolean = false, logger?: LoggerInterface) {
+    this.logger = logger || new NoOpLogger();
     this.content = content;
     this.appendStatsToContent = appendStatsToContent;
   }

@@ -3,7 +3,7 @@ import * as crypto from 'crypto';
 import AbleronConfig from './ableron-config.js';
 import HttpUtil from './http-util.js';
 import TTLCache from '@isaacs/ttlcache';
-import AbstractLogger from './abstract-logger.js';
+import { LoggerInterface, NoOpLogger } from './logger.js';
 
 export default class Include {
   /**
@@ -102,15 +102,15 @@ export default class Include {
    */
   private erroredPrimaryFragment: Fragment | null = null;
 
-  private readonly logger: AbstractLogger;
+  private readonly logger: LoggerInterface;
 
   constructor(
     rawAttributes?: Map<string, string>,
     fallbackContent?: string,
     rawIncludeTag?: string,
-    logger?: AbstractLogger
+    logger?: LoggerInterface
   ) {
-    this.logger = logger || new AbstractLogger();
+    this.logger = logger || new NoOpLogger();
     this.rawIncludeTag = rawIncludeTag !== undefined ? rawIncludeTag : '';
     this.rawAttributes = rawAttributes !== undefined ? rawAttributes : new Map<string, string>();
     this.id = this.buildIncludeId(this.rawAttributes.get(this.ATTR_ID));

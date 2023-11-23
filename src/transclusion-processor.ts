@@ -3,7 +3,7 @@ import TransclusionResult from './transclusion-result.js';
 import Include from './include.js';
 import TTLCache from '@isaacs/ttlcache';
 import Fragment from './fragment.js';
-import AbstractLogger from './abstract-logger.js';
+import { LoggerInterface, NoOpLogger } from './logger.js';
 
 export default class TransclusionProcessor {
   /**
@@ -20,10 +20,10 @@ export default class TransclusionProcessor {
 
   private readonly fragmentCache: TTLCache<string, Fragment>;
 
-  private readonly logger: AbstractLogger;
+  private readonly logger: LoggerInterface;
 
-  constructor(ableronConfig: AbleronConfig, logger?: AbstractLogger) {
-    this.logger = logger || new AbstractLogger();
+  constructor(ableronConfig: AbleronConfig, logger?: LoggerInterface) {
+    this.logger = logger || new NoOpLogger();
     this.ableronConfig = ableronConfig;
     this.fragmentCache = this.buildFragmentCache();
   }
