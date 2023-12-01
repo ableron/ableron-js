@@ -18,7 +18,12 @@ npm i @ableron/ableron
 import { Ableron } from '@ableron/ableron';
 
 const yourLoggerInstance = pinoWinstonMorganOrWhateverYouMayHave() || console;
-const ableron = new Ableron({}, yourLoggerInstance);
+const ableron = new Ableron(
+  {
+    /* optional configuration */
+  },
+  yourLoggerInstance
+);
 const rawResponseBody = buildRawResponseBody();
 const req = yourNodeJsRequestObject();
 const res = yourNodeJsResponseObject();
@@ -46,32 +51,57 @@ try {
 }
 ```
 
-## Configuration
+### Configuration
 
-```ts
-import { Ableron } from '@ableron/ableron';
-const ableron = new Ableron({
-  // apply your configuration here
-});
+#### `enabled`
+
+Default: `true`
+
+Whether UI composition is enabled.
+
+#### `fragmentRequestTimeoutMillis`
+
+Default: `3000`
+
+Timeout in milliseconds for requesting fragments.
+
+#### `fragmentRequestHeadersToPass`
+
+Default:
+
+```js
+[
+  'Accept-Language',
+  'Correlation-ID',
+  'Forwarded',
+  'Referer',
+  'User-Agent',
+  'X-Correlation-ID',
+  'X-Forwarded-For',
+  'X-Forwarded-Proto',
+  'X-Forwarded-Host',
+  'X-Real-IP',
+  'X-Request-ID'
+];
 ```
 
-- `enabled`: Whether UI composition is enabled. Defaults to `true`
-- `fragmentRequestTimeoutMillis`: Timeout for requesting fragments. Defaults to `3 seconds`
-- `fragmentRequestHeadersToPass`: Request headers that are passed to fragment requests if present. Defaults to:
-  - `Accept-Language`
-  - `Correlation-ID`
-  - `Forwarded`
-  - `Referer`
-  - `User-Agent`
-  - `X-Correlation-ID`
-  - `X-Forwarded-For`
-  - `X-Forwarded-Proto`
-  - `X-Forwarded-Host`
-  - `X-Real-IP`
-  - `X-Request-ID`
-- `primaryFragmentResponseHeadersToPass`: Response headers of primary fragments to pass to the page response if present. Defaults to:
-  - `Content-Language`
-  - `Location`
-  - `Refresh`
-- `cacheVaryByRequestHeaders`: Fragment request headers which influence the requested fragment aside from its URL. Used to create fragment cache keys. Defaults to an empty list. Must be a subset of `fragmentRequestHeadersToPass`. Common example are headers used for steering A/B-tests
-- `statsAppendToContent`: Whether to append UI composition stats as HTML comment to the content. Defaults to `false`
+Request headers that are passed to fragment requests, if present.
+
+#### `primaryFragmentResponseHeadersToPass`
+
+Default: `['Content-Language', 'Location', 'Refresh']`
+
+Response headers of primary fragments to pass to the page response if present.
+
+#### `cacheVaryByRequestHeaders`
+
+Default: `[]`
+
+Fragment request headers which influence the requested fragment aside from its URL. Used to create fragment cache keys.
+Must be a subset of `fragmentRequestHeadersToPass`. Common example are headers used for steering A/B-tests.
+
+#### `statsAppendToContent`
+
+Default: `false`
+
+Whether to append UI composition stats as HTML comment to the content.
