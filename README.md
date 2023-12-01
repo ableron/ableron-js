@@ -1,4 +1,4 @@
-# Ableron JavaScript Library
+# @ableron/ableron
 
 [![Build Status](https://github.com/ableron/ableron-js/actions/workflows/test.yml/badge.svg)](https://github.com/ableron/ableron-js/actions/workflows/test.yml)
 [![npm version](https://badge.fury.io/js/@ableron%2Fableron.svg)](https://badge.fury.io/js/@ableron%2Fableron)
@@ -56,7 +56,7 @@ const ableron = new Ableron({
 ```
 
 - `enabled`: Whether UI composition is enabled. Defaults to `true`
-- `fragmentRequestTimeout`: Timeout for requesting fragments. Defaults to `3 seconds`
+- `fragmentRequestTimeoutMillis`: Timeout for requesting fragments. Defaults to `3 seconds`
 - `fragmentRequestHeadersToPass`: Request headers that are passed to fragment requests if present. Defaults to:
   - `Accept-Language`
   - `Correlation-ID`
