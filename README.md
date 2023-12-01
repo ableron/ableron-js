@@ -21,6 +21,7 @@ const yourLoggerInstance = pinoWinstonMorganOrWhateverYouMayHave() || console;
 const ableron = new Ableron(
   {
     /* optional configuration */
+    statsAppendToContent: true
   },
   yourLoggerInstance
 );
@@ -91,7 +92,7 @@ Request headers that are passed to fragment requests, if present.
 
 Default: `['Content-Language', 'Location', 'Refresh']`
 
-Response headers of primary fragments to pass to the page response if present.
+Response headers of primary fragments to pass to the page response, if present.
 
 #### `cacheVaryByRequestHeaders`
 
