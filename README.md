@@ -17,13 +17,14 @@ npm i @ableron/ableron
 ```ts
 import { Ableron } from '@ableron/ableron';
 
-const yourLoggerInstance = pinoWinstonMorganOrWhateverYouMayHave() || console;
 const ableron = new Ableron(
+  /* optional configuration */
   {
-    /* optional configuration */
     statsAppendToContent: true
+    // ...
   },
-  yourLoggerInstance
+  // optional logger
+  pinoWinstonMorganOrWhateverYouMayHave() || console
 );
 const rawResponseBody = buildRawResponseBody();
 const req = yourNodeJsRequestObject();
