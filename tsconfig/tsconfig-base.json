@@ -1,0 +1,14 @@
+{
+  "include": ["../src/**/*"],
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "noImplicitAny": false,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "es2022"
+  }
+}
