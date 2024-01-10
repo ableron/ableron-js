@@ -1,6 +1,6 @@
 {
   "name": "@ableron/ableron",
-  "version": "1.4.0-alpha.3",
+  "version": "1.4.0-alpha.4",
   "description": "JavaScript Library for Ableron Server Side UI Composition",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
@@ -15,7 +15,7 @@
     "dist"
   ],
   "engines": {
-    "node": ">=19"
+    "node": ">=18"
   },
   "scripts": {
     "clean": "rm -fr dist/*",
