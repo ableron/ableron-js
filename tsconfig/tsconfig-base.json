@@ -1,11 +1,11 @@
 {
-  "include": ["../src/**/*"],
+  "include": ["../src"],
   "compilerOptions": {
+    "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
+    "moduleResolution": "node",
     "noImplicitAny": false,
     "skipLibCheck": true,
     "strict": true,

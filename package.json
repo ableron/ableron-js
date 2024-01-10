@@ -1,21 +1,14 @@
 {
   "name": "@ableron/ableron",
-  "version": "1.4.0-alpha.2",
+  "version": "1.4.0-alpha.3",
   "description": "JavaScript Library for Ableron Server Side UI Composition",
-  "type": "module",
   "main": "./dist/cjs/index.cjs",
   "module": "./dist/esm/index.mjs",
   "types": "./dist/types/index.d.ts",
   "exports": {
     ".": {
-      "import": {
-        "types": "./dist/types/index.d.ts",
-        "default": "./dist/esm/index.mjs"
-      },
-      "require": {
-        "types": "./dist/types/index.d.ts",
-        "default": "./dist/cjs/index.cjs"
-      }
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
     }
   },
   "files": [
@@ -25,10 +18,10 @@
     "node": ">=19"
   },
   "scripts": {
-    "clean": "rimraf dist",
-    "build": "npm run clean && npm run build:esm && npm run build:cjs && npm run build:types",
-    "build:esm": "tsc -p tsconfig.json && move-file dist/esm/index.js dist/esm/index.mjs",
-    "build:cjs": "tsc -p tsconfig/tsconfig-cjs.json && move-file dist/cjs/index.js dist/cjs/index.cjs",
+    "clean": "rm -fr dist/*",
+    "build": "npm run clean && npm run build:esm && npm run build:cjs && npm run build:types && bash ./tsconfig/set-package-type",
+    "build:esm": "tsc -p tsconfig.json",
+    "build:cjs": "tsc -p tsconfig/tsconfig-cjs.json",
     "build:types": "tsc -p tsconfig/tsconfig-types.json",
     "prettier": "prettier . --write",
     "test": "vitest"
@@ -59,9 +52,7 @@
   "devDependencies": {
     "@types/node": "20.10.8",
     "fastify": "4.25.2",
-    "move-file-cli": "3.0.0",
     "prettier": "3.1.1",
-    "rimraf": "5.0.5",
     "ts-jest": "29.1.1",
     "ts-loader": "9.5.1",
     "typescript": "5.3.3",
