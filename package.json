@@ -2,8 +2,8 @@
   "name": "@ableron/ableron",
   "version": "1.4.0-alpha.3",
   "description": "JavaScript Library for Ableron Server Side UI Composition",
-  "main": "./dist/cjs/index.cjs",
-  "module": "./dist/esm/index.mjs",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
   "types": "./dist/types/index.d.ts",
   "exports": {
     ".": {
