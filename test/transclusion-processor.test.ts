@@ -518,12 +518,12 @@ test('should resolve includes in parallel', async () => {
 test('should handle unresolvable include', async () => {
   // given
   const transclusionProcessor = new TransclusionProcessor(new AbleronConfig({ statsAppendToContent: true }));
-  const presentRequestHeaders = vi.fn() as any as Headers;
+  const parentRequestHeaders = vi.fn() as any as Headers;
 
   // when
   const result = await transclusionProcessor.resolveIncludes(
     '<ableron-include ><!-- fallback content --></ableron-include>',
-    presentRequestHeaders
+    parentRequestHeaders
   );
 
   // then

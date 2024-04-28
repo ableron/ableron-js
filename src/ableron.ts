@@ -26,12 +26,12 @@ export default class Ableron {
 
   async resolveIncludes(
     content: string,
-    presentRequestHeaders: Headers | IncomingHttpHeaders | OutgoingHttpHeaders | { [key: string]: string | string[] }
+    parentRequestHeaders: Headers | IncomingHttpHeaders | OutgoingHttpHeaders | { [key: string]: string | string[] }
   ): Promise<TransclusionResult> {
     if (this.ableronConfig.enabled) {
       const transclusionResult = await this.transclusionProcessor.resolveIncludes(
         content,
-        HttpUtil.normalizeHeaders(presentRequestHeaders)
+        HttpUtil.normalizeHeaders(parentRequestHeaders)
       );
       this.logger.debug(
         `Ableron UI composition processed ${transclusionResult.getProcessedIncludesCount()} include(s) in ${transclusionResult.getProcessingTimeMillis()}ms`

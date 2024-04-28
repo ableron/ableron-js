@@ -162,17 +162,17 @@ export default class Include {
   resolve(
     config: AbleronConfig,
     fragmentCache: TTLCache<string, Fragment>,
-    fragmentRequestHeaders?: Headers
+    parentRequestHeaders?: Headers
   ): Promise<Fragment> {
-    const filteredFragmentRequestHeaders = this.filterHeaders(
-      fragmentRequestHeaders || new Headers(),
-      config.fragmentRequestHeadersToPass
+    const fragmentRequestHeaders = this.filterHeaders(
+      parentRequestHeaders || new Headers(),
+      config.fragmentRequestHeadersToPass.concat(config.fragmentAdditionalRequestHeadersToPass)
     );
     this.erroredPrimaryFragment = null;
 
     return this.load(
       this.src,
-      filteredFragmentRequestHeaders,
+      fragmentRequestHeaders,
       this.getRequestTimeout(this.srcTimeoutMillis, config),
       fragmentCache,
       config
@@ -182,7 +182,7 @@ export default class Include {
           fragment ||
           this.load(
             this.fallbackSrc,
-            filteredFragmentRequestHeaders,
+            fragmentRequestHeaders,
             this.getRequestTimeout(this.fallbackSrcTimeoutMillis, config),
             fragmentCache,
             config

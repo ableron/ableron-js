@@ -21,6 +21,7 @@ test('should have default value for each property', () => {
     'X-Real-IP',
     'X-Request-ID'
   ]);
+  expect(config.fragmentAdditionalRequestHeadersToPass).toEqual([]);
   expect(config.primaryFragmentResponseHeadersToPass).toEqual(['Content-Language', 'Location', 'Refresh']);
   expect(config.cacheVaryByRequestHeaders).toEqual([]);
   expect(config.statsAppendToContent).toBe(false);
@@ -32,6 +33,7 @@ test('should use values provided via constructor', () => {
     enabled: false,
     fragmentRequestTimeoutMillis: 200,
     fragmentRequestHeadersToPass: ['X-Test-Request-Header', 'X-Test-Request-Header-2'],
+    fragmentAdditionalRequestHeadersToPass: ['X-Additional-Req-Header', 'X-Additional-Req-Header-2'],
     primaryFragmentResponseHeadersToPass: ['X-Test-Response-Header', 'X-Test-Response-Header-2'],
     cacheVaryByRequestHeaders: ['X-ACME-Test-Groups'],
     statsAppendToContent: true
@@ -41,6 +43,10 @@ test('should use values provided via constructor', () => {
   expect(config.enabled).toBe(false);
   expect(config.fragmentRequestTimeoutMillis).toBe(200);
   expect(config.fragmentRequestHeadersToPass).toEqual(['X-Test-Request-Header', 'X-Test-Request-Header-2']);
+  expect(config.fragmentAdditionalRequestHeadersToPass).toEqual([
+    'X-Additional-Req-Header',
+    'X-Additional-Req-Header-2'
+  ]);
   expect(config.primaryFragmentResponseHeadersToPass).toEqual(['X-Test-Response-Header', 'X-Test-Response-Header-2']);
   expect(config.cacheVaryByRequestHeaders).toEqual(['X-ACME-Test-Groups']);
   expect(config.statsAppendToContent).toBe(true);

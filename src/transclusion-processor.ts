@@ -47,7 +47,7 @@ export default class TransclusionProcessor {
         ];
   }
 
-  async resolveIncludes(content: string, presentRequestHeaders: Headers): Promise<TransclusionResult> {
+  async resolveIncludes(content: string, parentRequestHeaders?: Headers): Promise<TransclusionResult> {
     const startTime = Date.now();
     const transclusionResult = new TransclusionResult(content, this.ableronConfig.statsAppendToContent, this.logger);
     await Promise.all(
@@ -55,7 +55,7 @@ export default class TransclusionProcessor {
         try {
           const includeResolveStartTime = Date.now();
           return include
-            .resolve(this.ableronConfig, this.fragmentCache, presentRequestHeaders)
+            .resolve(this.ableronConfig, this.fragmentCache, parentRequestHeaders)
             .then((fragment) => {
               const includeResolveTimeMillis = Date.now() - includeResolveStartTime;
               this.logger.debug('Resolved include %s in %dms', include.getId(), includeResolveTimeMillis);
