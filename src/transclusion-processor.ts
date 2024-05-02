@@ -41,7 +41,7 @@ export default class TransclusionProcessor {
           ...new Map(
             Array.from(content.matchAll(this.INCLUDE_PATTERN)).map((match) => [
               match[0],
-              new Include(this.parseAttributes(match[2]), match[5], match[0], this.logger)
+              new Include(match[0], this.parseAttributes(match[2]), match[5], this.logger)
             ])
           ).values()
         ];

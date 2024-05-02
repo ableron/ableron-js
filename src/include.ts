@@ -105,13 +105,13 @@ export default class Include {
   private readonly logger: LoggerInterface;
 
   constructor(
+    rawIncludeTag: string,
     rawAttributes?: Map<string, string>,
     fallbackContent?: string,
-    rawIncludeTag?: string,
     logger?: LoggerInterface
   ) {
     this.logger = logger || new NoOpLogger();
-    this.rawIncludeTag = rawIncludeTag !== undefined ? rawIncludeTag : '';
+    this.rawIncludeTag = rawIncludeTag;
     this.rawAttributes = rawAttributes !== undefined ? rawAttributes : new Map<string, string>();
     this.id = this.buildIncludeId(this.rawAttributes.get(this.ATTR_ID));
     this.src = this.rawAttributes.get(this.ATTR_SOURCE);

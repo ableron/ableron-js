@@ -32,7 +32,7 @@ describe('Transclusion result', () => {
   it('should handle resolved include correctly', () => {
     // given
     const transclusionResult = new TransclusionResult('content: <include>');
-    const include = new Include(new Map([['primary', '']]), 'fallback', '<include>');
+    const include = new Include('<include>', new Map([['primary', '']]), 'fallback');
     const fragment = new Fragment(404, 'not found', undefined, new Date(0), new Headers([['X-Test', 'Foo']]));
 
     // when
@@ -53,7 +53,7 @@ describe('Transclusion result', () => {
     const transclusionResult = new TransclusionResult('content: <include>');
 
     // when
-    transclusionResult.addUnresolvableInclude(new Include(new Map(), 'fallback', '<include>'));
+    transclusionResult.addUnresolvableInclude(new Include('<include>', new Map(), 'fallback'));
 
     // then
     expect(transclusionResult.getContent()).toBe('content: fallback');
@@ -85,7 +85,11 @@ describe('Transclusion result', () => {
     (fragmentExpirationTime: Date, pageMaxAge: number | undefined, expectedCacheControlHeaderValue: string) => {
       // given
       const transclusionResult = new TransclusionResult('content');
-      transclusionResult.addResolvedInclude(new Include(), new Fragment(200, '', undefined, fragmentExpirationTime), 0);
+      transclusionResult.addResolvedInclude(
+        new Include(''),
+        new Fragment(200, '', undefined, fragmentExpirationTime),
+        0
+      );
 
       // expect
       expect(transclusionResult.calculateCacheControlHeaderValue(pageMaxAge)).toBe(expectedCacheControlHeaderValue);
@@ -116,7 +120,11 @@ describe('Transclusion result', () => {
     (fragmentExpirationTime: Date, responseHeaders: Headers, expectedCacheControlHeaderValue: string) => {
       // given
       const transclusionResult = new TransclusionResult('content');
-      transclusionResult.addResolvedInclude(new Include(), new Fragment(200, '', undefined, fragmentExpirationTime), 0);
+      transclusionResult.addResolvedInclude(
+        new Include(''),
+        new Fragment(200, '', undefined, fragmentExpirationTime),
+        0
+      );
 
       // expect
       expect(transclusionResult.calculateCacheControlHeaderValueByResponseHeaders(responseHeaders)).toBe(
@@ -146,22 +154,18 @@ describe('Transclusion result', () => {
     const transclusionResult = new TransclusionResult('', true);
 
     // when
-    transclusionResult.addResolvedInclude(new Include(undefined, undefined, 'include#1'), new Fragment(200, ''), 0);
+    transclusionResult.addResolvedInclude(new Include('include#1'), new Fragment(200, ''), 0);
+    transclusionResult.addResolvedInclude(new Include('include#2'), new Fragment(404, 'not found', 'http://...'), 233);
     transclusionResult.addResolvedInclude(
-      new Include(undefined, undefined, 'include#2'),
-      new Fragment(404, 'not found', 'http://...'),
-      233
-    );
-    transclusionResult.addResolvedInclude(
-      new Include(undefined, 'fallback', 'include#3'),
+      new Include('include#3', undefined, 'fallback'),
       new Fragment(404, 'not found', 'http://...', new Date(2524608000000)),
       999
     );
     const fragmentFromCache = new Fragment(200, 'from cache', 'http://...', new Date(2524608001000));
     fragmentFromCache.fromCache = true;
-    transclusionResult.addResolvedInclude(new Include(undefined, undefined, 'include#4'), fragmentFromCache, 333);
+    transclusionResult.addResolvedInclude(new Include('include#4'), fragmentFromCache, 333);
     transclusionResult.addResolvedInclude(
-      new Include(undefined, undefined, 'include#5'),
+      new Include('include#5'),
       new Fragment(200, '', 'http://...', new Date(0)),
       77
     );
@@ -185,7 +189,7 @@ describe('Transclusion result', () => {
 
     // when
     transclusionResult.addResolvedInclude(
-      new Include(new Map([['primary', '']]), undefined, 'include#1'),
+      new Include('include#1', new Map([['primary', '']])),
       new Fragment(200, ''),
       0
     );
@@ -206,12 +210,12 @@ describe('Transclusion result', () => {
 
     // when
     transclusionResult.addResolvedInclude(
-      new Include(new Map([['primary', '']]), undefined, 'include#1'),
+      new Include('include#1', new Map([['primary', '']])),
       new Fragment(200, ''),
       0
     );
     transclusionResult.addResolvedInclude(
-      new Include(new Map([['primary', '']]), undefined, 'include#2'),
+      new Include('include#2', new Map([['primary', '']])),
       new Fragment(200, ''),
       33
     );
