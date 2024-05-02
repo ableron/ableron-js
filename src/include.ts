@@ -70,22 +70,22 @@ export default class Include {
   /**
    * URL of the fragment to include.
    */
-  private readonly src: string | undefined;
+  private readonly src?: string;
 
   /**
    * Timeout in milliseconds for requesting the src URL.
    */
-  private readonly srcTimeoutMillis: number | undefined;
+  private readonly srcTimeoutMillis?: number;
 
   /**
    * URL of the fragment to include in case the request to the source URL failed.
    */
-  private readonly fallbackSrc: string | undefined;
+  private readonly fallbackSrc?: string;
 
   /**
    * Timeout in milliseconds for requesting the fallback-src URL.
    */
-  private readonly fallbackSrcTimeoutMillis: number | undefined;
+  private readonly fallbackSrcTimeoutMillis?: number;
 
   /**
    * Whether the include provides the primary fragment and thus sets the response code of the page.
@@ -242,6 +242,7 @@ export default class Include {
               const fragmentTtl = fragment.expirationTime.getTime() - new Date().getTime();
 
               if (fragmentTtl > 0) {
+                fragment.fromCache = true;
                 fragmentCache.set(fragmentCacheKey, fragment, {
                   ttl: Math.min(fragmentTtl, this.SEVEN_DAYS_IN_MILLISECONDS)
                 });

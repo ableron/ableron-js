@@ -6,9 +6,9 @@ import { LoggerInterface, NoOpLogger } from './logger.js';
 
 export default class TransclusionResult {
   private content: string;
-  private contentExpirationTime: Date | undefined;
+  private contentExpirationTime?: Date;
   private hasPrimaryInclude: boolean = false;
-  private statusCodeOverride: number | undefined;
+  private statusCodeOverride?: number;
   private readonly responseHeadersToPass: Headers = new Headers();
   private readonly appendStatsToContent: boolean;
   private processedIncludesCount: number = 0;
@@ -59,7 +59,7 @@ export default class TransclusionResult {
       if (this.hasPrimaryInclude) {
         this.logger.warn('Only one primary include per page allowed. Multiple found');
         this.statMessages.push(
-          `Ignoring primary include with status code ${fragment.statusCode} because there is already another primary include`
+          `Ignoring status code and response headers of primary include with status code ${fragment.statusCode} because there is already another primary include`
         );
       } else {
         this.hasPrimaryInclude = true;
@@ -78,7 +78,7 @@ export default class TransclusionResult {
     this.content = this.content.replaceAll(include.getRawIncludeTag(), fragment.content);
     this.processedIncludesCount++;
     this.statMessages.push(
-      `Resolved include ${include.getId()} with ${this.getFragmentDebugInfo(fragment)} in ${includeResolveTimeMillis}ms`
+      `Resolved include '${include.getId()}' with ${this.getFragmentDebugInfo(fragment)} in ${includeResolveTimeMillis}ms`
     );
   }
 
@@ -130,8 +130,12 @@ export default class TransclusionResult {
   }
 
   private getFragmentDebugInfo(fragment: Fragment): string {
-    if (!fragment.isRemote) {
-      return 'fallback content';
+    if (!fragment.url) {
+      return 'static content';
+    }
+
+    if (fragment.fromCache) {
+      return `cached fragment with expiration time ${fragment.expirationTime.toISOString().split('.')[0] + 'Z'}`;
     }
 
     if (fragment.expirationTime.getTime() == new Date(0).getTime()) {
