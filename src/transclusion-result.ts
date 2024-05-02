@@ -11,15 +11,22 @@ export default class TransclusionResult {
   private statusCodeOverride?: number;
   private readonly responseHeadersToPass: Headers = new Headers();
   private readonly appendStatsToContent: boolean;
+  private readonly exposeFragmentUrl: boolean;
   private processedIncludesCount: number = 0;
   private processingTimeMillis: number = 0;
   private readonly statMessages: string[] = [];
   private readonly logger: LoggerInterface;
 
-  constructor(content: string, appendStatsToContent: boolean = false, logger?: LoggerInterface) {
+  constructor(
+    content: string,
+    appendStatsToContent: boolean = false,
+    exposeFragmentUrl: boolean = false,
+    logger?: LoggerInterface
+  ) {
     this.logger = logger || new NoOpLogger();
     this.content = content;
     this.appendStatsToContent = appendStatsToContent;
+    this.exposeFragmentUrl = exposeFragmentUrl;
   }
 
   getContent(): string {
@@ -78,7 +85,10 @@ export default class TransclusionResult {
     this.content = this.content.replaceAll(include.getRawIncludeTag(), fragment.content);
     this.processedIncludesCount++;
     this.statMessages.push(
-      `Resolved include '${include.getId()}' with ${this.getFragmentDebugInfo(fragment)} in ${includeResolveTimeMillis}ms`
+      `Resolved include '${include.getId()}'` +
+        ` with ${this.getFragmentDebugInfo(fragment)}` +
+        ` in ${includeResolveTimeMillis}ms` +
+        (this.exposeFragmentUrl && fragment.url ? '. Fragment-URL: ' + fragment.url : '')
     );
   }
 

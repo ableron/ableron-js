@@ -46,6 +46,11 @@ export default class AbleronConfig {
    */
   readonly statsAppendToContent: boolean = false;
 
+  /**
+   * Whether to expose fragment URLs in the stats appended to the content.
+   */
+  readonly statsExposeFragmentUrl: boolean = false;
+
   constructor(init?: Partial<AbleronConfig>) {
     Object.assign(this, init);
   }

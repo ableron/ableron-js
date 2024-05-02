@@ -151,34 +151,44 @@ describe('Transclusion result', () => {
 
   it('should append stats to content - more than zero includes', () => {
     // given
-    const transclusionResult = new TransclusionResult('', true);
+    const transclusionResult = new TransclusionResult('', true, true);
 
     // when
     transclusionResult.addResolvedInclude(new Include('include#1'), new Fragment(200, ''), 0);
-    transclusionResult.addResolvedInclude(new Include('include#2'), new Fragment(404, 'not found', 'http://...'), 233);
+    transclusionResult.addResolvedInclude(new Include('include#2'), new Fragment(404, 'not found', 'a.com'), 233);
     transclusionResult.addResolvedInclude(
       new Include('include#3', undefined, 'fallback'),
-      new Fragment(404, 'not found', 'http://...', new Date(2524608000000)),
+      new Fragment(404, 'not found', 'b.com', new Date(2524608000000)),
       999
     );
-    const fragmentFromCache = new Fragment(200, 'from cache', 'http://...', new Date(2524608001000));
+    const fragmentFromCache = new Fragment(200, 'from cache', 'c.com', new Date(2524608001000));
     fragmentFromCache.fromCache = true;
     transclusionResult.addResolvedInclude(new Include('include#4'), fragmentFromCache, 333);
-    transclusionResult.addResolvedInclude(
-      new Include('include#5'),
-      new Fragment(200, '', 'http://...', new Date(0)),
-      77
-    );
 
     // then
     expect(transclusionResult.getContent()).toBe(
       '\n<!-- Ableron stats:\n' +
-        'Processed 5 include(s) in 0ms\n' +
+        'Processed 4 include(s) in 0ms\n' +
         "Resolved include 'ceef048' with static content in 0ms\n" +
-        "Resolved include 'a57865f' with uncacheable remote fragment in 233ms\n" +
-        "Resolved include '184d860' with remote fragment with cache expiration time 2050-01-01T00:00:00Z in 999ms\n" +
-        "Resolved include '521b126' with cached fragment with expiration time 2050-01-01T00:00:01Z in 333ms\n" +
-        "Resolved include '710c1c8' with uncacheable remote fragment in 77ms\n" +
+        "Resolved include 'a57865f' with uncacheable remote fragment in 233ms. Fragment-URL: a.com\n" +
+        "Resolved include '184d860' with remote fragment with cache expiration time 2050-01-01T00:00:00Z in 999ms. Fragment-URL: b.com\n" +
+        "Resolved include '521b126' with cached fragment with expiration time 2050-01-01T00:00:01Z in 333ms. Fragment-URL: c.com\n" +
+        '-->'
+    );
+  });
+
+  it('should not expose fragment URL to stats by default', () => {
+    // given
+    const transclusionResult = new TransclusionResult('', true);
+
+    // when
+    transclusionResult.addResolvedInclude(new Include(''), new Fragment(200, '', 'example.com'), 71);
+
+    // then
+    expect(transclusionResult.getContent()).toBe(
+      '\n<!-- Ableron stats:\n' +
+        'Processed 1 include(s) in 0ms\n' +
+        "Resolved include 'da39a3e' with uncacheable remote fragment in 71ms\n" +
         '-->'
     );
   });
