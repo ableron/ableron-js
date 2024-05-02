@@ -78,8 +78,8 @@ describe('Transclusion result', () => {
     [new Date(new Date().getTime() - 5000), 120, 'no-store'],
     [new Date(), 120, 'no-store'],
     [new Date(new Date().getTime() + 300000), 120, 'max-age=120'],
-    [new Date(new Date().getTime() + 300000), 300, 'max-age=300'],
-    [new Date(new Date().getTime() + 300000), 600, 'max-age=300']
+    [new Date(new Date().getTime() + 300010), 300, 'max-age=300'],
+    [new Date(new Date().getTime() + 300010), 600, 'max-age=300']
   ])(
     'should calculate cache control header value',
     (fragmentExpirationTime: Date, pageMaxAge: number | undefined, expectedCacheControlHeaderValue: string) => {
