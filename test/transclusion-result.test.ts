@@ -32,7 +32,7 @@ describe('Transclusion result', () => {
   it('should handle resolved include correctly', () => {
     // given
     const transclusionResult = new TransclusionResult('content: <include>');
-    const include = new Include(new Map([['primary', '']]), 'fallback', '<include>');
+    const include = new Include('<include>', new Map([['primary', '']]), 'fallback');
     const fragment = new Fragment(404, 'not found', undefined, new Date(0), new Headers([['X-Test', 'Foo']]));
 
     // when
@@ -53,7 +53,7 @@ describe('Transclusion result', () => {
     const transclusionResult = new TransclusionResult('content: <include>');
 
     // when
-    transclusionResult.addUnresolvableInclude(new Include(new Map(), 'fallback', '<include>'));
+    transclusionResult.addUnresolvableInclude(new Include('<include>', new Map(), 'fallback'));
 
     // then
     expect(transclusionResult.getContent()).toBe('content: fallback');
@@ -78,14 +78,18 @@ describe('Transclusion result', () => {
     [new Date(new Date().getTime() - 5000), 120, 'no-store'],
     [new Date(), 120, 'no-store'],
     [new Date(new Date().getTime() + 300000), 120, 'max-age=120'],
-    [new Date(new Date().getTime() + 300000), 300, 'max-age=300'],
+    [new Date(new Date().getTime() + 360000), 300, 'max-age=300'],
     [new Date(new Date().getTime() + 300000), 600, 'max-age=300']
   ])(
     'should calculate cache control header value',
     (fragmentExpirationTime: Date, pageMaxAge: number | undefined, expectedCacheControlHeaderValue: string) => {
       // given
       const transclusionResult = new TransclusionResult('content');
-      transclusionResult.addResolvedInclude(new Include(), new Fragment(200, '', undefined, fragmentExpirationTime), 0);
+      transclusionResult.addResolvedInclude(
+        new Include(''),
+        new Fragment(200, '', undefined, fragmentExpirationTime),
+        0
+      );
 
       // expect
       expect(transclusionResult.calculateCacheControlHeaderValue(pageMaxAge)).toBe(expectedCacheControlHeaderValue);
@@ -116,7 +120,11 @@ describe('Transclusion result', () => {
     (fragmentExpirationTime: Date, responseHeaders: Headers, expectedCacheControlHeaderValue: string) => {
       // given
       const transclusionResult = new TransclusionResult('content');
-      transclusionResult.addResolvedInclude(new Include(), new Fragment(200, '', undefined, fragmentExpirationTime), 0);
+      transclusionResult.addResolvedInclude(
+        new Include(''),
+        new Fragment(200, '', undefined, fragmentExpirationTime),
+        0
+      );
 
       // expect
       expect(transclusionResult.calculateCacheControlHeaderValueByResponseHeaders(responseHeaders)).toBe(
@@ -143,28 +151,44 @@ describe('Transclusion result', () => {
 
   it('should append stats to content - more than zero includes', () => {
     // given
-    const transclusionResult = new TransclusionResult('', true);
+    const transclusionResult = new TransclusionResult('', true, true);
 
     // when
-    transclusionResult.addResolvedInclude(new Include(undefined, undefined, 'include#1'), new Fragment(200, ''), 0);
+    transclusionResult.addResolvedInclude(new Include('include#1'), new Fragment(200, ''), 0);
+    transclusionResult.addResolvedInclude(new Include('include#2'), new Fragment(404, 'not found', 'a.com'), 233);
     transclusionResult.addResolvedInclude(
-      new Include(undefined, undefined, 'include#2'),
-      new Fragment(404, 'not found', 'http://...'),
-      233
-    );
-    transclusionResult.addResolvedInclude(
-      new Include(undefined, 'fallback', 'include#3'),
-      new Fragment(404, 'not found', 'http://...', new Date(2524608000000)),
+      new Include('include#3', undefined, 'fallback'),
+      new Fragment(404, 'not found', 'b.com', new Date(2524608000000)),
       999
     );
+    const fragmentFromCache = new Fragment(200, 'from cache', 'c.com', new Date(2524608001000));
+    fragmentFromCache.fromCache = true;
+    transclusionResult.addResolvedInclude(new Include('include#4'), fragmentFromCache, 333);
 
     // then
     expect(transclusionResult.getContent()).toBe(
       '\n<!-- Ableron stats:\n' +
-        'Processed 3 include(s) in 0ms\n' +
-        'Resolved include ceef048 with fallback content in 0ms\n' +
-        'Resolved include a57865f with uncacheable remote fragment in 233ms\n' +
-        'Resolved include 184d860 with remote fragment with cache expiration time 2050-01-01T00:00:00Z in 999ms\n' +
+        'Processed 4 include(s) in 0ms\n' +
+        "Resolved include 'ceef048' with static content in 0ms\n" +
+        "Resolved include 'a57865f' with uncacheable remote fragment in 233ms. Fragment-URL: a.com\n" +
+        "Resolved include '184d860' with remote fragment with cache expiration time 2050-01-01T00:00:00Z in 999ms. Fragment-URL: b.com\n" +
+        "Resolved include '521b126' with cached fragment with expiration time 2050-01-01T00:00:01Z in 333ms. Fragment-URL: c.com\n" +
+        '-->'
+    );
+  });
+
+  it('should not expose fragment URL to stats by default', () => {
+    // given
+    const transclusionResult = new TransclusionResult('', true);
+
+    // when
+    transclusionResult.addResolvedInclude(new Include(''), new Fragment(200, '', 'example.com'), 71);
+
+    // then
+    expect(transclusionResult.getContent()).toBe(
+      '\n<!-- Ableron stats:\n' +
+        'Processed 1 include(s) in 0ms\n' +
+        "Resolved include 'da39a3e' with uncacheable remote fragment in 71ms\n" +
         '-->'
     );
   });
@@ -175,7 +199,7 @@ describe('Transclusion result', () => {
 
     // when
     transclusionResult.addResolvedInclude(
-      new Include(new Map([['primary', '']]), undefined, 'include#1'),
+      new Include('include#1', new Map([['primary', '']])),
       new Fragment(200, ''),
       0
     );
@@ -185,7 +209,7 @@ describe('Transclusion result', () => {
       '\n<!-- Ableron stats:\n' +
         'Processed 1 include(s) in 0ms\n' +
         'Primary include with status code 200\n' +
-        'Resolved include ceef048 with fallback content in 0ms\n' +
+        "Resolved include 'ceef048' with static content in 0ms\n" +
         '-->'
     );
   });
@@ -196,12 +220,12 @@ describe('Transclusion result', () => {
 
     // when
     transclusionResult.addResolvedInclude(
-      new Include(new Map([['primary', '']]), undefined, 'include#1'),
+      new Include('include#1', new Map([['primary', '']])),
       new Fragment(200, ''),
       0
     );
     transclusionResult.addResolvedInclude(
-      new Include(new Map([['primary', '']]), undefined, 'include#2'),
+      new Include('include#2', new Map([['primary', '']])),
       new Fragment(200, ''),
       33
     );
@@ -211,9 +235,9 @@ describe('Transclusion result', () => {
       '\n<!-- Ableron stats:\n' +
         'Processed 2 include(s) in 0ms\n' +
         'Primary include with status code 200\n' +
-        'Resolved include ceef048 with fallback content in 0ms\n' +
-        'Ignoring primary include with status code 200 because there is already another primary include\n' +
-        'Resolved include a57865f with fallback content in 33ms\n' +
+        "Resolved include 'ceef048' with static content in 0ms\n" +
+        'Ignoring status code and response headers of primary include with status code 200 because there is already another primary include\n' +
+        "Resolved include 'a57865f' with static content in 33ms\n" +
         '-->'
     );
   });

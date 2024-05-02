@@ -6,20 +6,27 @@ import { LoggerInterface, NoOpLogger } from './logger.js';
 
 export default class TransclusionResult {
   private content: string;
-  private contentExpirationTime: Date | undefined;
+  private contentExpirationTime?: Date;
   private hasPrimaryInclude: boolean = false;
-  private statusCodeOverride: number | undefined;
+  private statusCodeOverride?: number;
   private readonly responseHeadersToPass: Headers = new Headers();
   private readonly appendStatsToContent: boolean;
+  private readonly exposeFragmentUrl: boolean;
   private processedIncludesCount: number = 0;
   private processingTimeMillis: number = 0;
   private readonly statMessages: string[] = [];
   private readonly logger: LoggerInterface;
 
-  constructor(content: string, appendStatsToContent: boolean = false, logger?: LoggerInterface) {
+  constructor(
+    content: string,
+    appendStatsToContent: boolean = false,
+    exposeFragmentUrl: boolean = false,
+    logger?: LoggerInterface
+  ) {
     this.logger = logger || new NoOpLogger();
     this.content = content;
     this.appendStatsToContent = appendStatsToContent;
+    this.exposeFragmentUrl = exposeFragmentUrl;
   }
 
   getContent(): string {
@@ -59,7 +66,7 @@ export default class TransclusionResult {
       if (this.hasPrimaryInclude) {
         this.logger.warn('Only one primary include per page allowed. Multiple found');
         this.statMessages.push(
-          `Ignoring primary include with status code ${fragment.statusCode} because there is already another primary include`
+          `Ignoring status code and response headers of primary include with status code ${fragment.statusCode} because there is already another primary include`
         );
       } else {
         this.hasPrimaryInclude = true;
@@ -78,7 +85,10 @@ export default class TransclusionResult {
     this.content = this.content.replaceAll(include.getRawIncludeTag(), fragment.content);
     this.processedIncludesCount++;
     this.statMessages.push(
-      `Resolved include ${include.getId()} with ${this.getFragmentDebugInfo(fragment)} in ${includeResolveTimeMillis}ms`
+      `Resolved include '${include.getId()}'` +
+        ` with ${this.getFragmentDebugInfo(fragment)}` +
+        ` in ${includeResolveTimeMillis}ms` +
+        (this.exposeFragmentUrl && fragment.url ? '. Fragment-URL: ' + fragment.url : '')
     );
   }
 
@@ -108,7 +118,7 @@ export default class TransclusionResult {
     }
 
     if (this.contentExpirationTime < new Date(now.getTime() + pageMaxAgeInSeconds * 1000)) {
-      return `max-age=${Math.ceil((this.contentExpirationTime.getTime() - now.getTime()) / 1000)}`;
+      return 'max-age=' + Math.ceil(this.contentExpirationTime.getTime() / 1000 - now.getTime() / 1000);
     }
 
     return 'max-age=' + pageMaxAgeInSeconds;
@@ -130,8 +140,12 @@ export default class TransclusionResult {
   }
 
   private getFragmentDebugInfo(fragment: Fragment): string {
-    if (!fragment.isRemote) {
-      return 'fallback content';
+    if (!fragment.url) {
+      return 'static content';
+    }
+
+    if (fragment.fromCache) {
+      return `cached fragment with expiration time ${fragment.expirationTime.toISOString().split('.')[0] + 'Z'}`;
     }
 
     if (fragment.expirationTime.getTime() == new Date(0).getTime()) {

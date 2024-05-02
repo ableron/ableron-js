@@ -1,6 +1,6 @@
 {
   "name": "@ableron/ableron",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "description": "JavaScript Library for Ableron Server Side UI Composition",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
@@ -50,13 +50,13 @@
     "@isaacs/ttlcache": "1.4.1"
   },
   "devDependencies": {
-    "@types/node": "20.12.7",
+    "@types/node": "20.12.8",
     "fastify": "4.26.2",
     "prettier": "3.2.5",
     "ts-jest": "29.1.2",
     "ts-loader": "9.5.1",
     "typescript": "5.4.5",
-    "vitest": "1.5.2"
+    "vitest": "1.5.3"
   },
   "prettier": {
     "printWidth": 120,

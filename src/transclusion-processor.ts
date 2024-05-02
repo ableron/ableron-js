@@ -41,7 +41,7 @@ export default class TransclusionProcessor {
           ...new Map(
             Array.from(content.matchAll(this.INCLUDE_PATTERN)).map((match) => [
               match[0],
-              new Include(this.parseAttributes(match[2]), match[5], match[0], this.logger)
+              new Include(match[0], this.parseAttributes(match[2]), match[5], this.logger)
             ])
           ).values()
         ];
@@ -49,7 +49,12 @@ export default class TransclusionProcessor {
 
   async resolveIncludes(content: string, parentRequestHeaders?: Headers): Promise<TransclusionResult> {
     const startTime = Date.now();
-    const transclusionResult = new TransclusionResult(content, this.ableronConfig.statsAppendToContent, this.logger);
+    const transclusionResult = new TransclusionResult(
+      content,
+      this.ableronConfig.statsAppendToContent,
+      this.ableronConfig.statsExposeFragmentUrl,
+      this.logger
+    );
     await Promise.all(
       Array.from(this.findIncludes(content)).map((include) => {
         try {
