@@ -118,7 +118,7 @@ export default class TransclusionResult {
     }
 
     if (this.contentExpirationTime < new Date(now.getTime() + pageMaxAgeInSeconds * 1000)) {
-      return `max-age=${Math.ceil((this.contentExpirationTime.getTime() - now.getTime()) / 1000)}`;
+      return 'max-age=' + Math.ceil(this.contentExpirationTime.getTime() / 1000 - now.getTime() / 1000);
     }
 
     return 'max-age=' + pageMaxAgeInSeconds;
