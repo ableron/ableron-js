@@ -193,7 +193,7 @@ describe('Transclusion result', () => {
     expect(result.getContent()).toMatch(/static content/g);
     expect(result.getContent()).toMatch(/uncacheable-fragment/g);
     expect(result.getContent()).toMatch(/cacheable-fragment-1/g);
-    expect(result.getContent()).toMatch(/cacheable-fragment-2/g);
+    expect(result.getContent()).toMatch(/cacheable-fragment-2 from cache/g);
     expect(result.getContent()).toMatch(/<!-- Ableron stats:/g);
     expect(result.getContent()).toMatch(/Processed 4 include\(s\) in \d+ms/g);
     expect(result.getContent()).toMatch(/Resolved include '1' with static content in \d+ms/g);
