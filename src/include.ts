@@ -204,9 +204,9 @@ export default class Include {
     }
 
     const fragmentCacheKey = this.buildFragmentCacheKey(url, requestHeaders, config.cacheVaryByRequestHeaders);
-    const fragmentFromCache = fragmentCache.get(fragmentCacheKey);
+    const fragmentFromCache = this.getFragmentFromCache(fragmentCacheKey, fragmentCache);
     const fragment: Promise<Fragment | null> = fragmentFromCache
-      ? Promise.resolve(fragmentFromCache as Fragment)
+      ? Promise.resolve(fragmentFromCache)
       : this.requestFragment(url, requestHeaders, requestTimeoutMillis)
           .then(async (response: Response | null) => {
             if (!response) {
@@ -242,7 +242,6 @@ export default class Include {
               const fragmentTtl = fragment.expirationTime.getTime() - new Date().getTime();
 
               if (fragmentTtl > 0) {
-                fragment.fromCache = true;
                 fragmentCache.set(fragmentCacheKey, fragment, {
                   ttl: Math.min(fragmentTtl, this.SEVEN_DAYS_IN_MILLISECONDS)
                 });
@@ -361,5 +360,15 @@ export default class Include {
       }
     });
     return cacheKey;
+  }
+
+  private getFragmentFromCache(cacheKey: string, fragmentCache: TTLCache<string, Fragment>): Fragment | undefined {
+    const fragmentFromCache = fragmentCache.get(cacheKey);
+
+    if (fragmentFromCache) {
+      fragmentFromCache.fromCache = true;
+    }
+
+    return fragmentFromCache;
   }
 }

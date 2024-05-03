@@ -1,7 +1,9 @@
-import { describe, expect, it } from 'vitest';
-import { TransclusionResult } from '../src/index.js';
+import { describe, expect, it, test } from 'vitest';
+import { AbleronConfig, TransclusionResult } from '../src/index.js';
 import Include from '../src/include.js';
 import Fragment from '../src/fragment.js';
+import Fastify, { FastifyInstance } from 'fastify';
+import TransclusionProcessor from '../src/transclusion-processor';
 
 describe('Transclusion result', () => {
   it('should return reasonable defaults', () => {
@@ -149,31 +151,60 @@ describe('Transclusion result', () => {
     );
   });
 
-  it('should append stats to content - more than zero includes', () => {
+  it('should append stats to content', async () => {
     // given
-    const transclusionResult = new TransclusionResult('', true, true);
+    const server: FastifyInstance = Fastify();
+    const transclusionProcessor = new TransclusionProcessor(
+      new AbleronConfig({ statsAppendToContent: true, statsExposeFragmentUrl: true })
+    );
+    const serverAddress = (path: string) => {
+      const address = ['127.0.0.1', '::1'].includes(server.addresses()[0].address)
+        ? 'localhost'
+        : server.addresses()[0].address;
+      return 'http://' + address + ':' + server.addresses()[0].port + '/' + path.replace(/^\//, '');
+    };
+    server.get('/uncacheable-fragment', function (request, reply) {
+      reply.status(200).header('Cache-Control', 'no-store').send('uncacheable-fragment');
+    });
+    server.get('/cacheable-fragment-1', function (request, reply) {
+      reply.status(200).header('Expires', 'Wed, 21 Oct 2050 00:00:00 GMT').send('cacheable-fragment-1');
+    });
+    await server.listen();
+    transclusionProcessor
+      .getFragmentCache()
+      .set(
+        serverAddress('/cacheable-fragment-2'),
+        new Fragment(200, 'cacheable-fragment-2 from cache', serverAddress('/cacheable-fragment-2')),
+        {
+          ttl: 3600
+        }
+      );
 
     // when
-    transclusionResult.addResolvedInclude(new Include('include#1'), new Fragment(200, ''), 0);
-    transclusionResult.addResolvedInclude(new Include('include#2'), new Fragment(404, 'not found', 'a.com'), 233);
-    transclusionResult.addResolvedInclude(
-      new Include('include#3', undefined, 'fallback'),
-      new Fragment(404, 'not found', 'b.com', new Date(2524608000000)),
-      999
+    const result = await transclusionProcessor.resolveIncludes(
+      `<ableron-include id="1">static content</ableron-include>
+       <ableron-include id="2" src="${serverAddress('/uncacheable-fragment')}" />
+       <ableron-include id="3" src="${serverAddress('/cacheable-fragment-1')}" />
+       <ableron-include id="4" src="${serverAddress('/cacheable-fragment-2')}" />`,
+      new Headers()
     );
-    const fragmentFromCache = new Fragment(200, 'from cache', 'c.com', new Date(2524608001000));
-    fragmentFromCache.fromCache = true;
-    transclusionResult.addResolvedInclude(new Include('include#4'), fragmentFromCache, 333);
 
     // then
-    expect(transclusionResult.getContent()).toBe(
-      '\n<!-- Ableron stats:\n' +
-        'Processed 4 include(s) in 0ms\n' +
-        "Resolved include 'ceef048' with static content in 0ms\n" +
-        "Resolved include 'a57865f' with uncacheable remote fragment in 233ms. Fragment-URL: a.com\n" +
-        "Resolved include '184d860' with remote fragment with cache expiration time 2050-01-01T00:00:00Z in 999ms. Fragment-URL: b.com\n" +
-        "Resolved include '521b126' with cached fragment with expiration time 2050-01-01T00:00:01Z in 333ms. Fragment-URL: c.com\n" +
-        '-->'
+    expect(result.getContent()).toMatch(/static content/g);
+    expect(result.getContent()).toMatch(/uncacheable-fragment/g);
+    expect(result.getContent()).toMatch(/cacheable-fragment-1/g);
+    expect(result.getContent()).toMatch(/cacheable-fragment-2/g);
+    expect(result.getContent()).toMatch(/<!-- Ableron stats:/g);
+    expect(result.getContent()).toMatch(/Processed 4 include\(s\) in \d+ms/g);
+    expect(result.getContent()).toMatch(/Resolved include '1' with static content in \d+ms/g);
+    expect(result.getContent()).toMatch(
+      /Resolved include '2' with uncacheable remote fragment in \d+ms\. Fragment-URL: http:\/\/localhost:\d+\/uncacheable-fragment/g
+    );
+    expect(result.getContent()).toMatch(
+      /Resolved include '3' with remote fragment with cache expiration time 2050-10-21T00:00:00Z in \d+ms\. Fragment-URL: http:\/\/localhost:\d+\/cacheable-fragment-1/g
+    );
+    expect(result.getContent()).toMatch(
+      /Resolved include '4' with cached fragment with expiration time 1970-01-01T00:00:00Z in \d+ms\. Fragment-URL: http:\/\/localhost:\d+\/cacheable-fragment-2/g
     );
   });
 
