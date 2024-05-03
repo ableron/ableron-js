@@ -167,7 +167,7 @@ describe('Transclusion result', () => {
       reply.status(200).header('Cache-Control', 'no-store').send('uncacheable-fragment');
     });
     server.get('/cacheable-fragment-1', function (request, reply) {
-      reply.status(200).header('Expires', 'Wed, 21 Oct 2050 00:00:00 GMT').send('cacheable-fragment-1');
+      reply.status(200).header('Expires', 'Wed, 12 Oct 2050 07:28:00 GMT').send('cacheable-fragment-1');
     });
     await server.listen();
     transclusionProcessor
@@ -201,7 +201,7 @@ describe('Transclusion result', () => {
       /Resolved include '2' with uncacheable remote fragment in \d+ms\. Fragment-URL: http:\/\/localhost:\d+\/uncacheable-fragment/g
     );
     expect(result.getContent()).toMatch(
-      /Resolved include '3' with remote fragment with cache expiration time 2050-10-21T00:00:00Z in \d+ms\. Fragment-URL: http:\/\/localhost:\d+\/cacheable-fragment-1/g
+      /Resolved include '3' with remote fragment with cache expiration time 2050-10-12T07:28:00Z in \d+ms\. Fragment-URL: http:\/\/localhost:\d+\/cacheable-fragment-1/g
     );
     expect(result.getContent()).toMatch(
       /Resolved include '4' with cached fragment with expiration time 1970-01-01T00:00:00Z in \d+ms\. Fragment-URL: http:\/\/localhost:\d+\/cacheable-fragment-2/g
