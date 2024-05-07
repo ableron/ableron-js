@@ -46,10 +46,10 @@ try {
       setFinalResponseBody(transclusionResult.getContent());
     })
     .catch((e) => {
-      logger.error(`Unable to perform ableron UI composition: ${e.stack || e.message}`);
+      logger.error(`[Ableron] Unable to perform UI composition: ${e.stack || e.message}`);
     });
 } catch (e) {
-  logger.error(`Unable to perform ableron UI composition: ${e.stack || e.message}`);
+  logger.error(`[Ableron] Unable to perform UI composition: ${e.stack || e.message}`);
 }
 ```
 

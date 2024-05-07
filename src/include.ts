@@ -216,7 +216,7 @@ export default class Include {
             const responseBody = await response.text();
 
             if (!this.HTTP_STATUS_CODES_CACHEABLE.includes(response.status)) {
-              this.logger.error(`Fragment ${this.id} returned status code ${response.status}`);
+              this.logger.error(`[Ableron] Fragment ${this.id} returned status code ${response.status}`);
               this.recordErroredPrimaryFragment(
                 new Fragment(
                   response.status,
@@ -253,7 +253,7 @@ export default class Include {
 
     return fragment.then((fragment) => {
       if (fragment && !this.HTTP_STATUS_CODES_SUCCESS.includes(fragment.statusCode)) {
-        this.logger.error(`Fragment ${this.id} returned status code ${fragment.statusCode}`);
+        this.logger.error(`[Ableron] Fragment ${this.id} returned status code ${fragment.statusCode}`);
         this.recordErroredPrimaryFragment(fragment);
         return null;
       }
@@ -279,11 +279,11 @@ export default class Include {
       }).catch((e: Error) => {
         if (e.name === 'TimeoutError') {
           this.logger.error(
-            `Unable to load fragment ${url} for include ${this.id}: ${requestTimeoutMillis}ms timeout exceeded`
+            `[Ableron] Unable to load fragment ${url} for include ${this.id}: ${requestTimeoutMillis}ms timeout exceeded`
           );
         } else {
           this.logger.error(
-            `Unable to load fragment ${url} for include ${this.id}: ${e?.message}${e?.cause ? ` (${e?.cause})` : ''}`
+            `[Ableron] Unable to load fragment ${url} for include ${this.id}: ${e?.message}${e?.cause ? ` (${e?.cause})` : ''}`
           );
         }
 
@@ -292,7 +292,7 @@ export default class Include {
     } catch (e) {
       const error: Error = e as Error;
       this.logger.error(
-        `Unable to load fragment ${url} for include ${this.id}: ${error.message}${
+        `[Ableron] Unable to load fragment ${url} for include ${this.id}: ${error.message}${
           error.cause ? ` (${error.cause})` : ''
         }`
       );
@@ -321,7 +321,7 @@ export default class Include {
 
     if (isNaN(parsedTimeout)) {
       if (timeoutAsString) {
-        this.logger.error(`Invalid request timeout: ${timeoutAsString}`);
+        this.logger.error(`[Ableron] Invalid request timeout: ${timeoutAsString}`);
       }
 
       return undefined;

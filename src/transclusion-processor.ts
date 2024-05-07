@@ -68,7 +68,7 @@ export default class TransclusionProcessor {
             })
             .catch((e) => {
               this.logger.error(
-                `Unable to resolve include ${include.getId()}: ${
+                `[Ableron] Unable to resolve include ${include.getId()}: ${
                   e.stack || e.message + (e.cause ? ` (${e.cause})` : '')
                 }`
               );
@@ -76,7 +76,7 @@ export default class TransclusionProcessor {
             });
         } catch (e: any) {
           this.logger.error(
-            `Unable to resolve include ${include.getId()}: ${e.stack || e.message + (e.cause ? ` (${e.cause})` : '')}`
+            `[Ableron] Unable to resolve include ${include.getId()}: ${e.stack || e.message + (e.cause ? ` (${e.cause})` : '')}`
           );
           transclusionResult.addUnresolvableInclude(include, e.message);
         }
