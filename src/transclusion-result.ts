@@ -64,7 +64,7 @@ export default class TransclusionResult {
   addResolvedInclude(include: Include, fragment: Fragment, includeResolveTimeMillis: number): void {
     if (include.isPrimary()) {
       if (this.hasPrimaryInclude) {
-        this.logger.warn('Only one primary include per page allowed. Multiple found');
+        this.logger.warn('[Ableron] Only one primary include per page allowed. Multiple found');
         this.statMessages.push(
           `Ignoring status code and response headers of primary include with status code ${fragment.statusCode} because there is already another primary include`
         );

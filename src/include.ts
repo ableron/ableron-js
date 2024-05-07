@@ -267,7 +267,9 @@ export default class Include {
     requestHeaders: Headers,
     requestTimeoutMillis: number
   ): Promise<Response | null> {
-    this.logger.debug(`Loading fragment ${url} for include ${this.id} with timeout ${requestTimeoutMillis}ms`);
+    this.logger.debug(
+      `[Ableron] Loading fragment ${url} for include ${this.id} with timeout ${requestTimeoutMillis}ms`
+    );
 
     try {
       requestHeaders.set('Accept-Encoding', 'gzip');

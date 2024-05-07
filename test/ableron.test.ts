@@ -37,7 +37,7 @@ test('should accept provided external logger', async () => {
   await ableron.resolveIncludes('', new Headers());
 
   // then
-  expect(logMessages[0]).toMatch(/^Ableron UI composition processed 0 include\(s\) in \d+ms$/);
+  expect(logMessages[0]).toMatch(/^\[Ableron] Processed 0 include\(s\) in \d+ms$/);
 });
 
 test('should create complete config', () => {

@@ -34,7 +34,7 @@ export default class Ableron {
         HttpUtil.normalizeHeaders(parentRequestHeaders)
       );
       this.logger.debug(
-        `Ableron UI composition processed ${transclusionResult.getProcessedIncludesCount()} include(s) in ${transclusionResult.getProcessingTimeMillis()}ms`
+        `[Ableron] Processed ${transclusionResult.getProcessedIncludesCount()} include(s) in ${transclusionResult.getProcessingTimeMillis()}ms`
       );
       return transclusionResult;
     }
