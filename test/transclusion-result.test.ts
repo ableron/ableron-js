@@ -182,7 +182,7 @@ describe('Transclusion result', () => {
 
     // when
     const result = await transclusionProcessor.resolveIncludes(
-      `<ableron-include id="1">static content</ableron-include>
+      `<ableron-include id="1">fallback content</ableron-include>
        <ableron-include id="2" src="${serverAddress('/uncacheable-fragment')}" />
        <ableron-include id="3" src="${serverAddress('/cacheable-fragment-1')}" />
        <ableron-include id="4" src="${serverAddress('/cacheable-fragment-2')}" />`,
@@ -190,13 +190,13 @@ describe('Transclusion result', () => {
     );
 
     // then
-    expect(result.getContent()).toMatch(/static content/g);
+    expect(result.getContent()).toMatch(/fallback content/g);
     expect(result.getContent()).toMatch(/uncacheable-fragment/g);
     expect(result.getContent()).toMatch(/cacheable-fragment-1/g);
     expect(result.getContent()).toMatch(/cacheable-fragment-2 from cache/g);
     expect(result.getContent()).toMatch(/<!-- Ableron stats:/g);
     expect(result.getContent()).toMatch(/Processed 4 include\(s\) in \d+ms/g);
-    expect(result.getContent()).toMatch(/Resolved include '1' with static content in \d+ms/g);
+    expect(result.getContent()).toMatch(/Resolved include '1' with fallback content in \d+ms/g);
     expect(result.getContent()).toMatch(
       /Resolved include '2' with uncacheable remote fragment in \d+ms\. Fragment-URL: http:\/\/localhost:\d+\/uncacheable-fragment/g
     );
@@ -240,7 +240,7 @@ describe('Transclusion result', () => {
       '\n<!-- Ableron stats:\n' +
         'Processed 1 include(s) in 0ms\n' +
         'Primary include with status code 200\n' +
-        "Resolved include 'ceef048' with static content in 0ms\n" +
+        "Resolved include 'ceef048' with fallback content in 0ms\n" +
         '-->'
     );
   });
@@ -266,9 +266,9 @@ describe('Transclusion result', () => {
       '\n<!-- Ableron stats:\n' +
         'Processed 2 include(s) in 0ms\n' +
         'Primary include with status code 200\n' +
-        "Resolved include 'ceef048' with static content in 0ms\n" +
+        "Resolved include 'ceef048' with fallback content in 0ms\n" +
         'Ignoring status code and response headers of primary include with status code 200 because there is already another primary include\n' +
-        "Resolved include 'a57865f' with static content in 33ms\n" +
+        "Resolved include 'a57865f' with fallback content in 33ms\n" +
         '-->'
     );
   });

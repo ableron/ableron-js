@@ -141,7 +141,7 @@ export default class TransclusionResult {
 
   private getFragmentDebugInfo(fragment: Fragment): string {
     if (!fragment.url) {
-      return 'static content';
+      return 'fallback content';
     }
 
     if (fragment.fromCache) {
