@@ -4,6 +4,7 @@ import Fastify, { FastifyInstance } from 'fastify';
 import { AbleronConfig } from '../src/index.js';
 import TransclusionProcessor from '../src/transclusion-processor.js';
 import Fragment from '../src/fragment.js';
+import { NoOpLogger } from '../src/logger';
 
 const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay));
 
@@ -11,7 +12,7 @@ let server: FastifyInstance | undefined;
 const config = new AbleronConfig({
   fragmentRequestTimeoutMillis: 1000
 });
-const fragmentCache = new TransclusionProcessor(config).getFragmentCache();
+const fragmentCache = new TransclusionProcessor(config, new NoOpLogger()).getFragmentCache();
 
 beforeEach(() => {
   server = undefined;

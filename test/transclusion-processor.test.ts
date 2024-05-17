@@ -2,9 +2,10 @@ import { beforeEach, afterEach, expect, test, vi } from 'vitest';
 import TransclusionProcessor from '../src/transclusion-processor.js';
 import { AbleronConfig } from '../src/index.js';
 import Fastify, { FastifyInstance } from 'fastify';
+import { NoOpLogger } from '../src/logger';
 
 let server: FastifyInstance | undefined;
-const transclusionProcessor = new TransclusionProcessor(new AbleronConfig());
+const transclusionProcessor = new TransclusionProcessor(new AbleronConfig(), new NoOpLogger());
 
 beforeEach(() => {
   server = undefined;
@@ -517,7 +518,10 @@ test('should resolve includes in parallel', async () => {
 
 test('should handle unresolvable include', async () => {
   // given
-  const transclusionProcessor = new TransclusionProcessor(new AbleronConfig({ statsAppendToContent: true }));
+  const transclusionProcessor = new TransclusionProcessor(
+    new AbleronConfig({ statsAppendToContent: true }),
+    new NoOpLogger()
+  );
   const parentRequestHeaders = vi.fn() as any as Headers;
 
   // when

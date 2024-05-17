@@ -4,6 +4,7 @@ import Include from '../src/include.js';
 import Fragment from '../src/fragment.js';
 import Fastify, { FastifyInstance } from 'fastify';
 import TransclusionProcessor from '../src/transclusion-processor';
+import { NoOpLogger } from '../src/logger';
 
 describe('Transclusion result', () => {
   it('should return reasonable defaults', () => {
@@ -155,7 +156,8 @@ describe('Transclusion result', () => {
     // given
     const server: FastifyInstance = Fastify();
     const transclusionProcessor = new TransclusionProcessor(
-      new AbleronConfig({ statsAppendToContent: true, statsExposeFragmentUrl: true })
+      new AbleronConfig({ statsAppendToContent: true, statsExposeFragmentUrl: true }),
+      new NoOpLogger()
     );
     const serverAddress = (path: string) => {
       const address = ['127.0.0.1', '::1'].includes(server.addresses()[0].address)

@@ -13,7 +13,7 @@ export default class Ableron {
   constructor(ableronConfig: Partial<AbleronConfig>, logger?: LoggerInterface) {
     this.logger = logger || new NoOpLogger();
     this.ableronConfig = new AbleronConfig(ableronConfig);
-    this.transclusionProcessor = new TransclusionProcessor(this.ableronConfig);
+    this.transclusionProcessor = new TransclusionProcessor(this.ableronConfig, this.logger);
   }
 
   getLogger() {
