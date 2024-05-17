@@ -39,6 +39,6 @@ export default class Ableron {
       return transclusionResult;
     }
 
-    return new TransclusionResult(content);
+    return new TransclusionResult(content, false, false, this.logger);
   }
 }
