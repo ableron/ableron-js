@@ -89,17 +89,12 @@ export default class TransclusionResult {
 
     this.content = this.content.replaceAll(include.getRawIncludeTag(), fragment.content);
     this.processedIncludes.push(include);
-    this.statMessages.push(
-      `Resolved include '${include.getId()}'` +
-        ` with ${this.getFragmentDebugInfo(fragment)}` +
-        ` in ${include.getResolveTimeMillis()}ms` +
-        (this.exposeFragmentUrl && fragment.url ? '. Fragment-URL: ' + fragment.url : '')
-    );
   }
 
   addUnresolvableInclude(include: Include, errorMessage?: string): void {
     this.content = this.content.replaceAll(include.getRawIncludeTag(), include.getFallbackContent());
     this.contentExpirationTime = new Date(0);
+    //TODO: Add test
     this.processedIncludes.push(include);
     //TODO
     this.statMessages.push(`Unable to resolve include ${include.getId()}${errorMessage ? ': ' + errorMessage : ''}`);
@@ -145,56 +140,66 @@ export default class TransclusionResult {
     return this.calculateCacheControlHeaderValue(pageMaxAge);
   }
 
-  private getFragmentDebugInfo(fragment: Fragment): string {
-    if (!fragment.url) {
-      return 'fallback content';
-    }
-
-    if (fragment.fromCache) {
-      return `cached fragment with expiration time ${fragment.expirationTime.toISOString().split('.')[0] + 'Z'}`;
-    }
-
-    if (fragment.expirationTime.getTime() == new Date(0).getTime()) {
-      return 'uncacheable remote fragment';
-    }
-
-    return `remote fragment with cache expiration time ${fragment.expirationTime.toISOString().split('.')[0] + 'Z'}`;
-  }
-
   private getStats(): string {
-    let stats = `\n<!-- Ableron stats:\nProcessed ${this.getProcessedIncludesCount()} include(s) in ${this.processingTimeMillis}ms\n`;
-    this.statMessages.forEach((logEntry) => (stats += logEntry + '\n'));
-
-    stats += `\n${this.getResolvedIncludesStatsHeader()}\n`;
-    this.processedIncludes
-      .filter((processedInclude) => processedInclude.isResolved())
-      .sort((a, b) => b.getResolveTimeMillis() - a.getResolveTimeMillis())
-      .forEach((resolvedInclude) => (stats += this.getResolvedIncludeStatsRow(resolvedInclude) + '\n'));
-
-    return stats + '-->';
+    return this.getStatsHeader() + this.getStatsProcessedIncludesDetails() + this.getStatsFooter();
   }
 
-  private getResolvedIncludesStatsHeader(): string {
-    //TODO: Source, Cache Details
-    return 'Time | Include' + (this.exposeFragmentUrl ? ' | Fragment URL' : '');
+  private getStatsHeader(): string {
+    return `\n<!-- Ableron stats:\nProcessed ${this.getProcessedIncludesCount()} include(s) in ${this.processingTimeMillis}ms`;
   }
 
-  private getResolvedIncludeStatsRow(resolvedInclude: Include): string {
-    return `${resolvedInclude.getResolveTimeMillis()}ms | ${resolvedInclude.getId()}${this.exposeFragmentUrl ? ' | ' + this.getResolvedIncludeStatsRowFragmentUrl(resolvedInclude) : ''}`;
+  private getStatsFooter(): string {
+    let statsFooter = '\n';
+    this.statMessages.forEach((logEntry) => (statsFooter += '\n' + logEntry));
+    return statsFooter + '-->';
   }
 
-  private getResolvedIncludeStatsRowFragmentUrl(resolvedInclude: Include): string {
-    return resolvedInclude.getResolvedFragment()?.url || '-';
+  private getStatsProcessedIncludesDetails(): string {
+    let stats = '';
+
+    if (this.processedIncludes.length) {
+      stats +=
+        '\n\nTime | Include | Fragment Source | Cache Details' + (this.exposeFragmentUrl ? ' | Fragment URL' : '');
+      this.processedIncludes
+        .filter((processedInclude) => processedInclude.isResolved())
+        .sort((a, b) => b.getResolveTimeMillis() - a.getResolveTimeMillis())
+        .forEach((resolvedInclude) => (stats += '\n' + this.getProcessedIncludeStatsRow(resolvedInclude)));
+    }
+
+    return stats;
   }
 
-  //TODO
-  //TODO
-  //TODO
-  private buildStatCacheExpiration(cacheExpiration: Date): string {
-    if (cacheExpiration.getTime() == new Date(0).getTime()) {
+  private getProcessedIncludeStatsRow(resolvedInclude: Include): string {
+    return (
+      `${resolvedInclude.getResolveTimeMillis()}ms` +
+      ` | ${resolvedInclude.getId()}` +
+      ` | ${this.getProcessedIncludeStatsRowFragmentSource(resolvedInclude)}` +
+      ` | ${this.getProcessedIncludeStatsRowCacheDetails(resolvedInclude)}` +
+      `${this.exposeFragmentUrl ? ' | ' + this.getProcessedIncludeStatsRowFragmentUrl(resolvedInclude) : ''}`
+    );
+  }
+
+  private getProcessedIncludeStatsRowFragmentSource(resolvedInclude: Include): string {
+    return resolvedInclude.getResolvedFragmentSource() || '-';
+  }
+
+  private getProcessedIncludeStatsRowCacheDetails(resolvedInclude: Include): string {
+    if (!resolvedInclude.getResolvedFragment()?.url) {
+      return '-';
+    }
+
+    const fragmentCacheExpirationTime = resolvedInclude.getResolvedFragment()?.expirationTime || new Date(0);
+
+    if (fragmentCacheExpirationTime.getTime() == new Date(0).getTime()) {
       return 'not cacheable';
     }
 
-    return Math.abs((cacheExpiration.getTime() - new Date().getTime()) / 1000) + 's';
+    return (
+      'cached - expires in ' + Math.floor((fragmentCacheExpirationTime.getTime() - new Date().getTime()) / 1000) + 's'
+    );
+  }
+
+  private getProcessedIncludeStatsRowFragmentUrl(resolvedInclude: Include): string {
+    return resolvedInclude.getResolvedFragment()?.url || '-';
   }
 }

@@ -102,10 +102,12 @@ export default class Include {
   /**
    * Recorded response of the errored primary fragment.
    */
-  private erroredPrimaryFragment: Fragment | null = null;
+  private erroredPrimaryFragment?: Fragment;
+  private erroredPrimaryFragmentSource?: string;
 
   private resolved: boolean = false;
   private resolvedFragment?: Fragment;
+  private resolvedFragmentSource?: string;
   private resolveTimeMillis: number = 0;
 
   constructor(
@@ -167,12 +169,16 @@ export default class Include {
     return this.resolved;
   }
 
-  getResolveTimeMillis(): number {
-    return this.resolveTimeMillis;
-  }
-
   getResolvedFragment(): Fragment | undefined {
     return this.resolvedFragment;
+  }
+
+  getResolvedFragmentSource(): string | undefined {
+    return this.resolvedFragmentSource;
+  }
+
+  getResolveTimeMillis(): number {
+    return this.resolveTimeMillis;
   }
 
   resolve(
@@ -185,14 +191,15 @@ export default class Include {
       parentRequestHeaders || new Headers(),
       config.fragmentRequestHeadersToPass.concat(config.fragmentAdditionalRequestHeadersToPass)
     );
-    this.erroredPrimaryFragment = null;
+    this.erroredPrimaryFragment = undefined;
 
     return this.load(
       this.src,
       fragmentRequestHeaders,
       this.getRequestTimeout(this.srcTimeoutMillis, config),
       fragmentCache,
-      config
+      config,
+      'src'
     )
       .then(
         (fragment) =>
@@ -202,11 +209,26 @@ export default class Include {
             fragmentRequestHeaders,
             this.getRequestTimeout(this.fallbackSrcTimeoutMillis, config),
             fragmentCache,
-            config
+            config,
+            'fallback-src'
           )
       )
-      .then((fragment) => fragment || this.erroredPrimaryFragment)
-      .then((fragment) => fragment || new Fragment(200, this.fallbackContent))
+      .then((fragment) => {
+        if (fragment) {
+          return fragment;
+        }
+
+        this.resolvedFragmentSource = this.erroredPrimaryFragmentSource;
+        return this.erroredPrimaryFragment;
+      })
+      .then((fragment) => {
+        if (fragment) {
+          return fragment;
+        }
+
+        this.resolvedFragmentSource = 'fallback content';
+        return new Fragment(200, this.fallbackContent);
+      })
       .then((fragment) => {
         this.resolveWith(fragment, Date.now() - resolveStartTime);
         return fragment;
@@ -231,14 +253,16 @@ export default class Include {
     requestHeaders: Headers,
     requestTimeoutMillis: number,
     fragmentCache: TTLCache<string, Fragment>,
-    config: AbleronConfig
+    config: AbleronConfig,
+    urlSource: string
   ): Promise<Fragment | null> {
     if (!url) {
       return null;
     }
 
     const fragmentCacheKey = this.buildFragmentCacheKey(url, requestHeaders, config.cacheVaryByRequestHeaders);
-    const fragmentFromCache = this.getFragmentFromCache(fragmentCacheKey, fragmentCache);
+    const fragmentFromCache = fragmentCache.get(fragmentCacheKey);
+    this.resolvedFragmentSource = (fragmentFromCache ? 'cached ' : 'remote ') + urlSource;
     const fragment: Promise<Fragment | null> = fragmentFromCache
       ? Promise.resolve(fragmentFromCache)
       : this.requestFragment(url, requestHeaders, requestTimeoutMillis)
@@ -258,7 +282,8 @@ export default class Include {
                   url,
                   undefined,
                   this.filterHeaders(response.headers, config.primaryFragmentResponseHeadersToPass)
-                )
+                ),
+                urlSource
               );
               return null;
             }
@@ -288,7 +313,7 @@ export default class Include {
     return fragment.then((fragment) => {
       if (fragment && !this.HTTP_STATUS_CODES_SUCCESS.includes(fragment.statusCode)) {
         this.logger.error(`[Ableron] Fragment ${this.id} returned status code ${fragment.statusCode}`);
-        this.recordErroredPrimaryFragment(fragment);
+        this.recordErroredPrimaryFragment(fragment, urlSource);
         return null;
       }
 
@@ -336,9 +361,10 @@ export default class Include {
     }
   }
 
-  private recordErroredPrimaryFragment(fragment: Fragment): void {
-    if (this.primary && this.erroredPrimaryFragment === null) {
+  private recordErroredPrimaryFragment(fragment: Fragment, urlSource: string): void {
+    if (this.primary && !this.erroredPrimaryFragment) {
       this.erroredPrimaryFragment = fragment;
+      this.erroredPrimaryFragmentSource = urlSource;
     }
   }
 
@@ -396,15 +422,5 @@ export default class Include {
       }
     });
     return cacheKey;
-  }
-
-  private getFragmentFromCache(cacheKey: string, fragmentCache: TTLCache<string, Fragment>): Fragment | undefined {
-    const fragmentFromCache = fragmentCache.get(cacheKey);
-
-    if (fragmentFromCache) {
-      fragmentFromCache.fromCache = true;
-    }
-
-    return fragmentFromCache;
   }
 }
