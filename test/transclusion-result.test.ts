@@ -1,4 +1,4 @@
-import { describe, expect, it, test } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { AbleronConfig, TransclusionResult } from '../src/index.js';
 import Include from '../src/include.js';
 import Fragment from '../src/fragment.js';
@@ -39,7 +39,7 @@ describe('Transclusion result', () => {
     const fragment = new Fragment(404, 'not found', undefined, new Date(0), new Headers([['X-Test', 'Foo']]));
 
     // when
-    transclusionResult.addResolvedInclude(include, fragment);
+    transclusionResult.addResolvedInclude(include.resolveWith(fragment));
 
     // then
     expect(transclusionResult.getContent()).toBe('content: not found');
@@ -88,7 +88,9 @@ describe('Transclusion result', () => {
     (fragmentExpirationTime: Date, pageMaxAge: number | undefined, expectedCacheControlHeaderValue: string) => {
       // given
       const transclusionResult = new TransclusionResult('content');
-      transclusionResult.addResolvedInclude(new Include(''), new Fragment(200, '', undefined, fragmentExpirationTime));
+      transclusionResult.addResolvedInclude(
+        new Include('').resolveWith(new Fragment(200, '', undefined, fragmentExpirationTime))
+      );
 
       // expect
       expect(transclusionResult.calculateCacheControlHeaderValue(pageMaxAge)).toBe(expectedCacheControlHeaderValue);
@@ -119,7 +121,9 @@ describe('Transclusion result', () => {
     (fragmentExpirationTime: Date, responseHeaders: Headers, expectedCacheControlHeaderValue: string) => {
       // given
       const transclusionResult = new TransclusionResult('content');
-      transclusionResult.addResolvedInclude(new Include(''), new Fragment(200, '', undefined, fragmentExpirationTime));
+      transclusionResult.addResolvedInclude(
+        new Include('').resolveWith(new Fragment(200, '', undefined, fragmentExpirationTime))
+      );
 
       // expect
       expect(transclusionResult.calculateCacheControlHeaderValueByResponseHeaders(responseHeaders)).toBe(
@@ -208,13 +212,13 @@ describe('Transclusion result', () => {
     const transclusionResult = new TransclusionResult('', true);
 
     // when
-    transclusionResult.addResolvedInclude(new Include(''), new Fragment(200, '', 'example.com'));
+    transclusionResult.addResolvedInclude(new Include('').resolveWith(new Fragment(200, '', 'example.com'), 71));
 
     // then
     expect(transclusionResult.getContent()).toBe(
       '\n<!-- Ableron stats:\n' +
         'Processed 1 include(s) in 0ms\n' +
-        "Resolved include 'da39a3e' with uncacheable remote fragment in 0ms\n" +
+        "Resolved include 'da39a3e' with uncacheable remote fragment in 71ms\n" +
         '-->'
     );
   });
@@ -224,7 +228,9 @@ describe('Transclusion result', () => {
     const transclusionResult = new TransclusionResult('', true);
 
     // when
-    transclusionResult.addResolvedInclude(new Include('include#1', new Map([['primary', '']])), new Fragment(200, ''));
+    transclusionResult.addResolvedInclude(
+      new Include('include#1', new Map([['primary', '']])).resolveWith(new Fragment(200, ''))
+    );
 
     // then
     expect(transclusionResult.getContent()).toBe(
@@ -241,8 +247,12 @@ describe('Transclusion result', () => {
     const transclusionResult = new TransclusionResult('', true);
 
     // when
-    transclusionResult.addResolvedInclude(new Include('include#1', new Map([['primary', '']])), new Fragment(200, ''));
-    transclusionResult.addResolvedInclude(new Include('include#2', new Map([['primary', '']])), new Fragment(200, ''));
+    transclusionResult.addResolvedInclude(
+      new Include('include#1', new Map([['primary', '']])).resolveWith(new Fragment(200, ''))
+    );
+    transclusionResult.addResolvedInclude(
+      new Include('include#2', new Map([['primary', '']])).resolveWith(new Fragment(200, ''), 33)
+    );
 
     // then
     expect(transclusionResult.getContent()).toBe(
@@ -251,7 +261,7 @@ describe('Transclusion result', () => {
         'Primary include with status code 200\n' +
         "Resolved include 'ceef048' with fallback content in 0ms\n" +
         'Ignoring status code and response headers of primary include with status code 200 because there is already another primary include\n' +
-        "Resolved include 'a57865f' with fallback content in 0ms\n" +
+        "Resolved include 'a57865f' with fallback content in 33ms\n" +
         '-->'
     );
   });

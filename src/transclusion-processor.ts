@@ -60,7 +60,7 @@ export default class TransclusionProcessor {
         try {
           return include
             .resolve(this.ableronConfig, this.fragmentCache, parentRequestHeaders)
-            .then((fragment) => transclusionResult.addResolvedInclude(include, fragment))
+            .then(() => transclusionResult.addResolvedInclude(include))
             .catch((e) => {
               this.logger.error(
                 `[Ableron] Unable to resolve include ${include.getId()}: ${

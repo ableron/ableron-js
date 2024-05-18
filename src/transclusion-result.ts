@@ -61,7 +61,10 @@ export default class TransclusionResult {
     this.processingTimeMillis = processingTimeMillis;
   }
 
-  addResolvedInclude(include: Include, fragment: Fragment): void {
+  addResolvedInclude(include: Include): void {
+    //TODO: Create fallback Fragment looks messy
+    const fragment = include.getResolvedFragment() || new Fragment(200, '');
+
     if (include.isPrimary()) {
       if (this.hasPrimaryInclude) {
         this.logger.warn('[Ableron] Only one primary include per page allowed. Multiple found');
