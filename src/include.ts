@@ -52,6 +52,8 @@ export default class Include {
 
   private readonly SEVEN_DAYS_IN_MILLISECONDS: number = 7 * 24 * 60 * 60 * 1000;
 
+  private readonly logger: LoggerInterface;
+
   /**
    * Raw include tag.
    */
@@ -102,7 +104,9 @@ export default class Include {
    */
   private erroredPrimaryFragment: Fragment | null = null;
 
-  private readonly logger: LoggerInterface;
+  private resolved: boolean = false;
+  private resolveTimeMillis: number = 0;
+  private resolvedFragment?: Fragment;
 
   constructor(
     rawIncludeTag: string,
@@ -159,11 +163,24 @@ export default class Include {
     return this.fallbackContent;
   }
 
+  isResolved(): boolean {
+    return this.resolved;
+  }
+
+  getResolveTimeMillis(): number {
+    return this.resolveTimeMillis;
+  }
+
+  getResolvedFragment(): Fragment | undefined {
+    return this.resolvedFragment;
+  }
+
   resolve(
     config: AbleronConfig,
     fragmentCache: TTLCache<string, Fragment>,
     parentRequestHeaders?: Headers
   ): Promise<Fragment> {
+    const resolveStartTime = Date.now();
     const fragmentRequestHeaders = this.filterHeaders(
       parentRequestHeaders || new Headers(),
       config.fragmentRequestHeadersToPass.concat(config.fragmentAdditionalRequestHeadersToPass)
@@ -189,7 +206,14 @@ export default class Include {
           )
       )
       .then((fragment) => fragment || this.erroredPrimaryFragment)
-      .then((fragment) => fragment || new Fragment(200, this.fallbackContent));
+      .then((fragment) => fragment || new Fragment(200, this.fallbackContent))
+      .then((fragment) => {
+        this.resolved = true;
+        this.resolveTimeMillis = Date.now() - resolveStartTime;
+        this.resolvedFragment = fragment;
+        this.logger.debug('[Ableron] Resolved include %s in %dms', this.id, this.resolveTimeMillis);
+        return fragment;
+      });
   }
 
   private async load(

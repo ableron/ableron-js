@@ -58,14 +58,9 @@ export default class TransclusionProcessor {
     await Promise.all(
       Array.from(this.findIncludes(content)).map((include) => {
         try {
-          const includeResolveStartTime = Date.now();
           return include
             .resolve(this.ableronConfig, this.fragmentCache, parentRequestHeaders)
-            .then((fragment) => {
-              const includeResolveTimeMillis = Date.now() - includeResolveStartTime;
-              this.logger.debug('[Ableron] Resolved include %s in %dms', include.getId(), includeResolveTimeMillis);
-              transclusionResult.addResolvedInclude(include, fragment, includeResolveTimeMillis);
-            })
+            .then((fragment) => transclusionResult.addResolvedInclude(include, fragment))
             .catch((e) => {
               this.logger.error(
                 `[Ableron] Unable to resolve include ${include.getId()}: ${
