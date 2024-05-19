@@ -85,6 +85,7 @@ export default class TransclusionProcessor {
     transclusionResult.addResolvedInclude(
       include.resolveWith(
         new Fragment(200, include.getFallbackContent(), undefined, new Date(new Date().getTime() + 60000)),
+        'fallback content',
         Date.now() - resolveStartTimeMillis
       )
     );

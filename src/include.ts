@@ -230,7 +230,7 @@ export default class Include {
         return new Fragment(200, this.fallbackContent);
       })
       .then((fragment) => {
-        this.resolveWith(fragment, Date.now() - resolveStartTime);
+        this.resolveWith(fragment, this.resolvedFragmentSource, Date.now() - resolveStartTime);
         return fragment;
       });
   }
@@ -239,11 +239,13 @@ export default class Include {
    * Resolved this Include with the given Fragment.
    *
    * @param fragment The Fragment to resolve this Include with
+   * @param resolvedFragmentSource Source of the fragment
    * @param resolveTimeMillis The time in milliseconds it took to resolve the Include
    */
-  resolveWith(fragment: Fragment, resolveTimeMillis?: number): Include {
+  resolveWith(fragment: Fragment, resolvedFragmentSource?: string, resolveTimeMillis?: number): Include {
     this.resolved = true;
     this.resolvedFragment = fragment;
+    this.resolvedFragmentSource = resolvedFragmentSource;
     this.resolveTimeMillis = resolveTimeMillis || 0;
     this.logger.debug('[Ableron] Resolved include %s in %dms', this.id, this.resolveTimeMillis);
     return this;

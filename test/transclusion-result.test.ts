@@ -213,7 +213,9 @@ describe('Transclusion result', () => {
     const transclusionResult = new TransclusionResult('', true);
 
     // when
-    transclusionResult.addResolvedInclude(new Include('').resolveWith(new Fragment(200, '', 'example.com'), 71));
+    transclusionResult.addResolvedInclude(
+      new Include('').resolveWith(new Fragment(200, '', 'example.com'), 'fallback content', 71)
+    );
 
     // then
     expect(transclusionResult.getContent()).toBe(
@@ -252,7 +254,7 @@ describe('Transclusion result', () => {
       new Include('include#1', new Map([['primary', '']])).resolveWith(new Fragment(200, ''))
     );
     transclusionResult.addResolvedInclude(
-      new Include('include#2', new Map([['primary', '']])).resolveWith(new Fragment(200, ''), 33)
+      new Include('include#2', new Map([['primary', '']])).resolveWith(new Fragment(200, ''), 'fallback content', 33)
     );
 
     // then
