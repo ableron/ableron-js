@@ -61,8 +61,7 @@ export default class TransclusionResult {
   }
 
   addResolvedInclude(include: Include): void {
-    //TODO: Create fallback Fragment looks messy
-    const fragment = include.getResolvedFragment() || new Fragment(200, '');
+    const fragment: Fragment = include.getResolvedFragment()!;
 
     if (include.isPrimary()) {
       if (this.hasPrimaryInclude) {
