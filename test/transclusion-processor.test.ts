@@ -531,7 +531,6 @@ test('should handle unresolvable include', async () => {
   );
 
   // then
-  console.log(result.getContent());
   expect(result.getContent()).toMatch(
     /^<!-- fallback content -->\n<!-- Ableron stats:\nProcessed 1 include\(s\) in \d+?ms/gm
   );

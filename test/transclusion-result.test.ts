@@ -213,9 +213,7 @@ describe('Transclusion result', () => {
     const transclusionResult = new TransclusionResult('', true);
 
     // when
-    transclusionResult.addResolvedInclude(
-      new Include('').resolveWith(new Fragment(200, '', 'example.com'), 'fallback content', 71)
-    );
+    transclusionResult.addResolvedInclude(new Include('').resolveWith(new Fragment(200, '', 'example.com'), 71));
 
     // then
     expect(transclusionResult.getContent()).toBe(
@@ -254,17 +252,17 @@ describe('Transclusion result', () => {
       new Include('include#1', new Map([['primary', '']])).resolveWith(new Fragment(200, ''))
     );
     transclusionResult.addResolvedInclude(
-      new Include('include#2', new Map([['primary', '']])).resolveWith(new Fragment(200, ''), 'fallback content', 33)
+      new Include('include#2', new Map([['primary', '']])).resolveWith(new Fragment(200, ''), 33)
     );
 
     // then
     expect(transclusionResult.getContent()).toBe(
       '\n<!-- Ableron stats:\n' +
-        'Processed 2 include(s) in 0ms\n' +
-        'Primary include with status code 200\n' +
-        "Resolved include 'ceef048' with fallback content in 0ms\n" +
-        'Ignoring status code and response headers of primary include with status code 200 because there is already another primary include\n' +
-        "Resolved include 'a57865f' with fallback content in 33ms\n" +
+        'Processed 2 include(s) in 0ms\n\n' +
+        'Time | Include | Resolved With | Fragment Cacheability\n' +
+        '------------------------------------------------------\n' +
+        '33ms | a57865f (primary) | fallback content | -\n' +
+        '0ms | ceef048 (primary) | fallback content | -\n' +
         '-->'
     );
   });
