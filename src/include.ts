@@ -237,6 +237,7 @@ export default class Include {
 
   /**
    * Resolved this Include with the given Fragment.
+   *
    * @param fragment The Fragment to resolve this Include with
    * @param resolveTimeMillis The time in milliseconds it took to resolve the Include
    */
@@ -415,7 +416,7 @@ export default class Include {
   ): string {
     let cacheKey = fragmentUrl;
     cacheVaryByRequestHeaders.forEach((headerName) => {
-      const headerValue = fragmentRequestHeaders.get(headerName)?.toLowerCase() || null;
+      const headerValue = fragmentRequestHeaders.get(headerName)?.toLowerCase();
 
       if (headerValue) {
         cacheKey += '|' + headerName.toLowerCase() + '=' + headerValue;

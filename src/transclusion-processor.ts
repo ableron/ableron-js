@@ -61,24 +61,33 @@ export default class TransclusionProcessor {
           return include
             .resolve(this.ableronConfig, this.fragmentCache, parentRequestHeaders)
             .then(() => transclusionResult.addResolvedInclude(include))
-            .catch((e) => {
-              this.logger.error(
-                `[Ableron] Unable to resolve include ${include.getId()}: ${
-                  e.stack || e.message + (e.cause ? ` (${e.cause})` : '')
-                }`
-              );
-              transclusionResult.addUnresolvableInclude(include);
-            });
+            .catch((e) => this.handleResolveError(include, e, transclusionResult, startTime));
         } catch (e: any) {
-          this.logger.error(
-            `[Ableron] Unable to resolve include ${include.getId()}: ${e.stack || e.message + (e.cause ? ` (${e.cause})` : '')}`
-          );
-          transclusionResult.addUnresolvableInclude(include);
+          this.handleResolveError(include, e, transclusionResult, startTime);
         }
       })
     );
     transclusionResult.setProcessingTimeMillis(Date.now() - startTime);
     return transclusionResult;
+  }
+
+  private handleResolveError(
+    include: Include,
+    e: any,
+    transclusionResult: TransclusionResult,
+    resolveStartTimeMillis: number
+  ): void {
+    this.logger.error(
+      `[Ableron] Unable to resolve include ${include.getId()}: ${
+        e.stack || e.message + (e.cause ? ` (${e.cause})` : '')
+      }`
+    );
+    transclusionResult.addResolvedInclude(
+      include.resolveWith(
+        new Fragment(200, include.getFallbackContent(), undefined, new Date(new Date().getTime() + 60000)),
+        Date.now() - resolveStartTimeMillis
+      )
+    );
   }
 
   private parseAttributes(attributesString: string): Map<string, string> {

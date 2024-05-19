@@ -85,11 +85,6 @@ export default class TransclusionResult {
     this.processedIncludes.push(include);
   }
 
-  addUnresolvableInclude(include: Include): void {
-    this.content = this.content.replaceAll(include.getRawIncludeTag(), include.getFallbackContent());
-    this.processedIncludes.push(include);
-  }
-
   /**
    * Calculates the <code>Cache-Control</code> header value based on the fragment with the lowest
    * expiration time and the given page max age.
@@ -151,7 +146,6 @@ export default class TransclusionResult {
         (this.exposeFragmentUrl ? ' | Fragment URL' : '') +
         '\n---------------------------------------------------------------------';
       this.processedIncludes
-        .filter((processedInclude) => processedInclude.isResolved())
         .sort((a, b) => b.getResolveTimeMillis() - a.getResolveTimeMillis())
         .forEach((resolvedInclude) => (stats += '\n' + this.getProcessedIncludeStatsRow(resolvedInclude)));
     }
