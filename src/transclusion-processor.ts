@@ -67,13 +67,13 @@ export default class TransclusionProcessor {
                   e.stack || e.message + (e.cause ? ` (${e.cause})` : '')
                 }`
               );
-              transclusionResult.addUnresolvableInclude(include, e.message);
+              transclusionResult.addUnresolvableInclude(include);
             });
         } catch (e: any) {
           this.logger.error(
             `[Ableron] Unable to resolve include ${include.getId()}: ${e.stack || e.message + (e.cause ? ` (${e.cause})` : '')}`
           );
-          transclusionResult.addUnresolvableInclude(include, e.message);
+          transclusionResult.addUnresolvableInclude(include);
         }
       })
     );

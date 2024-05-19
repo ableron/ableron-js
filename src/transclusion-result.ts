@@ -13,7 +13,6 @@ export default class TransclusionResult {
   private readonly appendStatsToContent: boolean;
   private readonly exposeFragmentUrl: boolean;
   private processingTimeMillis: number = 0;
-  private readonly statMessages: string[] = [];
   private readonly processedIncludes: Include[] = [];
   private readonly logger: LoggerInterface;
 
@@ -67,10 +66,8 @@ export default class TransclusionResult {
 
     if (include.isPrimary()) {
       if (this.hasPrimaryInclude) {
-        this.logger.warn('[Ableron] Only one primary include per page allowed. Multiple found');
-        //TODO: Log instead of pushing to stats?
-        this.statMessages.push(
-          `Ignoring status code and response headers of primary include with status code ${fragment.statusCode} because there is already another primary include`
+        this.logger.error(
+          '[Ableron] Found multiple primary includes in one page. Only treating one of them as primary'
         );
       } else {
         this.hasPrimaryInclude = true;
@@ -78,8 +75,6 @@ export default class TransclusionResult {
         fragment.responseHeaders.forEach((headerValue, headerName) =>
           this.responseHeadersToPass.set(headerName, headerValue)
         );
-        //TODO: Log instead of pushing to stats?
-        this.statMessages.push(`Primary include with status code ${fragment.statusCode}`);
       }
     }
 
@@ -91,13 +86,12 @@ export default class TransclusionResult {
     this.processedIncludes.push(include);
   }
 
-  addUnresolvableInclude(include: Include, errorMessage?: string): void {
+  addUnresolvableInclude(include: Include): void {
     this.content = this.content.replaceAll(include.getRawIncludeTag(), include.getFallbackContent());
+    //TODO: Maybe not falling back to complete uncachability
     this.contentExpirationTime = new Date(0);
     //TODO: Add test
     this.processedIncludes.push(include);
-    //TODO
-    this.statMessages.push(`Unable to resolve include ${include.getId()}${errorMessage ? ': ' + errorMessage : ''}`);
   }
 
   /**
@@ -149,9 +143,7 @@ export default class TransclusionResult {
   }
 
   private getStatsFooter(): string {
-    let statsFooter = '\n';
-    this.statMessages.forEach((logEntry) => (statsFooter += '\n' + logEntry));
-    return statsFooter + '-->';
+    return '\n-->';
   }
 
   private getStatsProcessedIncludesDetails(): string {
@@ -159,7 +151,9 @@ export default class TransclusionResult {
 
     if (this.processedIncludes.length) {
       stats +=
-        '\n\nTime | Include | Fragment Source | Cache Details' + (this.exposeFragmentUrl ? ' | Fragment URL' : '');
+        '\n\nTime | Include | Resolved With | Fragment Cacheability' +
+        (this.exposeFragmentUrl ? ' | Fragment URL' : '') +
+        '\n---------------------------------------------------------------------';
       this.processedIncludes
         .filter((processedInclude) => processedInclude.isResolved())
         .sort((a, b) => b.getResolveTimeMillis() - a.getResolveTimeMillis())
@@ -172,18 +166,22 @@ export default class TransclusionResult {
   private getProcessedIncludeStatsRow(resolvedInclude: Include): string {
     return (
       `${resolvedInclude.getResolveTimeMillis()}ms` +
-      ` | ${resolvedInclude.getId()}` +
-      ` | ${this.getProcessedIncludeStatsRowFragmentSource(resolvedInclude)}` +
-      ` | ${this.getProcessedIncludeStatsRowCacheDetails(resolvedInclude)}` +
-      `${this.exposeFragmentUrl ? ' | ' + this.getProcessedIncludeStatsRowFragmentUrl(resolvedInclude) : ''}`
+      ` | ${this.getProcessedIncludeStatIncludeId(resolvedInclude)}` +
+      ` | ${this.getProcessedIncludeStatFragmentSource(resolvedInclude)}` +
+      ` | ${this.getProcessedIncludeStatCacheDetails(resolvedInclude)}` +
+      `${this.exposeFragmentUrl ? ' | ' + this.getProcessedIncludeStatFragmentUrl(resolvedInclude) : ''}`
     );
   }
 
-  private getProcessedIncludeStatsRowFragmentSource(resolvedInclude: Include): string {
+  private getProcessedIncludeStatIncludeId(resolvedInclude: Include): string {
+    return resolvedInclude.getId() + (resolvedInclude.isPrimary() ? ' (primary)' : '');
+  }
+
+  private getProcessedIncludeStatFragmentSource(resolvedInclude: Include): string {
     return resolvedInclude.getResolvedFragmentSource() || '-';
   }
 
-  private getProcessedIncludeStatsRowCacheDetails(resolvedInclude: Include): string {
+  private getProcessedIncludeStatCacheDetails(resolvedInclude: Include): string {
     if (!resolvedInclude.getResolvedFragment()?.url) {
       return '-';
     }
@@ -199,7 +197,7 @@ export default class TransclusionResult {
     );
   }
 
-  private getProcessedIncludeStatsRowFragmentUrl(resolvedInclude: Include): string {
+  private getProcessedIncludeStatFragmentUrl(resolvedInclude: Include): string {
     return resolvedInclude.getResolvedFragment()?.url || '-';
   }
 }
