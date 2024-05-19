@@ -532,6 +532,7 @@ test('should handle unresolvable include', async () => {
 
   // then
   expect(result.getContent()).toMatch(
-    /<!-- fallback content -->\n<!-- Ableron stats:\nProcessed 1 include\(s\) in \d+?ms\nUnable to resolve include ce164c3: headersToFilter\.has is not a function\n-->/gm
+    /^<!-- fallback content -->\n<!-- Ableron stats:\nProcessed 1 include\(s\) in \d+?ms/gm
   );
+  expect(result.getContent()).toMatch(/\d+ms \| ce164c3 \| - \| -\n-->$/gm);
 });

@@ -144,7 +144,7 @@ export default class TransclusionResult {
       stats +=
         '\n\nTime | Include | Resolved With | Fragment Cacheability' +
         (this.exposeFragmentUrl ? ' | Fragment URL' : '') +
-        '\n---------------------------------------------------------------------';
+        '\n------------------------------------------------------';
       this.processedIncludes
         .sort((a, b) => b.getResolveTimeMillis() - a.getResolveTimeMillis())
         .forEach((resolvedInclude) => (stats += '\n' + this.getProcessedIncludeStatsRow(resolvedInclude)));
