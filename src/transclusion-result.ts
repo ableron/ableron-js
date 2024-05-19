@@ -88,9 +88,6 @@ export default class TransclusionResult {
 
   addUnresolvableInclude(include: Include): void {
     this.content = this.content.replaceAll(include.getRawIncludeTag(), include.getFallbackContent());
-    //TODO: Maybe not falling back to complete uncachability
-    this.contentExpirationTime = new Date(0);
-    //TODO: Add test
     this.processedIncludes.push(include);
   }
 
