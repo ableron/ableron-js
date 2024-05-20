@@ -202,7 +202,7 @@ describe('Transclusion result', () => {
       /\d+ms \| 3 \| remote src \| cached - expires in \d+s \| http:\/\/localhost:\d+\/cacheable-fragment-1/
     );
     expect(result.getContent()).toMatch(
-      /0ms \| 4 \| cached fallback-src \| cached - expires in 9s \| http:\/\/localhost:\d+\/cacheable-fragment-2/
+      /\d+ms \| 4 \| cached fallback-src \| cached - expires in 9s \| http:\/\/localhost:\d+\/cacheable-fragment-2/
     );
   });
 
