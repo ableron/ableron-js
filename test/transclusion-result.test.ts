@@ -189,22 +189,22 @@ describe('Transclusion result', () => {
     );
 
     // then
-    console.log(result.getContent());
-    expect(result.getContent()).toMatch(/fallback content/g);
-    expect(result.getContent()).toMatch(/uncacheable-fragment/g);
-    expect(result.getContent()).toMatch(/cacheable-fragment-1/g);
-    expect(result.getContent()).toMatch(/cacheable-fragment-2 from cache/g);
-    expect(result.getContent()).toMatch(/<!-- Ableron stats:/g);
-    expect(result.getContent()).toMatch(/Processed 4 include\(s\) in \d+ms/g);
-    expect(result.getContent()).toMatch(/Resolved include '1' with fallback content in \d+ms/g);
+    expect(result.getContent()).toContain('fallback content');
+    expect(result.getContent()).toContain('uncacheable-fragment');
+    expect(result.getContent()).toContain('cacheable-fragment-1');
+    expect(result.getContent()).toContain('cacheable-fragment-2 from cache');
+    expect(result.getContent()).toMatch(/<!-- Ableron stats:\nProcessed 4 include\(s\) in \d+ms/);
+    expect(result.getContent()).toContain('Time | Include | Resolved With | Fragment Cacheability | Fragment URL');
+    expect(result.getContent()).toContain('------------------------------------------------------');
+    expect(result.getContent()).toMatch(/\d+ms \| 1 \| fallback content \| - \| -/);
     expect(result.getContent()).toMatch(
-      /Resolved include '2' with uncacheable remote fragment in \d+ms\. Fragment-URL: http:\/\/localhost:\d+\/uncacheable-fragment/g
+      /\d+ms \| 2 \| remote src \| not cacheable \| http:\/\/localhost:\d+\/uncacheable-fragment/
     );
     expect(result.getContent()).toMatch(
-      /Resolved include '3' with remote fragment with cache expiration time 2050-10-12T07:28:00Z in \d+ms\. Fragment-URL: http:\/\/localhost:\d+\/cacheable-fragment-1/g
+      /\d+ms \| 3 \| remote src \| cached - expires in \d+s \| http:\/\/localhost:\d+\/cacheable-fragment-1/
     );
     expect(result.getContent()).toMatch(
-      /Resolved include '4' with cached fragment with expiration time 1970-01-01T00:00:00Z in \d+ms\. Fragment-URL: http:\/\/localhost:\d+\/cacheable-fragment-2/g
+      /\d+ms \| 4 \| cached src \| not cacheable \| http:\/\/localhost:\d+\/cacheable-fragment-2/
     );
   });
 
@@ -213,13 +213,15 @@ describe('Transclusion result', () => {
     const transclusionResult = new TransclusionResult('', true);
 
     // when
-    transclusionResult.addResolvedInclude(new Include('').resolveWith(new Fragment(200, '', 'example.com'), 71));
+    transclusionResult.addResolvedInclude(new Include('').resolveWith(new Fragment(200, '', 'example.com'), 71, 'src'));
 
     // then
     expect(transclusionResult.getContent()).toBe(
       '\n<!-- Ableron stats:\n' +
-        'Processed 1 include(s) in 0ms\n' +
-        "Resolved include 'da39a3e' with uncacheable remote fragment in 71ms\n" +
+        'Processed 1 include(s) in 0ms\n\n' +
+        'Time | Include | Resolved With | Fragment Cacheability\n' +
+        '------------------------------------------------------\n' +
+        '71ms | da39a3e | src | not cacheable\n' +
         '-->'
     );
   });
@@ -236,14 +238,15 @@ describe('Transclusion result', () => {
     // then
     expect(transclusionResult.getContent()).toBe(
       '\n<!-- Ableron stats:\n' +
-        'Processed 1 include(s) in 0ms\n' +
-        'Primary include with status code 200\n' +
-        "Resolved include 'ceef048' with fallback content in 0ms\n" +
+        'Processed 1 include(s) in 0ms\n\n' +
+        'Time | Include | Resolved With | Fragment Cacheability\n' +
+        '------------------------------------------------------\n' +
+        '0ms | ceef048 (primary) | fallback content | -\n' +
         '-->'
     );
   });
 
-  it('should append stats for primary include - multiple primary includes', () => {
+  it('should append stats for multiple primary includes', () => {
     // given
     const transclusionResult = new TransclusionResult('', true);
 

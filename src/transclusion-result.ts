@@ -146,7 +146,7 @@ export default class TransclusionResult {
         (this.exposeFragmentUrl ? ' | Fragment URL' : '') +
         '\n------------------------------------------------------';
       this.processedIncludes
-        .sort((a, b) => b.getResolveTimeMillis() - a.getResolveTimeMillis())
+        .sort((a, b) => new Intl.Collator().compare(a.getId(), b.getId()))
         .forEach((resolvedInclude) => (stats += '\n' + this.getProcessedIncludeStatsRow(resolvedInclude)));
     }
 
