@@ -168,23 +168,21 @@ describe('Transclusion result', () => {
     server.get('/cacheable-fragment-1', function (request, reply) {
       reply.status(200).header('Expires', 'Wed, 12 Oct 2050 07:28:00 GMT').send('cacheable-fragment-1');
     });
+    server.get('/cacheable-fragment-2', function (request, reply) {
+      reply.status(200).header('Cache-Control', 'max-age=10').send('cacheable-fragment-2');
+    });
     await server.listen();
-    transclusionProcessor
-      .getFragmentCache()
-      .set(
-        serverAddress('/cacheable-fragment-2'),
-        new Fragment(200, 'cacheable-fragment-2 from cache', serverAddress('/cacheable-fragment-2')),
-        {
-          ttl: 3600
-        }
-      );
+    await transclusionProcessor.resolveIncludes(
+      `<ableron-include src="${serverAddress('/cacheable-fragment-2')}" />`,
+      new Headers()
+    );
 
     // when
     const result = await transclusionProcessor.resolveIncludes(
       `<ableron-include id="1">fallback content</ableron-include>
        <ableron-include id="2" src="${serverAddress('/uncacheable-fragment')}" />
        <ableron-include id="3" src="${serverAddress('/cacheable-fragment-1')}" />
-       <ableron-include id="4" src="${serverAddress('/cacheable-fragment-2')}" />`,
+       <ableron-include id="4" fallback-src="${serverAddress('/cacheable-fragment-2')}" />`,
       new Headers()
     );
 
@@ -192,7 +190,7 @@ describe('Transclusion result', () => {
     expect(result.getContent()).toContain('fallback content');
     expect(result.getContent()).toContain('uncacheable-fragment');
     expect(result.getContent()).toContain('cacheable-fragment-1');
-    expect(result.getContent()).toContain('cacheable-fragment-2 from cache');
+    expect(result.getContent()).toContain('cacheable-fragment-2');
     expect(result.getContent()).toMatch(/<!-- Ableron stats:\nProcessed 4 include\(s\) in \d+ms/);
     expect(result.getContent()).toContain('Time | Include | Resolved With | Fragment Cacheability | Fragment URL');
     expect(result.getContent()).toContain('------------------------------------------------------');
@@ -204,7 +202,7 @@ describe('Transclusion result', () => {
       /\d+ms \| 3 \| remote src \| cached - expires in \d+s \| http:\/\/localhost:\d+\/cacheable-fragment-1/
     );
     expect(result.getContent()).toMatch(
-      /\d+ms \| 4 \| cached src \| not cacheable \| http:\/\/localhost:\d+\/cacheable-fragment-2/
+      /0ms \| 4 \| cached fallback-src \| cached - expires in 9s \| http:\/\/localhost:\d+\/cacheable-fragment-2/
     );
   });
 
