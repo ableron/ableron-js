@@ -35,11 +35,13 @@ describe('Transclusion result', () => {
   it('should handle resolved include correctly', () => {
     // given
     const transclusionResult = new TransclusionResult('content: <include>');
-    const include = new Include('<include>', new Map([['primary', '']]), 'fallback');
-    const fragment = new Fragment(404, 'not found', undefined, new Date(0), new Headers([['X-Test', 'Foo']]));
 
     // when
-    transclusionResult.addResolvedInclude(include.resolveWith(fragment));
+    transclusionResult.addResolvedInclude(
+      new Include('<include>', new Map([['primary', '']]), 'fallback').resolveWith(
+        new Fragment(404, 'not found', undefined, new Date(0), new Headers([['X-Test', 'Foo']]))
+      )
+    );
 
     // then
     expect(transclusionResult.getContent()).toBe('content: not found');
@@ -50,24 +52,6 @@ describe('Transclusion result', () => {
     expect(transclusionResult.getProcessedIncludesCount()).toBe(1);
     expect(transclusionResult.getProcessingTimeMillis()).toBe(0);
   });
-
-  //TODO: Check Stats is the only thing we can do
-  // it('should handle unresolvable include correctly', () => {
-  //   // given
-  //   const transclusionResult = new TransclusionResult('content: <include>');
-  //
-  //   // when
-  //   transclusionResult.addUnresolvableInclude(new Include('<include>', new Map(), 'fallback'));
-  //
-  //   // then
-  //   expect(transclusionResult.getContent()).toBe('content: fallback');
-  //   expect(transclusionResult.getContentExpirationTime()).toEqual(new Date(0));
-  //   expect(transclusionResult.getHasPrimaryInclude()).toBe(false);
-  //   expect(transclusionResult.getStatusCodeOverride()).toBeUndefined();
-  //   expect(transclusionResult.getResponseHeadersToPass()).toEqual(new Headers());
-  //   expect(transclusionResult.getProcessedIncludesCount()).toBe(1);
-  //   expect(transclusionResult.getProcessingTimeMillis()).toBe(0);
-  // });
 
   it.each([
     [new Date(0), undefined, 'no-store'],
