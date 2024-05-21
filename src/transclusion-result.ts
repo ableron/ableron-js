@@ -176,15 +176,13 @@ export default class TransclusionResult {
       return '-';
     }
 
-    const fragmentCacheExpirationTime = include.getResolvedFragment()?.expirationTime || new Date(0);
+    const fragmentExpirationTime = include.getResolvedFragment()?.expirationTime!;
 
-    if (fragmentCacheExpirationTime.getTime() == new Date(0).getTime()) {
+    if (fragmentExpirationTime.getTime() == new Date(0).getTime()) {
       return 'not cacheable';
     }
 
-    return (
-      'cached - expires in ' + Math.floor((fragmentCacheExpirationTime.getTime() - new Date().getTime()) / 1000) + 's'
-    );
+    return 'cached - expires in ' + Math.floor((fragmentExpirationTime.getTime() - new Date().getTime()) / 1000) + 's';
   }
 
   private getProcessedIncludeStatFragmentUrl(include: Include): string {
