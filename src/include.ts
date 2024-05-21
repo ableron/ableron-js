@@ -185,7 +185,7 @@ export default class Include {
     config: AbleronConfig,
     fragmentCache: TTLCache<string, Fragment>,
     parentRequestHeaders?: Headers
-  ): Promise<Fragment> {
+  ): Promise<Include> {
     const resolveStartTime = Date.now();
     const fragmentRequestHeaders = this.filterHeaders(
       parentRequestHeaders || new Headers(),
@@ -199,7 +199,7 @@ export default class Include {
       this.getRequestTimeout(this.srcTimeoutMillis, config),
       fragmentCache,
       config,
-      'src'
+      this.ATTR_SOURCE
     )
       .then(
         (fragment) =>
@@ -210,7 +210,7 @@ export default class Include {
             this.getRequestTimeout(this.fallbackSrcTimeoutMillis, config),
             fragmentCache,
             config,
-            'fallback-src'
+            this.ATTR_FALLBACK_SOURCE
           )
       )
       .then((fragment) => {
@@ -229,14 +229,11 @@ export default class Include {
         this.resolvedFragmentSource = 'fallback content';
         return new Fragment(200, this.fallbackContent);
       })
-      .then((fragment) => {
-        this.resolveWith(fragment, Date.now() - resolveStartTime, this.resolvedFragmentSource);
-        return fragment;
-      });
+      .then((fragment) => this.resolveWith(fragment, Date.now() - resolveStartTime, this.resolvedFragmentSource));
   }
 
   /**
-   * Resolved this Include with the given Fragment.
+   * Resolves this Include with the given Fragment.
    *
    * @param fragment The Fragment to resolve this Include with
    * @param resolveTimeMillis The time in milliseconds it took to resolve the Include
@@ -269,7 +266,7 @@ export default class Include {
 
     const fragmentCacheKey = this.buildFragmentCacheKey(url, requestHeaders, config.cacheVaryByRequestHeaders);
     const fragmentFromCache = fragmentCache.get(fragmentCacheKey);
-    this.resolvedFragmentSource = (fragmentFromCache ? 'cached ' : 'remote ') + urlSource;
+    const fragmentSource = (fragmentFromCache ? 'cached ' : 'remote ') + urlSource;
     const fragment: Promise<Fragment | null> = fragmentFromCache
       ? Promise.resolve(fragmentFromCache)
       : this.requestFragment(url, requestHeaders, requestTimeoutMillis)
@@ -290,7 +287,7 @@ export default class Include {
                   undefined,
                   this.filterHeaders(response.headers, config.primaryFragmentResponseHeadersToPass)
                 ),
-                urlSource
+                fragmentSource
               );
               return null;
             }
@@ -320,10 +317,11 @@ export default class Include {
     return fragment.then((fragment) => {
       if (fragment && !this.HTTP_STATUS_CODES_SUCCESS.includes(fragment.statusCode)) {
         this.logger.error(`[Ableron] Fragment ${this.id} returned status code ${fragment.statusCode}`);
-        this.recordErroredPrimaryFragment(fragment, urlSource);
+        this.recordErroredPrimaryFragment(fragment, fragmentSource);
         return null;
       }
 
+      this.resolvedFragmentSource = fragmentSource;
       return fragment;
     });
   }
@@ -368,10 +366,10 @@ export default class Include {
     }
   }
 
-  private recordErroredPrimaryFragment(fragment: Fragment, urlSource: string): void {
+  private recordErroredPrimaryFragment(fragment: Fragment, fragmentSource: string): void {
     if (this.primary && !this.erroredPrimaryFragment) {
       this.erroredPrimaryFragment = fragment;
-      this.erroredPrimaryFragmentSource = urlSource;
+      this.erroredPrimaryFragmentSource = fragmentSource;
     }
   }
 
