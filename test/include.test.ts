@@ -115,7 +115,7 @@ describe('Include', () => {
     expect(include.isPrimary()).toBe(expectedPrimary);
   });
 
-  it('should resolve with URL provided via src attribute', async () => {
+  it('should resolve with src', async () => {
     // given
     server = Fastify();
     server.get('/', function (request, reply) {
@@ -134,7 +134,7 @@ describe('Include', () => {
     expect(include.getResolveTimeMillis()).toBeGreaterThan(0);
   });
 
-  it('should resolve with URL provided via fallback-src attribute if src could not be loaded', async () => {
+  it('should resolve with fallback-src if src could not be loaded', async () => {
     // given
     server = Fastify();
     server.get('/src', function (request, reply) {
