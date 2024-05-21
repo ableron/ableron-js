@@ -58,32 +58,36 @@ export default class TransclusionProcessor {
     await Promise.all(
       Array.from(this.findIncludes(content)).map((include) => {
         try {
-          const includeResolveStartTime = Date.now();
           return include
             .resolve(this.ableronConfig, this.fragmentCache, parentRequestHeaders)
-            .then((fragment) => {
-              const includeResolveTimeMillis = Date.now() - includeResolveStartTime;
-              this.logger.debug('[Ableron] Resolved include %s in %dms', include.getId(), includeResolveTimeMillis);
-              transclusionResult.addResolvedInclude(include, fragment, includeResolveTimeMillis);
-            })
-            .catch((e) => {
-              this.logger.error(
-                `[Ableron] Unable to resolve include ${include.getId()}: ${
-                  e.stack || e.message + (e.cause ? ` (${e.cause})` : '')
-                }`
-              );
-              transclusionResult.addUnresolvableInclude(include, e.message);
-            });
+            .then(() => transclusionResult.addResolvedInclude(include))
+            .catch((e) => this.handleResolveError(include, e, transclusionResult, startTime));
         } catch (e: any) {
-          this.logger.error(
-            `[Ableron] Unable to resolve include ${include.getId()}: ${e.stack || e.message + (e.cause ? ` (${e.cause})` : '')}`
-          );
-          transclusionResult.addUnresolvableInclude(include, e.message);
+          this.handleResolveError(include, e, transclusionResult, startTime);
         }
       })
     );
     transclusionResult.setProcessingTimeMillis(Date.now() - startTime);
     return transclusionResult;
+  }
+
+  private handleResolveError(
+    include: Include,
+    e: any,
+    transclusionResult: TransclusionResult,
+    resolveStartTimeMillis: number
+  ): void {
+    this.logger.error(
+      `[Ableron] Unable to resolve include ${include.getId()}: ${
+        e.stack || e.message + (e.cause ? ` (${e.cause})` : '')
+      }`
+    );
+    transclusionResult.addResolvedInclude(
+      include.resolveWith(
+        new Fragment(200, include.getFallbackContent(), undefined, new Date(new Date().getTime() + 60000)),
+        Date.now() - resolveStartTimeMillis
+      )
+    );
   }
 
   private parseAttributes(attributesString: string): Map<string, string> {

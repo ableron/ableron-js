@@ -1,7 +1,7 @@
-import { expect, test } from 'vitest';
+import { expect, it } from 'vitest';
 import { AbleronConfig } from '../src/index.js';
 
-test('should have default value for each property', () => {
+it('should have default value for each property', () => {
   // when
   const config = new AbleronConfig();
 
@@ -28,7 +28,7 @@ test('should have default value for each property', () => {
   expect(config.statsExposeFragmentUrl).toBe(false);
 });
 
-test('should use values provided via constructor', () => {
+it('should use values provided via constructor', () => {
   // when
   const config = new AbleronConfig({
     enabled: false,

@@ -4,7 +4,6 @@ export default class Fragment {
   readonly url?: string;
   readonly statusCode: number;
   readonly responseHeaders: Headers;
-  public fromCache: boolean = false;
 
   constructor(statusCode: number, content: string, url?: string, expirationTime?: Date, responseHeaders?: Headers) {
     this.statusCode = statusCode;

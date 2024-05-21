@@ -12,9 +12,8 @@ export default class TransclusionResult {
   private readonly responseHeadersToPass: Headers = new Headers();
   private readonly appendStatsToContent: boolean;
   private readonly exposeFragmentUrl: boolean;
-  private processedIncludesCount: number = 0;
   private processingTimeMillis: number = 0;
-  private readonly statMessages: string[] = [];
+  private readonly processedIncludes: Include[] = [];
   private readonly logger: LoggerInterface;
 
   constructor(
@@ -50,7 +49,7 @@ export default class TransclusionResult {
   }
 
   getProcessedIncludesCount(): number {
-    return this.processedIncludesCount;
+    return this.processedIncludes.length;
   }
 
   getProcessingTimeMillis(): number {
@@ -61,12 +60,13 @@ export default class TransclusionResult {
     this.processingTimeMillis = processingTimeMillis;
   }
 
-  addResolvedInclude(include: Include, fragment: Fragment, includeResolveTimeMillis: number): void {
+  addResolvedInclude(include: Include): void {
+    const fragment: Fragment = include.getResolvedFragment()!;
+
     if (include.isPrimary()) {
       if (this.hasPrimaryInclude) {
-        this.logger.warn('[Ableron] Only one primary include per page allowed. Multiple found');
-        this.statMessages.push(
-          `Ignoring status code and response headers of primary include with status code ${fragment.statusCode} because there is already another primary include`
+        this.logger.error(
+          '[Ableron] Found multiple primary includes in one page. Only treating one of them as primary'
         );
       } else {
         this.hasPrimaryInclude = true;
@@ -74,7 +74,6 @@ export default class TransclusionResult {
         fragment.responseHeaders.forEach((headerValue, headerName) =>
           this.responseHeadersToPass.set(headerName, headerValue)
         );
-        this.statMessages.push(`Primary include with status code ${fragment.statusCode}`);
       }
     }
 
@@ -83,20 +82,7 @@ export default class TransclusionResult {
     }
 
     this.content = this.content.replaceAll(include.getRawIncludeTag(), fragment.content);
-    this.processedIncludesCount++;
-    this.statMessages.push(
-      `Resolved include '${include.getId()}'` +
-        ` with ${this.getFragmentDebugInfo(fragment)}` +
-        ` in ${includeResolveTimeMillis}ms` +
-        (this.exposeFragmentUrl && fragment.url ? '. Fragment-URL: ' + fragment.url : '')
-    );
-  }
-
-  addUnresolvableInclude(include: Include, errorMessage?: string): void {
-    this.content = this.content.replaceAll(include.getRawIncludeTag(), include.getFallbackContent());
-    this.contentExpirationTime = new Date(0);
-    this.processedIncludesCount++;
-    this.statMessages.push(`Unable to resolve include ${include.getId()}${errorMessage ? ': ' + errorMessage : ''}`);
+    this.processedIncludes.push(include);
   }
 
   /**
@@ -139,25 +125,67 @@ export default class TransclusionResult {
     return this.calculateCacheControlHeaderValue(pageMaxAge);
   }
 
-  private getFragmentDebugInfo(fragment: Fragment): string {
-    if (!fragment.url) {
-      return 'fallback content';
-    }
-
-    if (fragment.fromCache) {
-      return `cached fragment with expiration time ${fragment.expirationTime.toISOString().split('.')[0] + 'Z'}`;
-    }
-
-    if (fragment.expirationTime.getTime() == new Date(0).getTime()) {
-      return 'uncacheable remote fragment';
-    }
-
-    return `remote fragment with cache expiration time ${fragment.expirationTime.toISOString().split('.')[0] + 'Z'}`;
+  private getStats(): string {
+    return this.getStatsHeader() + this.getStatsProcessedIncludes() + this.getStatsFooter();
   }
 
-  private getStats(): string {
-    let stats = `\n<!-- Ableron stats:\nProcessed ${this.processedIncludesCount} include(s) in ${this.processingTimeMillis}ms\n`;
-    this.statMessages.forEach((logEntry) => (stats = stats + logEntry + '\n'));
-    return stats + '-->';
+  private getStatsHeader(): string {
+    return `\n<!-- Ableron stats:\nProcessed ${this.getProcessedIncludesCount()} include(s) in ${this.processingTimeMillis}ms`;
+  }
+
+  private getStatsFooter(): string {
+    return '\n-->';
+  }
+
+  private getStatsProcessedIncludes(): string {
+    let stats = '';
+
+    if (this.processedIncludes.length) {
+      stats +=
+        '\n\nTime | Include | Resolved With | Fragment Cacheability' +
+        (this.exposeFragmentUrl ? ' | Fragment URL' : '') +
+        '\n------------------------------------------------------';
+      this.processedIncludes
+        .sort((a, b) => new Intl.Collator().compare(a.getId(), b.getId()))
+        .forEach((include) => (stats += '\n' + this.getProcessedIncludeStatsRow(include)));
+    }
+
+    return stats;
+  }
+
+  private getProcessedIncludeStatsRow(include: Include): string {
+    return (
+      `${include.getResolveTimeMillis()}ms` +
+      ` | ${this.getProcessedIncludeStatIncludeId(include)}` +
+      ` | ${this.getProcessedIncludeStatFragmentSource(include)}` +
+      ` | ${this.getProcessedIncludeStatCacheDetails(include)}` +
+      `${this.exposeFragmentUrl ? ' | ' + this.getProcessedIncludeStatFragmentUrl(include) : ''}`
+    );
+  }
+
+  private getProcessedIncludeStatIncludeId(include: Include): string {
+    return include.getId() + (include.isPrimary() ? ' (primary)' : '');
+  }
+
+  private getProcessedIncludeStatFragmentSource(include: Include): string {
+    return include.getResolvedFragmentSource() || '-';
+  }
+
+  private getProcessedIncludeStatCacheDetails(include: Include): string {
+    if (!include.getResolvedFragment()?.url) {
+      return '-';
+    }
+
+    const fragmentExpirationTime = include.getResolvedFragment()?.expirationTime!;
+
+    if (fragmentExpirationTime.getTime() == new Date(0).getTime()) {
+      return 'not cacheable';
+    }
+
+    return 'cached - expires in ' + Math.floor((fragmentExpirationTime.getTime() - new Date().getTime()) / 1000) + 's';
+  }
+
+  private getProcessedIncludeStatFragmentUrl(include: Include): string {
+    return include.getResolvedFragment()?.url || '-';
   }
 }

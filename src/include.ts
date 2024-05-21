@@ -52,6 +52,8 @@ export default class Include {
 
   private readonly SEVEN_DAYS_IN_MILLISECONDS: number = 7 * 24 * 60 * 60 * 1000;
 
+  private readonly logger: LoggerInterface;
+
   /**
    * Raw include tag.
    */
@@ -100,9 +102,13 @@ export default class Include {
   /**
    * Recorded response of the errored primary fragment.
    */
-  private erroredPrimaryFragment: Fragment | null = null;
+  private erroredPrimaryFragment?: Fragment;
+  private erroredPrimaryFragmentSource?: string;
 
-  private readonly logger: LoggerInterface;
+  private resolved: boolean = false;
+  private resolvedFragment?: Fragment;
+  private resolvedFragmentSource?: string;
+  private resolveTimeMillis: number = 0;
 
   constructor(
     rawIncludeTag: string,
@@ -159,23 +165,41 @@ export default class Include {
     return this.fallbackContent;
   }
 
+  isResolved(): boolean {
+    return this.resolved;
+  }
+
+  getResolvedFragment(): Fragment | undefined {
+    return this.resolvedFragment;
+  }
+
+  getResolvedFragmentSource(): string | undefined {
+    return this.resolvedFragmentSource;
+  }
+
+  getResolveTimeMillis(): number {
+    return this.resolveTimeMillis;
+  }
+
   resolve(
     config: AbleronConfig,
     fragmentCache: TTLCache<string, Fragment>,
     parentRequestHeaders?: Headers
-  ): Promise<Fragment> {
+  ): Promise<Include> {
+    const resolveStartTime = Date.now();
     const fragmentRequestHeaders = this.filterHeaders(
       parentRequestHeaders || new Headers(),
       config.fragmentRequestHeadersToPass.concat(config.fragmentAdditionalRequestHeadersToPass)
     );
-    this.erroredPrimaryFragment = null;
+    this.erroredPrimaryFragment = undefined;
 
     return this.load(
       this.src,
       fragmentRequestHeaders,
       this.getRequestTimeout(this.srcTimeoutMillis, config),
       fragmentCache,
-      config
+      config,
+      this.ATTR_SOURCE
     )
       .then(
         (fragment) =>
@@ -185,11 +209,47 @@ export default class Include {
             fragmentRequestHeaders,
             this.getRequestTimeout(this.fallbackSrcTimeoutMillis, config),
             fragmentCache,
-            config
+            config,
+            this.ATTR_FALLBACK_SOURCE
           )
       )
-      .then((fragment) => fragment || this.erroredPrimaryFragment)
-      .then((fragment) => fragment || new Fragment(200, this.fallbackContent));
+      .then((fragment) => {
+        if (fragment) {
+          return fragment;
+        }
+
+        this.resolvedFragmentSource = this.erroredPrimaryFragmentSource;
+        return this.erroredPrimaryFragment;
+      })
+      .then((fragment) => {
+        if (fragment) {
+          return fragment;
+        }
+
+        this.resolvedFragmentSource = 'fallback content';
+        return new Fragment(200, this.fallbackContent);
+      })
+      .then((fragment) => this.resolveWith(fragment, Date.now() - resolveStartTime, this.resolvedFragmentSource));
+  }
+
+  /**
+   * Resolves this Include with the given Fragment.
+   *
+   * @param fragment The Fragment to resolve this Include with
+   * @param resolveTimeMillis The time in milliseconds it took to resolve the Include
+   * @param resolvedFragmentSource Source of the fragment
+   */
+  resolveWith(
+    fragment: Fragment,
+    resolveTimeMillis?: number,
+    resolvedFragmentSource: string = 'fallback content'
+  ): Include {
+    this.resolved = true;
+    this.resolvedFragment = fragment;
+    this.resolvedFragmentSource = resolvedFragmentSource;
+    this.resolveTimeMillis = resolveTimeMillis || 0;
+    this.logger.debug('[Ableron] Resolved include %s in %dms', this.id, this.resolveTimeMillis);
+    return this;
   }
 
   private async load(
@@ -197,14 +257,16 @@ export default class Include {
     requestHeaders: Headers,
     requestTimeoutMillis: number,
     fragmentCache: TTLCache<string, Fragment>,
-    config: AbleronConfig
+    config: AbleronConfig,
+    urlSource: string
   ): Promise<Fragment | null> {
     if (!url) {
       return null;
     }
 
     const fragmentCacheKey = this.buildFragmentCacheKey(url, requestHeaders, config.cacheVaryByRequestHeaders);
-    const fragmentFromCache = this.getFragmentFromCache(fragmentCacheKey, fragmentCache);
+    const fragmentFromCache = fragmentCache.get(fragmentCacheKey);
+    const fragmentSource = (fragmentFromCache ? 'cached ' : 'remote ') + urlSource;
     const fragment: Promise<Fragment | null> = fragmentFromCache
       ? Promise.resolve(fragmentFromCache)
       : this.requestFragment(url, requestHeaders, requestTimeoutMillis)
@@ -224,7 +286,8 @@ export default class Include {
                   url,
                   undefined,
                   this.filterHeaders(response.headers, config.primaryFragmentResponseHeadersToPass)
-                )
+                ),
+                fragmentSource
               );
               return null;
             }
@@ -254,10 +317,11 @@ export default class Include {
     return fragment.then((fragment) => {
       if (fragment && !this.HTTP_STATUS_CODES_SUCCESS.includes(fragment.statusCode)) {
         this.logger.error(`[Ableron] Fragment ${this.id} returned status code ${fragment.statusCode}`);
-        this.recordErroredPrimaryFragment(fragment);
+        this.recordErroredPrimaryFragment(fragment, fragmentSource);
         return null;
       }
 
+      this.resolvedFragmentSource = fragmentSource;
       return fragment;
     });
   }
@@ -302,9 +366,10 @@ export default class Include {
     }
   }
 
-  private recordErroredPrimaryFragment(fragment: Fragment): void {
-    if (this.primary && this.erroredPrimaryFragment === null) {
+  private recordErroredPrimaryFragment(fragment: Fragment, fragmentSource: string): void {
+    if (this.primary && !this.erroredPrimaryFragment) {
       this.erroredPrimaryFragment = fragment;
+      this.erroredPrimaryFragmentSource = fragmentSource;
     }
   }
 
@@ -355,22 +420,12 @@ export default class Include {
   ): string {
     let cacheKey = fragmentUrl;
     cacheVaryByRequestHeaders.forEach((headerName) => {
-      const headerValue = fragmentRequestHeaders.get(headerName)?.toLowerCase() || null;
+      const headerValue = fragmentRequestHeaders.get(headerName)?.toLowerCase();
 
       if (headerValue) {
         cacheKey += '|' + headerName.toLowerCase() + '=' + headerValue;
       }
     });
     return cacheKey;
-  }
-
-  private getFragmentFromCache(cacheKey: string, fragmentCache: TTLCache<string, Fragment>): Fragment | undefined {
-    const fragmentFromCache = fragmentCache.get(cacheKey);
-
-    if (fragmentFromCache) {
-      fragmentFromCache.fromCache = true;
-    }
-
-    return fragmentFromCache;
   }
 }
