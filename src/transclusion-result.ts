@@ -147,36 +147,36 @@ export default class TransclusionResult {
         '\n------------------------------------------------------';
       this.processedIncludes
         .sort((a, b) => new Intl.Collator().compare(a.getId(), b.getId()))
-        .forEach((resolvedInclude) => (stats += '\n' + this.getProcessedIncludeStatsRow(resolvedInclude)));
+        .forEach((include) => (stats += '\n' + this.getProcessedIncludeStatsRow(include)));
     }
 
     return stats;
   }
 
-  private getProcessedIncludeStatsRow(resolvedInclude: Include): string {
+  private getProcessedIncludeStatsRow(include: Include): string {
     return (
-      `${resolvedInclude.getResolveTimeMillis()}ms` +
-      ` | ${this.getProcessedIncludeStatIncludeId(resolvedInclude)}` +
-      ` | ${this.getProcessedIncludeStatFragmentSource(resolvedInclude)}` +
-      ` | ${this.getProcessedIncludeStatCacheDetails(resolvedInclude)}` +
-      `${this.exposeFragmentUrl ? ' | ' + this.getProcessedIncludeStatFragmentUrl(resolvedInclude) : ''}`
+      `${include.getResolveTimeMillis()}ms` +
+      ` | ${this.getProcessedIncludeStatIncludeId(include)}` +
+      ` | ${this.getProcessedIncludeStatFragmentSource(include)}` +
+      ` | ${this.getProcessedIncludeStatCacheDetails(include)}` +
+      `${this.exposeFragmentUrl ? ' | ' + this.getProcessedIncludeStatFragmentUrl(include) : ''}`
     );
   }
 
-  private getProcessedIncludeStatIncludeId(resolvedInclude: Include): string {
-    return resolvedInclude.getId() + (resolvedInclude.isPrimary() ? ' (primary)' : '');
+  private getProcessedIncludeStatIncludeId(include: Include): string {
+    return include.getId() + (include.isPrimary() ? ' (primary)' : '');
   }
 
-  private getProcessedIncludeStatFragmentSource(resolvedInclude: Include): string {
-    return resolvedInclude.getResolvedFragmentSource() || '-';
+  private getProcessedIncludeStatFragmentSource(include: Include): string {
+    return include.getResolvedFragmentSource() || '-';
   }
 
-  private getProcessedIncludeStatCacheDetails(resolvedInclude: Include): string {
-    if (!resolvedInclude.getResolvedFragment()?.url) {
+  private getProcessedIncludeStatCacheDetails(include: Include): string {
+    if (!include.getResolvedFragment()?.url) {
       return '-';
     }
 
-    const fragmentCacheExpirationTime = resolvedInclude.getResolvedFragment()?.expirationTime || new Date(0);
+    const fragmentCacheExpirationTime = include.getResolvedFragment()?.expirationTime || new Date(0);
 
     if (fragmentCacheExpirationTime.getTime() == new Date(0).getTime()) {
       return 'not cacheable';
@@ -187,7 +187,7 @@ export default class TransclusionResult {
     );
   }
 
-  private getProcessedIncludeStatFragmentUrl(resolvedInclude: Include): string {
-    return resolvedInclude.getResolvedFragment()?.url || '-';
+  private getProcessedIncludeStatFragmentUrl(include: Include): string {
+    return include.getResolvedFragment()?.url || '-';
   }
 }
