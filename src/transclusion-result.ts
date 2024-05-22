@@ -182,7 +182,7 @@ export default class TransclusionResult {
       return 'not cacheable';
     }
 
-    return 'cached - expires in ' + Math.floor((fragmentExpirationTime.getTime() - new Date().getTime()) / 1000) + 's';
+    return 'expires in ' + Math.ceil((fragmentExpirationTime.getTime() - new Date().getTime()) / 1000) + 's';
   }
 
   private getProcessedIncludeStatFragmentUrl(include: Include): string {

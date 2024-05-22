@@ -183,10 +183,10 @@ describe('TransclusionResult', () => {
       /\d+ms \| 2 \| remote src \| not cacheable \| http:\/\/localhost:\d+\/uncacheable-fragment/
     );
     expect(result.getContent()).toMatch(
-      /\d+ms \| 3 \| remote src \| cached - expires in \d+s \| http:\/\/localhost:\d+\/cacheable-fragment-1/
+      /\d+ms \| 3 \| remote src \| expires in \d+s \| http:\/\/localhost:\d+\/cacheable-fragment-1/
     );
     expect(result.getContent()).toMatch(
-      /\d+ms \| 4 \| cached fallback-src \| cached - expires in 9s \| http:\/\/localhost:\d+\/cacheable-fragment-2/
+      /\d+ms \| 4 \| cached fallback-src \| expires in 10s \| http:\/\/localhost:\d+\/cacheable-fragment-2/
     );
   });
 
