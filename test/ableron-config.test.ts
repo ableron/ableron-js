@@ -1,56 +1,58 @@
-import { expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { AbleronConfig } from '../src/index.js';
 
-it('should have default value for each property', () => {
-  // when
-  const config = new AbleronConfig();
+describe('AbleronConfig', () => {
+  it('should have default value for each property', () => {
+    // when
+    const config = new AbleronConfig();
 
-  // then
-  expect(config.enabled).toBe(true);
-  expect(config.fragmentRequestTimeoutMillis).toBe(3000);
-  expect(config.fragmentRequestHeadersToPass).toEqual([
-    'Accept-Language',
-    'Correlation-ID',
-    'Forwarded',
-    'Referer',
-    'User-Agent',
-    'X-Correlation-ID',
-    'X-Forwarded-For',
-    'X-Forwarded-Proto',
-    'X-Forwarded-Host',
-    'X-Real-IP',
-    'X-Request-ID'
-  ]);
-  expect(config.fragmentAdditionalRequestHeadersToPass).toEqual([]);
-  expect(config.primaryFragmentResponseHeadersToPass).toEqual(['Content-Language', 'Location', 'Refresh']);
-  expect(config.cacheVaryByRequestHeaders).toEqual([]);
-  expect(config.statsAppendToContent).toBe(false);
-  expect(config.statsExposeFragmentUrl).toBe(false);
-});
-
-it('should use values provided via constructor', () => {
-  // when
-  const config = new AbleronConfig({
-    enabled: false,
-    fragmentRequestTimeoutMillis: 200,
-    fragmentRequestHeadersToPass: ['X-Test-Request-Header', 'X-Test-Request-Header-2'],
-    fragmentAdditionalRequestHeadersToPass: ['X-Additional-Req-Header', 'X-Additional-Req-Header-2'],
-    primaryFragmentResponseHeadersToPass: ['X-Test-Response-Header', 'X-Test-Response-Header-2'],
-    cacheVaryByRequestHeaders: ['X-ACME-Test-Groups'],
-    statsAppendToContent: true,
-    statsExposeFragmentUrl: true
+    // then
+    expect(config.enabled).toBe(true);
+    expect(config.fragmentRequestTimeoutMillis).toBe(3000);
+    expect(config.fragmentRequestHeadersToPass).toEqual([
+      'Accept-Language',
+      'Correlation-ID',
+      'Forwarded',
+      'Referer',
+      'User-Agent',
+      'X-Correlation-ID',
+      'X-Forwarded-For',
+      'X-Forwarded-Proto',
+      'X-Forwarded-Host',
+      'X-Real-IP',
+      'X-Request-ID'
+    ]);
+    expect(config.fragmentAdditionalRequestHeadersToPass).toEqual([]);
+    expect(config.primaryFragmentResponseHeadersToPass).toEqual(['Content-Language', 'Location', 'Refresh']);
+    expect(config.cacheVaryByRequestHeaders).toEqual([]);
+    expect(config.statsAppendToContent).toBe(false);
+    expect(config.statsExposeFragmentUrl).toBe(false);
   });
 
-  // then
-  expect(config.enabled).toBe(false);
-  expect(config.fragmentRequestTimeoutMillis).toBe(200);
-  expect(config.fragmentRequestHeadersToPass).toEqual(['X-Test-Request-Header', 'X-Test-Request-Header-2']);
-  expect(config.fragmentAdditionalRequestHeadersToPass).toEqual([
-    'X-Additional-Req-Header',
-    'X-Additional-Req-Header-2'
-  ]);
-  expect(config.primaryFragmentResponseHeadersToPass).toEqual(['X-Test-Response-Header', 'X-Test-Response-Header-2']);
-  expect(config.cacheVaryByRequestHeaders).toEqual(['X-ACME-Test-Groups']);
-  expect(config.statsAppendToContent).toBe(true);
-  expect(config.statsExposeFragmentUrl).toBe(true);
+  it('should use values provided via constructor', () => {
+    // when
+    const config = new AbleronConfig({
+      enabled: false,
+      fragmentRequestTimeoutMillis: 200,
+      fragmentRequestHeadersToPass: ['X-Test-Request-Header', 'X-Test-Request-Header-2'],
+      fragmentAdditionalRequestHeadersToPass: ['X-Additional-Req-Header', 'X-Additional-Req-Header-2'],
+      primaryFragmentResponseHeadersToPass: ['X-Test-Response-Header', 'X-Test-Response-Header-2'],
+      cacheVaryByRequestHeaders: ['X-ACME-Test-Groups'],
+      statsAppendToContent: true,
+      statsExposeFragmentUrl: true
+    });
+
+    // then
+    expect(config.enabled).toBe(false);
+    expect(config.fragmentRequestTimeoutMillis).toBe(200);
+    expect(config.fragmentRequestHeadersToPass).toEqual(['X-Test-Request-Header', 'X-Test-Request-Header-2']);
+    expect(config.fragmentAdditionalRequestHeadersToPass).toEqual([
+      'X-Additional-Req-Header',
+      'X-Additional-Req-Header-2'
+    ]);
+    expect(config.primaryFragmentResponseHeadersToPass).toEqual(['X-Test-Response-Header', 'X-Test-Response-Header-2']);
+    expect(config.cacheVaryByRequestHeaders).toEqual(['X-ACME-Test-Groups']);
+    expect(config.statsAppendToContent).toBe(true);
+    expect(config.statsExposeFragmentUrl).toBe(true);
+  });
 });

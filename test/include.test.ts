@@ -769,7 +769,7 @@ describe('Include', () => {
       // when
       const rawAttributes = new Map([[srcAttributeName, serverAddress('/')]]);
       timeoutAttribute.forEach((value, key) => rawAttributes.set(key, value));
-      const include = await new Include('', new Map(rawAttributes)).resolve(config, fragmentCache);
+      const include = await new Include('', rawAttributes).resolve(config, fragmentCache);
 
       // then
       expect(include.getResolvedFragment().content).toBe(expectedFragmentContent);

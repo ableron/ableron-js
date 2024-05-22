@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import HttpUtil from '../src/http-util.js';
 
-describe('calculateResponseExpirationTime', () => {
+describe('HttpUtil.calculateResponseExpirationTime', () => {
   it('should calculate response expiration time based on s-maxage', () => {
     // when
     const expirationTime = HttpUtil.calculateResponseExpirationTime(
@@ -138,7 +138,7 @@ describe('calculateResponseExpirationTime', () => {
   });
 });
 
-describe('normalizeHeaders', () => {
+describe('HttpUtil.normalizeHeaders', () => {
   it('should handle input headers of type Headers', () => {
     // given
     const inputHeaders = new Headers([

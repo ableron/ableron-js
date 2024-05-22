@@ -6,7 +6,7 @@ import Fastify, { FastifyInstance } from 'fastify';
 import TransclusionProcessor from '../src/transclusion-processor';
 import { NoOpLogger } from '../src/logger';
 
-describe('Transclusion result', () => {
+describe('TransclusionResult', () => {
   it('should return reasonable defaults', () => {
     // given
     const transclusionResult = new TransclusionResult('content');
