@@ -335,24 +335,24 @@ describe('Include', () => {
     );
 
     // when
-    const resolvedInclude1 = await include.resolve(config, fragmentCache);
+    await include.resolve(config, fragmentCache);
 
     // then
-    expect(resolvedInclude1.isResolved()).toBe(true);
-    expect(resolvedInclude1.getResolvedFragment().content).toBe('fragment from src');
-    expect(resolvedInclude1.getResolvedFragment().statusCode).toBe(503);
-    expect(resolvedInclude1.getResolvedFragmentSource()).toBe('remote src');
-    expect(resolvedInclude1.getResolveTimeMillis()).toBeGreaterThan(0);
+    expect(include.isResolved()).toBe(true);
+    expect(include.getResolvedFragment().content).toBe('fragment from src');
+    expect(include.getResolvedFragment().statusCode).toBe(503);
+    expect(include.getResolvedFragmentSource()).toBe('remote src');
+    expect(include.getResolveTimeMillis()).toBeGreaterThan(0);
 
     // when
-    const resolvedInclude2 = await include.resolve(config, fragmentCache);
+    await include.resolve(config, fragmentCache);
 
     // then
-    expect(resolvedInclude2.isResolved()).toBe(true);
-    expect(resolvedInclude2.getResolvedFragment().content).toBe('fragment from src 2nd call');
-    expect(resolvedInclude2.getResolvedFragment().statusCode).toBe(504);
-    expect(resolvedInclude2.getResolvedFragmentSource()).toBe('remote src');
-    expect(resolvedInclude2.getResolveTimeMillis()).toBeGreaterThan(0);
+    expect(include.isResolved()).toBe(true);
+    expect(include.getResolvedFragment().content).toBe('fragment from src 2nd call');
+    expect(include.getResolvedFragment().statusCode).toBe(504);
+    expect(include.getResolvedFragmentSource()).toBe('remote src');
+    expect(include.getResolveTimeMillis()).toBeGreaterThan(0);
   });
 
   it('should ignore fallback content and set fragment status code and body of errored src if primary', async () => {
