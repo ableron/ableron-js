@@ -126,7 +126,7 @@ export default class TransclusionResult {
   }
 
   private getStats(): string {
-    return this.getStatsHeader() + this.getStatsProcessedIncludes() + this.getStatsFooter();
+    return this.getStatsHeader() + this.getProcessedIncludesStats() + this.getStatsFooter();
   }
 
   private getStatsHeader(): string {
@@ -137,7 +137,7 @@ export default class TransclusionResult {
     return '\n-->';
   }
 
-  private getStatsProcessedIncludes(): string {
+  private getProcessedIncludesStats(): string {
     let stats = '';
 
     if (this.processedIncludes.length) {
