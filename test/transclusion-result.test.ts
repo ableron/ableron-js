@@ -5,11 +5,12 @@ import Fragment from '../src/fragment.js';
 import Fastify, { FastifyInstance } from 'fastify';
 import TransclusionProcessor from '../src/transclusion-processor';
 import { NoOpLogger } from '../src/logger';
+import Stats from '../src/stats';
 
 describe('TransclusionResult', () => {
   it('should return reasonable defaults', () => {
     // given
-    const transclusionResult = new TransclusionResult('content');
+    const transclusionResult = new TransclusionResult('content', new Stats());
 
     // expect
     expect(transclusionResult.getContent()).toBe('content');
@@ -23,7 +24,7 @@ describe('TransclusionResult', () => {
 
   it('should set processing time', () => {
     // given
-    const transclusionResult = new TransclusionResult('content');
+    const transclusionResult = new TransclusionResult('content', new Stats());
 
     // when
     transclusionResult.setProcessingTimeMillis(111);
@@ -34,7 +35,7 @@ describe('TransclusionResult', () => {
 
   it('should handle resolved include correctly', () => {
     // given
-    const transclusionResult = new TransclusionResult('content: <include>');
+    const transclusionResult = new TransclusionResult('content: <include>', new Stats());
 
     // when
     transclusionResult.addResolvedInclude(
@@ -72,7 +73,7 @@ describe('TransclusionResult', () => {
     'should calculate cache control header value',
     (fragmentExpirationTime: Date, pageMaxAge: number | undefined, expectedCacheControlHeaderValue: string) => {
       // given
-      const transclusionResult = new TransclusionResult('content');
+      const transclusionResult = new TransclusionResult('content', new Stats());
       transclusionResult.addResolvedInclude(
         new Include('').resolveWith(new Fragment(200, '', undefined, fragmentExpirationTime))
       );
@@ -105,7 +106,7 @@ describe('TransclusionResult', () => {
     'should calculate cache control header value based on given response headers',
     (fragmentExpirationTime: Date, responseHeaders: Headers, expectedCacheControlHeaderValue: string) => {
       // given
-      const transclusionResult = new TransclusionResult('content');
+      const transclusionResult = new TransclusionResult('content', new Stats());
       transclusionResult.addResolvedInclude(
         new Include('').resolveWith(new Fragment(200, '', undefined, fragmentExpirationTime))
       );
@@ -118,18 +119,23 @@ describe('TransclusionResult', () => {
   );
 
   it('should handle missing content expiration time when calculating cache control header value', () => {
-    expect(new TransclusionResult('').calculateCacheControlHeaderValueByResponseHeaders(new Headers())).toBe(
-      'no-store'
-    );
+    expect(
+      new TransclusionResult('', new Stats()).calculateCacheControlHeaderValueByResponseHeaders(new Headers())
+    ).toBe('no-store');
   });
 
   it('should not append stats to content by default', () => {
-    expect(new TransclusionResult('content').getContent()).toBe('content');
+    expect(new TransclusionResult('content', new Stats()).getContent()).toBe('content');
   });
 
   it('should append stats to content - zero includes', () => {
-    expect(new TransclusionResult('content', true).getContent()).toBe(
-      'content\n<!-- Ableron stats:\nProcessed 0 include(s) in 0ms\n-->'
+    expect(new TransclusionResult('content', new Stats(), true).getContent()).toBe(
+      'content\n' +
+        '<!-- Ableron stats:\n' +
+        'Processed 0 include(s) in 0ms\n' +
+        '\n' +
+        'Cache Stats: 0 overall hits, 0 overall misses\n' +
+        '-->'
     );
   });
 
@@ -171,46 +177,57 @@ describe('TransclusionResult', () => {
     );
 
     // then
-    expect(result.getContent()).toContain('fallback content');
-    expect(result.getContent()).toContain('uncacheable-fragment');
-    expect(result.getContent()).toContain('cacheable-fragment-1');
-    expect(result.getContent()).toContain('cacheable-fragment-2');
-    expect(result.getContent()).toMatch(/<!-- Ableron stats:\nProcessed 4 include\(s\) in \d+ms/);
-    expect(result.getContent()).toContain('Time | Include | Resolved With | Fragment Cacheability | Fragment URL');
-    expect(result.getContent()).toContain('------------------------------------------------------');
-    expect(result.getContent()).toMatch(/\d+ms \| 1 \| fallback content \| - \| -/);
-    expect(result.getContent()).toMatch(
-      /\d+ms \| 2 \| remote src \| not cacheable \| http:\/\/localhost:\d+\/uncacheable-fragment/
-    );
-    expect(result.getContent()).toMatch(
-      /\d+ms \| 3 \| remote src \| expires in \d+s \| http:\/\/localhost:\d+\/cacheable-fragment-1/
-    );
-    expect(result.getContent()).toMatch(
-      /\d+ms \| 4 \| cached fallback-src \| expires in 10s \| http:\/\/localhost:\d+\/cacheable-fragment-2/
+    expect(
+      result
+        .getContent()
+        .replace(/\d+ms/g, 'XXXms')
+        .replace(/localhost:\d+\//g, 'localhost:80/')
+        .replace(/expires in \d{3,}s/g, 'expires in XXXs')
+    ).toBe(
+      'fallback content\n' +
+        '       uncacheable-fragment\n' +
+        '       cacheable-fragment-1\n' +
+        '       cacheable-fragment-2\n' +
+        '<!-- Ableron stats:\n' +
+        'Processed 4 include(s) in XXXms\n' +
+        '\n' +
+        'Time | Include | Resolved With | Fragment Cacheability | Fragment URL\n' +
+        '------------------------------------------------------\n' +
+        'XXXms | 1 | fallback content | - | -\n' +
+        'XXXms | 2 | remote src | not cacheable | http://localhost:80/uncacheable-fragment\n' +
+        'XXXms | 3 | remote src | expires in XXXs | http://localhost:80/cacheable-fragment-1\n' +
+        'XXXms | 4 | cached fallback-src | expires in 10s | http://localhost:80/cacheable-fragment-2\n' +
+        '\n' +
+        'Cache Stats: 1 overall hits, 3 overall misses\n' +
+        '-->'
     );
   });
 
   it('should not expose fragment URL to stats by default', () => {
     // given
-    const transclusionResult = new TransclusionResult('', true);
+    const transclusionResult = new TransclusionResult('', new Stats(), true);
 
     // when
     transclusionResult.addResolvedInclude(new Include('').resolveWith(new Fragment(200, '', 'example.com'), 71, 'src'));
 
     // then
     expect(transclusionResult.getContent()).toBe(
-      '\n<!-- Ableron stats:\n' +
-        'Processed 1 include(s) in 0ms\n\n' +
+      '\n' +
+        '<!-- Ableron stats:\n' +
+        'Processed 1 include(s) in 0ms\n' +
+        '\n' +
         'Time | Include | Resolved With | Fragment Cacheability\n' +
         '------------------------------------------------------\n' +
         '71ms | da39a3e | src | not cacheable\n' +
+        '\n' +
+        'Cache Stats: 0 overall hits, 0 overall misses\n' +
         '-->'
     );
   });
 
   it('should append stats for primary include', () => {
     // given
-    const transclusionResult = new TransclusionResult('', true);
+    const transclusionResult = new TransclusionResult('', new Stats(), true);
 
     // when
     transclusionResult.addResolvedInclude(
@@ -219,18 +236,22 @@ describe('TransclusionResult', () => {
 
     // then
     expect(transclusionResult.getContent()).toBe(
-      '\n<!-- Ableron stats:\n' +
-        'Processed 1 include(s) in 0ms\n\n' +
+      '\n' +
+        '<!-- Ableron stats:\n' +
+        'Processed 1 include(s) in 0ms\n' +
+        '\n' +
         'Time | Include | Resolved With | Fragment Cacheability\n' +
         '------------------------------------------------------\n' +
         '0ms | ceef048 (primary) | fallback content | -\n' +
+        '\n' +
+        'Cache Stats: 0 overall hits, 0 overall misses\n' +
         '-->'
     );
   });
 
   it('should append stats for multiple primary includes', () => {
     // given
-    const transclusionResult = new TransclusionResult('', true);
+    const transclusionResult = new TransclusionResult('', new Stats(), true);
 
     // when
     transclusionResult.addResolvedInclude(
@@ -242,12 +263,16 @@ describe('TransclusionResult', () => {
 
     // then
     expect(transclusionResult.getContent()).toBe(
-      '\n<!-- Ableron stats:\n' +
-        'Processed 2 include(s) in 0ms\n\n' +
+      '\n' +
+        '<!-- Ableron stats:\n' +
+        'Processed 2 include(s) in 0ms\n' +
+        '\n' +
         'Time | Include | Resolved With | Fragment Cacheability\n' +
         '------------------------------------------------------\n' +
         '33ms | a57865f (primary) | fallback content | -\n' +
         '0ms | ceef048 (primary) | fallback content | -\n' +
+        '\n' +
+        'Cache Stats: 0 overall hits, 0 overall misses\n' +
         '-->'
     );
   });

@@ -4,6 +4,7 @@ import Include from './include.js';
 import TTLCache from '@isaacs/ttlcache';
 import Fragment from './fragment.js';
 import { LoggerInterface } from './logger.js';
+import Stats from './stats';
 
 export default class TransclusionProcessor {
   /**
@@ -16,15 +17,17 @@ export default class TransclusionProcessor {
    */
   private readonly ATTRIBUTES_PATTERN: RegExp = /\s*([a-zA-Z0-9_-]+)(="([^"]+)")?/gs;
 
+  private readonly logger: LoggerInterface;
+
   private readonly ableronConfig: AbleronConfig;
 
   private readonly fragmentCache: TTLCache<string, Fragment>;
 
-  private readonly logger: LoggerInterface;
+  private readonly stats: Stats = new Stats();
 
   constructor(ableronConfig: AbleronConfig, logger: LoggerInterface) {
-    this.logger = logger;
     this.ableronConfig = ableronConfig;
+    this.logger = logger;
     this.fragmentCache = this.buildFragmentCache();
   }
 
@@ -51,6 +54,7 @@ export default class TransclusionProcessor {
     const startTime = Date.now();
     const transclusionResult = new TransclusionResult(
       content,
+      this.stats,
       this.ableronConfig.statsAppendToContent,
       this.ableronConfig.statsExposeFragmentUrl,
       this.logger
@@ -59,7 +63,7 @@ export default class TransclusionProcessor {
       Array.from(this.findIncludes(content)).map((include) => {
         try {
           return include
-            .resolve(this.ableronConfig, this.fragmentCache, parentRequestHeaders)
+            .resolve(this.ableronConfig, this.fragmentCache, this.stats, parentRequestHeaders)
             .then(() => transclusionResult.addResolvedInclude(include))
             .catch((e) => this.handleResolveError(include, e, transclusionResult, startTime));
         } catch (e: any) {
