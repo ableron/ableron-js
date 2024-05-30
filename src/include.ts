@@ -4,6 +4,7 @@ import AbleronConfig from './ableron-config.js';
 import HttpUtil from './http-util.js';
 import TTLCache from '@isaacs/ttlcache';
 import { LoggerInterface, NoOpLogger } from './logger.js';
+import Stats from './stats';
 
 export default class Include {
   /**
@@ -184,6 +185,7 @@ export default class Include {
   resolve(
     config: AbleronConfig,
     fragmentCache: TTLCache<string, Fragment>,
+    stats: Stats,
     parentRequestHeaders?: Headers
   ): Promise<Include> {
     const resolveStartTime = Date.now();

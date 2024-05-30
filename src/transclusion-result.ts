@@ -3,27 +3,31 @@ import Fragment from './fragment.js';
 import HttpUtil from './http-util.js';
 import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http2';
 import { LoggerInterface, NoOpLogger } from './logger.js';
+import Stats from './stats';
 
 export default class TransclusionResult {
+  private readonly logger: LoggerInterface;
   private content: string;
   private contentExpirationTime?: Date;
   private hasPrimaryInclude: boolean = false;
   private statusCodeOverride?: number;
   private readonly responseHeadersToPass: Headers = new Headers();
+  private readonly stats: Stats;
   private readonly appendStatsToContent: boolean;
   private readonly exposeFragmentUrl: boolean;
   private processingTimeMillis: number = 0;
   private readonly processedIncludes: Include[] = [];
-  private readonly logger: LoggerInterface;
 
   constructor(
     content: string,
+    stats: Stats,
     appendStatsToContent: boolean = false,
     exposeFragmentUrl: boolean = false,
     logger?: LoggerInterface
   ) {
     this.logger = logger || new NoOpLogger();
     this.content = content;
+    this.stats = stats;
     this.appendStatsToContent = appendStatsToContent;
     this.exposeFragmentUrl = exposeFragmentUrl;
   }
@@ -126,11 +130,11 @@ export default class TransclusionResult {
   }
 
   private getStats(): string {
-    return this.getStatsHeader() + this.getProcessedIncludesStats() + this.getStatsFooter();
+    return this.getStatsHeader() + this.getProcessedIncludesStats() + this.getCacheStats() + this.getStatsFooter();
   }
 
   private getStatsHeader(): string {
-    return `\n<!-- Ableron stats:\nProcessed ${this.getProcessedIncludesCount()} include(s) in ${this.processingTimeMillis}ms`;
+    return '\n<!-- Ableron stats:';
   }
 
   private getStatsFooter(): string {
@@ -138,7 +142,7 @@ export default class TransclusionResult {
   }
 
   private getProcessedIncludesStats(): string {
-    let stats = '';
+    let stats = `\nProcessed ${this.getProcessedIncludesCount()} include(s) in ${this.processingTimeMillis}ms`;
 
     if (this.processedIncludes.length) {
       stats +=
@@ -151,6 +155,10 @@ export default class TransclusionResult {
     }
 
     return stats;
+  }
+
+  private getCacheStats(): string {
+    return `\n\nCache Stats: ${this.stats.getTotalCacheHits()} overall hits, ${this.stats.getTotalCacheMisses()} overall misses`;
   }
 
   private getProcessedIncludeStatsRow(include: Include): string {

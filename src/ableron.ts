@@ -4,6 +4,7 @@ import TransclusionResult from './transclusion-result.js';
 import HttpUtil from './http-util.js';
 import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http2';
 import { LoggerInterface, NoOpLogger } from './logger.js';
+import Stats from './stats';
 
 export default class Ableron {
   private readonly logger: LoggerInterface;
@@ -39,6 +40,6 @@ export default class Ableron {
       return transclusionResult;
     }
 
-    return new TransclusionResult(content, false, false, this.logger);
+    return new TransclusionResult(content, new Stats(), false, false, this.logger);
   }
 }

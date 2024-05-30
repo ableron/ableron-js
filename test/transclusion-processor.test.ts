@@ -535,7 +535,7 @@ describe('TransclusionProcessor', () => {
     expect(result.getContent()).toMatch(
       /^<!-- fallback content -->\n<!-- Ableron stats:\nProcessed 1 include\(s\) in \d+ms/gm
     );
-    expect(result.getContent()).toMatch(/\d+ms \| ce164c3 \| fallback content \| -\n-->$/gm);
+    expect(result.getContent()).toMatch(/^\d+ms \| ce164c3 \| fallback content \| -$/gm);
     expect(result.getContentExpirationTime().getTime()).toBeLessThanOrEqual(
       new Date(new Date().getTime() + 60000).getTime()
     );
