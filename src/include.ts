@@ -201,7 +201,8 @@ export default class Include {
       this.getRequestTimeout(this.srcTimeoutMillis, config),
       fragmentCache,
       config,
-      this.ATTR_SOURCE
+      this.ATTR_SOURCE,
+      stats
     )
       .then(
         (fragment) =>
@@ -212,7 +213,8 @@ export default class Include {
             this.getRequestTimeout(this.fallbackSrcTimeoutMillis, config),
             fragmentCache,
             config,
-            this.ATTR_FALLBACK_SOURCE
+            this.ATTR_FALLBACK_SOURCE,
+            stats
           )
       )
       .then((fragment) => {
@@ -260,14 +262,15 @@ export default class Include {
     requestTimeoutMillis: number,
     fragmentCache: TTLCache<string, Fragment>,
     config: AbleronConfig,
-    urlSource: string
+    urlSource: string,
+    stats: Stats
   ): Promise<Fragment | null> {
     if (!url) {
       return null;
     }
 
     const fragmentCacheKey = this.buildFragmentCacheKey(url, requestHeaders, config.cacheVaryByRequestHeaders);
-    const fragmentFromCache = fragmentCache.get(fragmentCacheKey);
+    const fragmentFromCache = this.getFragmentFromCache(fragmentCacheKey, fragmentCache, stats);
     const fragmentSource = (fragmentFromCache ? 'cached ' : 'remote ') + urlSource;
     const fragment: Promise<Fragment | null> = fragmentFromCache
       ? Promise.resolve(fragmentFromCache)
@@ -429,5 +432,21 @@ export default class Include {
       }
     });
     return cacheKey;
+  }
+
+  private getFragmentFromCache(
+    cacheKey: string,
+    fragmentCache: TTLCache<string, Fragment>,
+    stats: Stats
+  ): Fragment | undefined {
+    const fragmentFromCache = fragmentCache.get(cacheKey);
+
+    if (fragmentFromCache) {
+      stats.recordCacheHit();
+    } else {
+      stats.recordCacheMiss();
+    }
+
+    return fragmentFromCache;
   }
 }

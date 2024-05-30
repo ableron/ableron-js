@@ -177,22 +177,29 @@ describe('TransclusionResult', () => {
     );
 
     // then
-    expect(result.getContent()).toContain('fallback content');
-    expect(result.getContent()).toContain('uncacheable-fragment');
-    expect(result.getContent()).toContain('cacheable-fragment-1');
-    expect(result.getContent()).toContain('cacheable-fragment-2');
-    expect(result.getContent()).toMatch(/<!-- Ableron stats:\nProcessed 4 include\(s\) in \d+ms/);
-    expect(result.getContent()).toContain('Time | Include | Resolved With | Fragment Cacheability | Fragment URL');
-    expect(result.getContent()).toContain('------------------------------------------------------');
-    expect(result.getContent()).toMatch(/\d+ms \| 1 \| fallback content \| - \| -/);
-    expect(result.getContent()).toMatch(
-      /\d+ms \| 2 \| remote src \| not cacheable \| http:\/\/localhost:\d+\/uncacheable-fragment/
-    );
-    expect(result.getContent()).toMatch(
-      /\d+ms \| 3 \| remote src \| expires in \d+s \| http:\/\/localhost:\d+\/cacheable-fragment-1/
-    );
-    expect(result.getContent()).toMatch(
-      /\d+ms \| 4 \| cached fallback-src \| expires in 10s \| http:\/\/localhost:\d+\/cacheable-fragment-2/
+    expect(
+      result
+        .getContent()
+        .replace(/\d+ms/g, 'XXXms')
+        .replace(/localhost:\d+\//g, 'localhost:80/')
+        .replace(/expires in \d{3,}s/g, 'expires in XXXs')
+    ).toBe(
+      'fallback content\n' +
+        '       uncacheable-fragment\n' +
+        '       cacheable-fragment-1\n' +
+        '       cacheable-fragment-2\n' +
+        '<!-- Ableron stats:\n' +
+        'Processed 4 include(s) in XXXms\n' +
+        '\n' +
+        'Time | Include | Resolved With | Fragment Cacheability | Fragment URL\n' +
+        '------------------------------------------------------\n' +
+        'XXXms | 1 | fallback content | - | -\n' +
+        'XXXms | 2 | remote src | not cacheable | http://localhost:80/uncacheable-fragment\n' +
+        'XXXms | 3 | remote src | expires in XXXs | http://localhost:80/cacheable-fragment-1\n' +
+        'XXXms | 4 | cached fallback-src | expires in 10s | http://localhost:80/cacheable-fragment-2\n' +
+        '\n' +
+        'Cache Stats: 1 overall hits, 3 overall misses\n' +
+        '-->'
     );
   });
 
