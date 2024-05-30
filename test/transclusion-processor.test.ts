@@ -601,7 +601,6 @@ describe('TransclusionProcessor', () => {
     );
 
     // then
-    console.log(result.getContent().replace(/\d+ms/g, 'XXXms'));
     expect(result.getContent().replace(/\d+ms/g, 'XXXms')).toBe(
       '\n' +
         '       200-cacheable\n' +
