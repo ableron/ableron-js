@@ -543,4 +543,85 @@ describe('TransclusionProcessor', () => {
       new Date(new Date().getTime() + 58000).getTime()
     );
   });
+
+  it('should record stats', async () => {
+    // given
+    const transclusionProcessor = new TransclusionProcessor(
+      new AbleronConfig({ statsAppendToContent: true }),
+      new NoOpLogger()
+    );
+    server = Fastify();
+    server.get('/200-cacheable', async function (request, reply) {
+      reply.status(200).header('Cache-Control', 'max-age=60').send('200-cacheable');
+    });
+    server.get('/200-not-cacheable', async function (request, reply) {
+      reply.status(200).send('200-not-cacheable');
+    });
+    server.get('/404', async function (request, reply) {
+      reply.status(404).send('404');
+    });
+    server.get('/503', async function (request, reply) {
+      reply.status(503).send('503');
+    });
+    await server.listen();
+
+    // when
+    await transclusionProcessor.resolveIncludes(
+      `
+       <ableron-include src="${serverAddress('/200-cacheable')}"/>
+       <ableron-include src="${serverAddress('/200-not-cacheable')}"/>
+       <ableron-include src="${serverAddress('/404')}"/>
+       <ableron-include src="${serverAddress('/503')}" fallback-src="${serverAddress('/200-cacheable')}"/>`,
+      new Headers()
+    );
+    await transclusionProcessor.resolveIncludes(
+      `
+       <ableron-include src="${serverAddress('/200-cacheable')}"/>
+       <ableron-include src="${serverAddress('/200-not-cacheable')}"/>
+       <ableron-include src="${serverAddress('/404')}" primary/>
+       <ableron-include src="${serverAddress('/503')}" fallback-src="${serverAddress('/404')}" primary/>`,
+      new Headers()
+    );
+    await transclusionProcessor.resolveIncludes(
+      `
+       <ableron-include src="${serverAddress('/200-cacheable')}"/>
+       <ableron-include src="${serverAddress('/200-not-cacheable')}"/>
+       <ableron-include src="${serverAddress('/404')}" fallback-src="${serverAddress('/200-cacheable')}" primary/>
+       <ableron-include src="${serverAddress('/404')}" fallback-src="${serverAddress('/503')}"/>`,
+      new Headers()
+    );
+    const result = await transclusionProcessor.resolveIncludes(
+      `
+       <ableron-include id="5" src="${serverAddress('/200-cacheable')}"/>
+       <ableron-include id="e" src="${serverAddress('/200-not-cacheable')}"/>
+       <ableron-include id="4" src="${serverAddress('/404')}"><!-- error --></ableron-include>
+       <ableron-include id="h" src="${serverAddress('/404')}" fallback-src="${serverAddress('/503')}" primary><!-- error --></ableron-include>
+       <ableron-include id="b" src="${serverAddress('/503')}" fallback-src="${serverAddress('/200-cacheable')}"><!-- error --></ableron-include>`,
+      new Headers()
+    );
+
+    // then
+    console.log(result.getContent().replace(/\d+ms/g, 'XXXms'));
+    expect(result.getContent().replace(/\d+ms/g, 'XXXms')).toBe(
+      '\n' +
+        '       200-cacheable\n' +
+        '       200-not-cacheable\n' +
+        '       <!-- error -->\n' +
+        '       404\n' +
+        '       200-cacheable\n' +
+        '<!-- Ableron stats:\n' +
+        'Processed 5 include(s) in XXXms\n' +
+        '\n' +
+        'Time | Include | Resolved With | Fragment Cacheability\n' +
+        '------------------------------------------------------\n' +
+        'XXXms | 4 | fallback content | -\n' +
+        'XXXms | 5 | cached src | expires in 60s\n' +
+        'XXXms | b | cached fallback-src | expires in 60s\n' +
+        'XXXms | e | remote src | not cacheable\n' +
+        'XXXms | h (primary) | remote src | not cacheable\n' +
+        '\n' +
+        'Cache Stats: 6 overall hits, 17 overall misses\n' +
+        '-->'
+    );
+  });
 });
