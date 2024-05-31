@@ -571,7 +571,7 @@ describe('TransclusionProcessor', () => {
        <ableron-include src="${serverAddress('/200-cacheable')}"/>
        <ableron-include src="${serverAddress('/200-not-cacheable')}"/>
        <ableron-include src="${serverAddress('/404')}"/>
-       <ableron-include src="${serverAddress('/503')}" fallback-src="${serverAddress('/200-cacheable')}"/>`,
+       <ableron-include src="${serverAddress('/503')}"/>`,
       new Headers()
     );
     await transclusionProcessor.resolveIncludes(
@@ -596,6 +596,7 @@ describe('TransclusionProcessor', () => {
        <ableron-include id="e" src="${serverAddress('/200-not-cacheable')}"/>
        <ableron-include id="4" src="${serverAddress('/404')}"><!-- error --></ableron-include>
        <ableron-include id="h" src="${serverAddress('/404')}" fallback-src="${serverAddress('/503')}" primary><!-- error --></ableron-include>
+       <ableron-include id="z" fallback-src="${serverAddress('/200-not-cacheable')}"/>
        <ableron-include id="b" src="${serverAddress('/503')}" fallback-src="${serverAddress('/200-cacheable')}"><!-- error --></ableron-include>`,
       new Headers()
     );
@@ -607,9 +608,10 @@ describe('TransclusionProcessor', () => {
         '       200-not-cacheable\n' +
         '       <!-- error -->\n' +
         '       404\n' +
+        '       200-not-cacheable\n' +
         '       200-cacheable\n' +
         '<!-- Ableron stats:\n' +
-        'Processed 5 include(s) in XXXms\n' +
+        'Processed 6 include(s) in XXXms\n' +
         '\n' +
         'Time | Include | Resolved With | Fragment Cacheability\n' +
         '------------------------------------------------------\n' +
@@ -618,8 +620,9 @@ describe('TransclusionProcessor', () => {
         'XXXms | b | cached fallback-src | expires in 60s\n' +
         'XXXms | e | remote src | not cacheable\n' +
         'XXXms | h (primary) | remote src | not cacheable\n' +
+        'XXXms | z | remote fallback-src | not cacheable\n' +
         '\n' +
-        'Cache Stats: 6 overall hits, 17 overall misses\n' +
+        'Cache Stats: 5 overall hits, 18 overall misses\n' +
         '-->'
     );
   });
