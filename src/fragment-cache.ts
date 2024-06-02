@@ -3,8 +3,10 @@ import Fragment from './fragment';
 
 export default class FragmentCache {
   private readonly cache: TTLCache<string, Fragment>;
+  private readonly autoRefreshFragments: boolean;
 
-  constructor() {
+  constructor(autoRefreshFragments: boolean = false) {
+    this.autoRefreshFragments = autoRefreshFragments;
     this.cache = this.initCache();
   }
 
