@@ -2,9 +2,9 @@ import Fragment from './fragment.js';
 import * as crypto from 'crypto';
 import AbleronConfig from './ableron-config.js';
 import HttpUtil from './http-util.js';
-import TTLCache from '@isaacs/ttlcache';
 import { LoggerInterface, NoOpLogger } from './logger.js';
 import Stats from './stats';
+import FragmentCache from './fragment-cache';
 
 export default class Include {
   /**
@@ -50,8 +50,6 @@ export default class Include {
    * @link <a href="https://www.rfc-editor.org/rfc/rfc9110#section-15.1">RFC 9110 Section 15.1. Overview of Status Codes</a>
    */
   private readonly HTTP_STATUS_CODES_CACHEABLE: number[] = [200, 203, 204, 206, 300, 404, 405, 410, 414, 501];
-
-  private readonly SEVEN_DAYS_IN_MILLISECONDS: number = 7 * 24 * 60 * 60 * 1000;
 
   private readonly logger: LoggerInterface;
 
@@ -184,7 +182,7 @@ export default class Include {
 
   resolve(
     config: AbleronConfig,
-    fragmentCache: TTLCache<string, Fragment>,
+    fragmentCache: FragmentCache,
     stats: Stats,
     parentRequestHeaders?: Headers
   ): Promise<Include> {
@@ -260,7 +258,7 @@ export default class Include {
     url: string | undefined,
     requestHeaders: Headers,
     requestTimeoutMillis: number,
-    fragmentCache: TTLCache<string, Fragment>,
+    fragmentCache: FragmentCache,
     config: AbleronConfig,
     urlSource: string,
     stats: Stats
@@ -310,9 +308,7 @@ export default class Include {
               const fragmentTtl = fragment.expirationTime.getTime() - new Date().getTime();
 
               if (fragmentTtl > 0) {
-                fragmentCache.set(fragmentCacheKey, fragment, {
-                  ttl: Math.min(fragmentTtl, this.SEVEN_DAYS_IN_MILLISECONDS)
-                });
+                fragmentCache.set(fragmentCacheKey, fragment, fragmentTtl);
               }
             }
 
@@ -434,11 +430,7 @@ export default class Include {
     return cacheKey;
   }
 
-  private getFragmentFromCache(
-    cacheKey: string,
-    fragmentCache: TTLCache<string, Fragment>,
-    stats: Stats
-  ): Fragment | undefined {
+  private getFragmentFromCache(cacheKey: string, fragmentCache: FragmentCache, stats: Stats): Fragment | undefined {
     const fragmentFromCache = fragmentCache.get(cacheKey);
 
     if (fragmentFromCache) {
