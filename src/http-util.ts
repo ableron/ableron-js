@@ -1,12 +1,52 @@
 import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http2';
+import { LoggerInterface } from './logger';
 
-export default class HttpUtil {
-  private static HEADER_AGE: string = 'Age';
-  private static HEADER_CACHE_CONTROL: string = 'Cache-Control';
-  private static HEADER_DATE: string = 'Date';
-  private static HEADER_EXPIRES: string = 'Expires';
+export default abstract class HttpUtil {
+  /**
+   * HTTP status codes indicating cacheable responses.
+   *
+   * @link <a href="https://www.rfc-editor.org/rfc/rfc9110#section-15.1">RFC 9110 Section 15.1. Overview of Status Codes</a>
+   */
+  public static readonly HTTP_STATUS_CODES_CACHEABLE: number[] = [200, 203, 204, 206, 300, 404, 405, 410, 414, 501];
 
-  static calculateResponseExpirationTime(
+  private static readonly HEADER_AGE: string = 'Age';
+  private static readonly HEADER_CACHE_CONTROL: string = 'Cache-Control';
+  private static readonly HEADER_DATE: string = 'Date';
+  private static readonly HEADER_EXPIRES: string = 'Expires';
+
+  public static loadUrl(
+    url: string,
+    requestHeaders: Headers,
+    requestTimeoutMillis: number,
+    logger?: LoggerInterface
+  ): Promise<Response | null> {
+    logger && logger.debug(`[Ableron] Loading ${url} with timeout ${requestTimeoutMillis}ms`);
+
+    try {
+      requestHeaders.set('Accept-Encoding', 'gzip');
+
+      return fetch(url, {
+        headers: requestHeaders,
+        redirect: 'manual',
+        signal: AbortSignal.timeout(requestTimeoutMillis)
+      }).catch((e: Error) => {
+        if (e.name === 'TimeoutError') {
+          logger && logger.error(`[Ableron] Unable to load ${url}: ${requestTimeoutMillis}ms timeout exceeded`);
+        } else {
+          logger && logger.error(`[Ableron] Unable to load ${url}: ${e?.message}${e?.cause ? ` (${e?.cause})` : ''}`);
+        }
+
+        return null;
+      });
+    } catch (e) {
+      const error: Error = e as Error;
+      logger &&
+        logger.error(`[Ableron] Unable to load ${url}: ${error.message}${error.cause ? ` (${error.cause})` : ''}`);
+      return Promise.resolve(null);
+    }
+  }
+
+  public static calculateResponseExpirationTime(
     inputHeaders: Headers | IncomingHttpHeaders | OutgoingHttpHeaders | { [key: string]: string | string[] | number }
   ): Date {
     const headers = this.normalizeHeaders(inputHeaders);

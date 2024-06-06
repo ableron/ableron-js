@@ -44,13 +44,6 @@ export default class Include {
    */
   private readonly HTTP_STATUS_CODES_SUCCESS: number[] = [200, 203, 204, 206];
 
-  /**
-   * HTTP status codes indicating cacheable responses.
-   *
-   * @link <a href="https://www.rfc-editor.org/rfc/rfc9110#section-15.1">RFC 9110 Section 15.1. Overview of Status Codes</a>
-   */
-  private readonly HTTP_STATUS_CODES_CACHEABLE: number[] = [200, 203, 204, 206, 300, 404, 405, 410, 414, 501];
-
   private readonly logger: LoggerInterface;
 
   /**
@@ -272,7 +265,7 @@ export default class Include {
     const fragmentSource = (fragmentFromCache ? 'cached ' : 'remote ') + urlSource;
     const fragment: Promise<Fragment | null> = fragmentFromCache
       ? Promise.resolve(fragmentFromCache)
-      : this.requestFragment(url, requestHeaders, requestTimeoutMillis)
+      : HttpUtil.loadUrl(url, requestHeaders, requestTimeoutMillis)
           .then(async (response: Response | null) => {
             if (!response) {
               return null;
@@ -280,7 +273,7 @@ export default class Include {
 
             const responseBody = await response.text();
 
-            if (!this.HTTP_STATUS_CODES_CACHEABLE.includes(response.status)) {
+            if (!HttpUtil.HTTP_STATUS_CODES_CACHEABLE.includes(response.status)) {
               this.logger.error(`[Ableron] Fragment ${this.id} returned status code ${response.status}`);
               this.recordErroredPrimaryFragment(
                 new Fragment(
@@ -308,7 +301,24 @@ export default class Include {
               const fragmentTtl = fragment.expirationTime.getTime() - new Date().getTime();
 
               if (fragmentTtl > 0) {
-                fragmentCache.set(fragmentCacheKey, fragment, fragmentTtl);
+                fragmentCache.set(fragmentCacheKey, fragment, fragmentTtl, () =>
+                  HttpUtil.loadUrl(url, requestHeaders, requestTimeoutMillis).then(
+                    async (response: Response | null) => {
+                      if (!response) {
+                        return null;
+                      }
+
+                      const responseBody = await response.text();
+                      return new Fragment(
+                        response.status,
+                        responseBody,
+                        url,
+                        HttpUtil.calculateResponseExpirationTime(response.headers),
+                        this.filterHeaders(response.headers, config.primaryFragmentResponseHeadersToPass)
+                      );
+                    }
+                  )
+                );
               }
             }
 
@@ -325,46 +335,6 @@ export default class Include {
       this.resolvedFragmentSource = fragmentSource;
       return fragment;
     });
-  }
-
-  private requestFragment(
-    url: string,
-    requestHeaders: Headers,
-    requestTimeoutMillis: number
-  ): Promise<Response | null> {
-    this.logger.debug(
-      `[Ableron] Loading fragment ${url} for include ${this.id} with timeout ${requestTimeoutMillis}ms`
-    );
-
-    try {
-      requestHeaders.set('Accept-Encoding', 'gzip');
-
-      return fetch(url, {
-        headers: requestHeaders,
-        redirect: 'manual',
-        signal: AbortSignal.timeout(requestTimeoutMillis)
-      }).catch((e: Error) => {
-        if (e.name === 'TimeoutError') {
-          this.logger.error(
-            `[Ableron] Unable to load fragment ${url} for include ${this.id}: ${requestTimeoutMillis}ms timeout exceeded`
-          );
-        } else {
-          this.logger.error(
-            `[Ableron] Unable to load fragment ${url} for include ${this.id}: ${e?.message}${e?.cause ? ` (${e?.cause})` : ''}`
-          );
-        }
-
-        return null;
-      });
-    } catch (e) {
-      const error: Error = e as Error;
-      this.logger.error(
-        `[Ableron] Unable to load fragment ${url} for include ${this.id}: ${error.message}${
-          error.cause ? ` (${error.cause})` : ''
-        }`
-      );
-      return Promise.resolve(null);
-    }
   }
 
   private recordErroredPrimaryFragment(fragment: Fragment, fragmentSource: string): void {

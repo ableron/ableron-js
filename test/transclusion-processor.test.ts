@@ -602,7 +602,12 @@ describe('TransclusionProcessor', () => {
     );
 
     // then
-    expect(result.getContent().replace(/\d+ms/g, 'XXXms')).toBe(
+    expect(
+      result
+        .getContent()
+        .replace(/\d+ms/g, 'XXXms')
+        .replace(/(60|59)s/g, '60s')
+    ).toBe(
       '\n' +
         '       200-cacheable\n' +
         '       200-not-cacheable\n' +
