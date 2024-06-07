@@ -298,28 +298,22 @@ export default class Include {
           })
           .then((fragment) => {
             if (fragment) {
-              const fragmentTtl = fragment.expirationTime.getTime() - new Date().getTime();
+              fragmentCache.set(fragmentCacheKey, fragment, () =>
+                HttpUtil.loadUrl(url, requestHeaders, requestTimeoutMillis).then(async (response: Response | null) => {
+                  if (!response) {
+                    return null;
+                  }
 
-              if (fragmentTtl > 0) {
-                fragmentCache.set(fragmentCacheKey, fragment, fragmentTtl, () =>
-                  HttpUtil.loadUrl(url, requestHeaders, requestTimeoutMillis).then(
-                    async (response: Response | null) => {
-                      if (!response) {
-                        return null;
-                      }
-
-                      const responseBody = await response.text();
-                      return new Fragment(
-                        response.status,
-                        responseBody,
-                        url,
-                        HttpUtil.calculateResponseExpirationTime(response.headers),
-                        this.filterHeaders(response.headers, config.primaryFragmentResponseHeadersToPass)
-                      );
-                    }
-                  )
-                );
-              }
+                  const responseBody = await response.text();
+                  return new Fragment(
+                    response.status,
+                    responseBody,
+                    url,
+                    HttpUtil.calculateResponseExpirationTime(response.headers),
+                    this.filterHeaders(response.headers, config.primaryFragmentResponseHeadersToPass)
+                  );
+                })
+              );
             }
 
             return fragment;

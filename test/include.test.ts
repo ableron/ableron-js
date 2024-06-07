@@ -423,11 +423,7 @@ describe('Include', () => {
       await server.listen();
 
       // when
-      fragmentCache.set(
-        serverAddress('/src'),
-        new Fragment(200, 'fragment from cache', undefined, expirationTime),
-        Math.max(1, expirationTime.getTime() - new Date().getTime())
-      );
+      fragmentCache.set(serverAddress('/src'), new Fragment(200, 'fragment from cache', undefined, expirationTime));
       await sleep(2);
       const include = await new Include('', new Map([['src', serverAddress('/src')]])).resolve(
         config,

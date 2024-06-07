@@ -25,15 +25,19 @@ export default class FragmentCache {
     return this.cache.get(cacheKey);
   }
 
-  public set(cacheKey: string, fragment: Fragment, ttl: number, autoRefresh?: () => Promise<Fragment | null>): this {
-    this.cache.set(cacheKey, fragment, {
-      // Math.min(ttl, 0x7fffffff) assures, that tll fits into a 32-bit signed
-      // integer, which is necessary for setTimeout() used internally in cache lib
-      ttl: Math.min(ttl, FragmentCache.MAX_SET_TIMEOUT_DELAY_MS)
-    });
+  public set(cacheKey: string, fragment: Fragment, autoRefresh?: () => Promise<Fragment | null>): this {
+    const fragmentTtl = fragment.expirationTime.getTime() - new Date().getTime();
 
-    if (this.autoRefreshFragments && autoRefresh) {
-      this.registerAutoRefresh(cacheKey, autoRefresh, this.calculateFragmentRefreshDelay(ttl));
+    if (fragmentTtl > 0) {
+      this.cache.set(cacheKey, fragment, {
+        // Math.min(ttl, 0x7fffffff) assures, that tll fits into a 32-bit signed
+        // integer, which is necessary for setTimeout() used internally in cache lib
+        ttl: Math.min(fragmentTtl, FragmentCache.MAX_SET_TIMEOUT_DELAY_MS)
+      });
+
+      if (this.autoRefreshFragments && autoRefresh) {
+        this.registerAutoRefresh(cacheKey, autoRefresh, this.calculateFragmentRefreshDelay(fragmentTtl));
+      }
     }
 
     return this;
@@ -68,15 +72,8 @@ export default class FragmentCache {
             return null;
           }
 
-          const fragmentTtl = fragment.expirationTime.getTime() - new Date().getTime();
-
-          if (fragmentTtl <= 0) {
-            this.logger.error(`[Ableron] Unable to refresh cache entry ${cacheKey}: Fragment not cacheable`);
-            return null;
-          }
-
           const oldCacheEntry = this.get(cacheKey);
-          this.set(cacheKey, fragment, fragmentTtl, autoRefresh);
+          this.set(cacheKey, fragment, autoRefresh);
           this.logger.debug(
             `[Ableron] Refreshed cache entry ${cacheKey} ${
               oldCacheEntry
