@@ -62,8 +62,8 @@ export default class FragmentCache {
           this.autoRefreshTimers.delete(cacheKey);
 
           if (!fragment) {
-            this.logger.error(`[Ableron] Unable to refresh cache entry ${cacheKey}: Retry in 1s`);
-            this.registerAutoRefresh(cacheKey, autoRefresh, 1000);
+            this.logger.error(`[Ableron] Unable to refresh cache entry ${cacheKey}: Retry in 500ms`);
+            this.registerAutoRefresh(cacheKey, autoRefresh, 500);
             return null;
           }
 
@@ -91,6 +91,6 @@ export default class FragmentCache {
   }
 
   private initCache(): TTLCache<string, Fragment> {
-    return new TTLCache({ max: 1000, ttl: 24 * 60 * 60 * 1000, checkAgeOnGet: false });
+    return new TTLCache({ max: 1000, checkAgeOnGet: false });
   }
 }

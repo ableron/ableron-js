@@ -19,10 +19,7 @@ describe('FragmentCache', () => {
   it('should have limited capacity to prevent out of memory problems', () => {
     // when
     for (let i = 0; i < 1100; i++) {
-      fragmentCache.set(
-        'fragment-' + i,
-        new Fragment(200, 'fragment', undefined, new Date(new Date().getTime() + 60000))
-      );
+      fragmentCache.set('fragment-' + i, new Fragment(200, 'fragment', undefined, new Date(Date.now() + 60000)));
     }
 
     //then
@@ -38,7 +35,7 @@ describe('FragmentCache', () => {
       }),
       console
     ).getFragmentCache();
-    const newFragment = () => new Fragment(200, 'fragment', undefined, new Date(new Date().getTime() + 1000));
+    const newFragment = () => new Fragment(200, 'fragment', undefined, new Date(Date.now() + 1000));
     fragmentCache.set('cacheKey', newFragment(), () => Promise.resolve(newFragment()));
 
     // when
@@ -56,7 +53,7 @@ describe('FragmentCache', () => {
       }),
       console
     ).getFragmentCache();
-    const newFragment = () => new Fragment(200, 'fragment', undefined, new Date(new Date().getTime() + 1000));
+    const newFragment = () => new Fragment(200, 'fragment', undefined, new Date(Date.now() + 1000));
     fragmentCache.set('cacheKey', newFragment(), () => Promise.resolve(newFragment()));
 
     // when
@@ -68,7 +65,7 @@ describe('FragmentCache', () => {
 
   it('should use fragment expiration time as cache entry ttl', async () => {
     // when
-    fragmentCache.set('key', new Fragment(200, 'fragment', undefined, new Date(new Date().getTime() + 1000)));
+    fragmentCache.set('key', new Fragment(200, 'fragment', undefined, new Date(Date.now() + 1000)));
 
     // then
     expect(fragmentCache.get('key').content).toBe('fragment');
@@ -86,5 +83,76 @@ describe('FragmentCache', () => {
 
     // then
     expect(fragmentCache.get('key')).toBeUndefined();
+  });
+
+  it('should clear cache', async () => {
+    // given
+    const newFragment = () => new Fragment(200, 'fragment', undefined, new Date(Date.now() + 200));
+    fragmentCache.set('key', newFragment(), () => Promise.resolve(newFragment()));
+
+    // expect
+    expect(fragmentCache.get('key')).toBeDefined();
+    await sleep(300);
+    expect(fragmentCache.get('key')).toBeDefined();
+    fragmentCache.clear();
+    expect(fragmentCache.get('key')).toBeUndefined();
+    await sleep(300);
+    expect(fragmentCache.get('key')).toBeUndefined();
+    // @ts-ignore
+    expect(fragmentCache.autoRefreshTimers.size).toBe(0);
+  });
+
+  it('should only refresh cache with cacheable fragment', async () => {
+    // given
+    const newFragment = (status: number) => new Fragment(status, 'fragment', undefined, new Date(Date.now() + 300));
+    fragmentCache.set('key', newFragment(200), () => Promise.resolve(newFragment(500)));
+
+    // expect
+    expect(fragmentCache.get('key')).toBeDefined();
+    await sleep(300);
+    expect(fragmentCache.get('key')).toBeUndefined();
+    // @ts-ignore
+    expect(fragmentCache.autoRefreshTimers.size).toBe(0);
+  });
+
+  it('should continuously refresh cache', async () => {
+    // given
+    const newFragment = () => new Fragment(200, 'fragment', undefined, new Date(Date.now() + 200));
+    fragmentCache.set('key', newFragment(), () => Promise.resolve(newFragment()));
+
+    // expect
+    expect(fragmentCache.get('key')).toBeDefined();
+    await sleep(250);
+    expect(fragmentCache.get('key')).toBeDefined();
+    await sleep(250);
+    expect(fragmentCache.get('key')).toBeDefined();
+    await sleep(250);
+    expect(fragmentCache.get('key')).toBeDefined();
+  });
+
+  it('should retry to refresh cache on failure', async () => {
+    // given
+    let counter = 0;
+    const newFragment = () => {
+      counter++;
+
+      switch (counter) {
+        case 2:
+        case 3:
+          return null;
+        default:
+          return new Fragment(200, 'fragment', undefined, new Date(Date.now() + 200));
+      }
+    };
+    fragmentCache.set('key', newFragment(), () => Promise.resolve(newFragment()));
+
+    // expect
+    expect(fragmentCache.get('key')).toBeDefined();
+    await sleep(250);
+    expect(fragmentCache.get('key')).toBeUndefined();
+    await sleep(550);
+    expect(fragmentCache.get('key')).toBeUndefined();
+    await sleep(550);
+    expect(fragmentCache.get('key')).toBeDefined();
   });
 });
