@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { AbleronConfig } from '../src';
 import TransclusionProcessor from '../src/transclusion-processor';
 import Fragment from '../src/fragment';
+import FragmentCache from '../src/fragment-cache';
 
 const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay));
 const config = new AbleronConfig({
@@ -10,8 +11,12 @@ const config = new AbleronConfig({
 });
 const fragmentCache = new TransclusionProcessor(config, console).getFragmentCache();
 
+beforeEach(() => {
+  fragmentCache.clear();
+});
+
 describe('FragmentCache', () => {
-  it('should have maximum capacity of 1000 fragments', () => {
+  it('should have limited capacity to prevent out of memory problems', () => {
     // when
     for (let i = 0; i < 1100; i++) {
       fragmentCache.set(
@@ -59,5 +64,27 @@ describe('FragmentCache', () => {
 
     // then
     expect(fragmentCache.get('cacheKey')).toBeDefined();
+  });
+
+  it('should use fragment expiration time as cache entry ttl', async () => {
+    // when
+    fragmentCache.set('key', new Fragment(200, 'fragment', undefined, new Date(new Date().getTime() + 1000)));
+
+    // then
+    expect(fragmentCache.get('key').content).toBe('fragment');
+
+    // and
+    await sleep(1010);
+
+    // then
+    expect(fragmentCache.get('key')).toBeUndefined();
+  });
+
+  it('should not cache expired fragments', async () => {
+    // when
+    fragmentCache.set('key', new Fragment(200, 'fragment', undefined, new Date()));
+
+    // then
+    expect(fragmentCache.get('key')).toBeUndefined();
   });
 });
