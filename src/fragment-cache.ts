@@ -26,7 +26,7 @@ export default class FragmentCache {
   }
 
   public set(cacheKey: string, fragment: Fragment, autoRefresh?: () => Promise<Fragment | null>): this {
-    const fragmentTtl = fragment.expirationTime.getTime() - new Date().getTime();
+    const fragmentTtl = fragment.expirationTime.getTime() - Date.now();
 
     if (fragmentTtl > 0) {
       this.cache.set(cacheKey, fragment, {
