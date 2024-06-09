@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import Stats from '../src/Stats';
+import Stats from '../src/stats.js';
 
 describe('Stats', () => {
   it('should record cache hit', () => {
