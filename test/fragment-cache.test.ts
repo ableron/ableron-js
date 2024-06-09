@@ -112,7 +112,7 @@ describe('FragmentCache', () => {
     await sleep(300);
     expect(fragmentCache.get('key')).toBeUndefined();
     // @ts-ignore
-    expect(fragmentCache.autoRefreshTimers.size).toBe(0);
+    expect(fragmentCache.autoRefreshTimers.size).toBe(1);
   });
 
   it('should continuously refresh cache', async () => {
