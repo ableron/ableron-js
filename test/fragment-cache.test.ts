@@ -130,29 +130,43 @@ describe('FragmentCache', () => {
     expect(fragmentCache.get('key')).toBeDefined();
   });
 
-  it('should retry to refresh cache on failure', async () => {
+  it('should retry to refresh cache on failure with max 3 attempts', { timeout: 10000 }, async () => {
     // given
     let counter = 0;
     const newFragment = () => {
       counter++;
 
       switch (counter) {
-        case 2:
-        case 3:
-          return null;
+        case 1:
+        case 4:
+        case 8:
+          return new Fragment(200, 'fragment', undefined, new Date(Date.now() + 1000));
         default:
-          return new Fragment(200, 'fragment', undefined, new Date(Date.now() + 200));
+          return null;
       }
     };
     fragmentCache.set('key', newFragment(), () => Promise.resolve(newFragment()));
 
     // expect
     expect(fragmentCache.get('key')).toBeDefined();
-    await sleep(250);
+    await sleep(1100);
     expect(fragmentCache.get('key')).toBeUndefined();
-    await sleep(550);
+    await sleep(1000);
     expect(fragmentCache.get('key')).toBeUndefined();
-    await sleep(550);
+    await sleep(1000);
     expect(fragmentCache.get('key')).toBeDefined();
+    // @ts-ignore
+    expect(fragmentCache.autoRefreshRetries.size).toBe(0);
+
+    await sleep(1100);
+    expect(fragmentCache.get('key')).toBeUndefined();
+    await sleep(1000);
+    expect(fragmentCache.get('key')).toBeUndefined();
+    await sleep(1000);
+    expect(fragmentCache.get('key')).toBeUndefined();
+    await sleep(1000);
+    expect(fragmentCache.get('key')).toBeUndefined();
+    // @ts-ignore
+    expect(fragmentCache.autoRefreshRetries.size).toBe(0);
   });
 });

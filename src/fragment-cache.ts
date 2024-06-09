@@ -14,6 +14,8 @@ export default class FragmentCache {
   private readonly cache: TTLCache<string, Fragment>;
   private readonly autoRefreshFragments: boolean;
   private readonly autoRefreshTimers: Map<string, NodeJS.Timeout> = new Map();
+  private readonly autoRefreshRetries: Map<string, number> = new Map();
+  private readonly autoRefreshMaxRetries: number = 3;
 
   constructor(autoRefreshFragments: boolean, logger: LoggerInterface) {
     this.autoRefreshFragments = autoRefreshFragments;
@@ -62,11 +64,25 @@ export default class FragmentCache {
           this.autoRefreshTimers.delete(cacheKey);
 
           if (!fragment) {
-            this.logger.error(`[Ableron] Unable to refresh cache entry ${cacheKey}: Retry in 500ms`);
-            this.registerAutoRefresh(cacheKey, autoRefresh, 500);
+            const retryCount = (this.autoRefreshRetries.get(cacheKey) ?? 0) + 1;
+            this.autoRefreshRetries.set(cacheKey, retryCount);
+
+            if (retryCount < this.autoRefreshMaxRetries) {
+              this.logger.error(`[Ableron] Unable to refresh cache entry ${cacheKey}: Retry in 1s`);
+              this.registerAutoRefresh(cacheKey, autoRefresh, 1000);
+            } else {
+              this.logger.error(
+                `[Ableron] Unable to refresh cache entry ${cacheKey}. ${this.autoRefreshMaxRetries} consecutive attempts failed`
+              );
+              this.autoRefreshRetries.delete(cacheKey);
+            }
+
             return null;
           }
 
+          //TODO: We break auto refresh on first uncacheable status code. Instead we might want
+          // to check fragment.expirationTime and whether fragment.status equals oldCacheEntry.status
+          //TODO: We might want to keep the loop running instead of stopping auto refresh here
           if (!HttpUtil.HTTP_STATUS_CODES_CACHEABLE.includes(fragment.statusCode)) {
             this.logger.error(`[Ableron] Unable to refresh cache entry ${cacheKey}: Status ${fragment.statusCode}`);
             return null;
@@ -74,13 +90,15 @@ export default class FragmentCache {
 
           const oldCacheEntry = this.get(cacheKey);
           this.set(cacheKey, fragment, autoRefresh);
-          this.logger.debug(
-            `[Ableron] Refreshed cache entry ${cacheKey} ${
-              oldCacheEntry
-                ? oldCacheEntry.expirationTime.getTime() - new Date().getTime() + 'ms before expiration'
-                : 'which was already expired'
-            }. Refresh was triggered after ${refreshDelayMs}ms`
-          );
+          this.autoRefreshRetries.delete(cacheKey);
+
+          if (oldCacheEntry) {
+            this.logger.error(
+              `[Ableron] Refreshed cache entry ${cacheKey} ${oldCacheEntry.expirationTime.getTime() - Date.now()}ms before expiration`
+            );
+          } else {
+            this.logger.error(`[Ableron] Refreshed already expired cache entry ${cacheKey} via auto refresh`);
+          }
         });
       }, refreshDelayMs)
     );
