@@ -85,7 +85,7 @@ export default abstract class HttpUtil {
 
     if (sharedCacheMaxAgeDirective) {
       const maxAge = Number(sharedCacheMaxAgeDirective.substring('s-maxage='.length));
-      return new Date(new Date().getTime() + maxAge * 1000);
+      return new Date(Date.now() + maxAge * 1000);
     }
 
     return null;
@@ -115,7 +115,7 @@ export default abstract class HttpUtil {
       maxAge = maxAge - Math.abs(age);
     }
 
-    return new Date(new Date().getTime() + maxAge * 1000);
+    return new Date(Date.now() + maxAge * 1000);
   }
 
   private static getCacheLifetimeByExpiresHeader(
@@ -130,7 +130,7 @@ export default abstract class HttpUtil {
 
     if (dateHeaderValue && !isNaN(expires.getTime())) {
       const date = new Date(dateHeaderValue);
-      return isNaN(date.getTime()) ? null : new Date(new Date().getTime() + (expires.getTime() - date.getTime()));
+      return isNaN(date.getTime()) ? null : new Date(Date.now() + (expires.getTime() - date.getTime()));
     }
 
     return isNaN(expires.getTime()) ? null : expires;

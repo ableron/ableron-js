@@ -12,8 +12,8 @@ describe('HttpUtil.calculateResponseExpirationTime', () => {
     );
 
     // then
-    expect(expirationTime < new Date(new Date().getTime() + 604800000 + 1000)).toBe(true);
-    expect(expirationTime > new Date(new Date().getTime() + 604800000 - 1000)).toBe(true);
+    expect(expirationTime < new Date(Date.now() + 604800000 + 1000)).toBe(true);
+    expect(expirationTime > new Date(Date.now() + 604800000 - 1000)).toBe(true);
   });
 
   it.each([
@@ -63,10 +63,10 @@ describe('HttpUtil.calculateResponseExpirationTime', () => {
 
       // then
       expect(expirationTime.getTime()).toBeLessThan(
-        new Date(new Date().getTime() + expectedExpirationTimeSeconds * 1000 + 1000).getTime()
+        new Date(Date.now() + expectedExpirationTimeSeconds * 1000 + 1000).getTime()
       );
       expect(expirationTime.getTime()).toBeGreaterThan(
-        new Date(new Date().getTime() + expectedExpirationTimeSeconds * 1000 - 1000).getTime()
+        new Date(Date.now() + expectedExpirationTimeSeconds * 1000 - 1000).getTime()
       );
     }
   );
@@ -95,11 +95,9 @@ describe('HttpUtil.calculateResponseExpirationTime', () => {
 
     // then
     const SEVEN_DAYS_IN_MILLISECONDS = 7 * 24 * 60 * 60 * 1000;
-    expect(expirationTime.getTime()).toBeLessThan(
-      new Date(new Date().getTime() + SEVEN_DAYS_IN_MILLISECONDS + 1000).getTime()
-    );
+    expect(expirationTime.getTime()).toBeLessThan(new Date(Date.now() + SEVEN_DAYS_IN_MILLISECONDS + 1000).getTime());
     expect(expirationTime.getTime()).toBeGreaterThan(
-      new Date(new Date().getTime() + SEVEN_DAYS_IN_MILLISECONDS - 1000).getTime()
+      new Date(Date.now() + SEVEN_DAYS_IN_MILLISECONDS - 1000).getTime()
     );
   });
 

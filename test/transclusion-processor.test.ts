@@ -307,8 +307,8 @@ describe('TransclusionProcessor', () => {
     main-fragment
     footer-fragment`
     );
-    expect((result.getContentExpirationTime() as Date) < new Date(new Date().getTime() + 31000)).toBe(true);
-    expect((result.getContentExpirationTime() as Date) > new Date(new Date().getTime() + 27000)).toBe(true);
+    expect((result.getContentExpirationTime() as Date) < new Date(Date.now() + 31000)).toBe(true);
+    expect((result.getContentExpirationTime() as Date) > new Date(Date.now() + 27000)).toBe(true);
   });
 
   it('should set content expiration time to past if a fragment must not be cached', async () => {
@@ -536,12 +536,8 @@ describe('TransclusionProcessor', () => {
       /^<!-- fallback content -->\n<!-- Ableron stats:\nProcessed 1 include\(s\) in \d+ms/gm
     );
     expect(result.getContent()).toMatch(/^\d+ms \| ce164c3 \| fallback content \| -$/gm);
-    expect(result.getContentExpirationTime().getTime()).toBeLessThanOrEqual(
-      new Date(new Date().getTime() + 60000).getTime()
-    );
-    expect(result.getContentExpirationTime().getTime()).toBeGreaterThanOrEqual(
-      new Date(new Date().getTime() + 58000).getTime()
-    );
+    expect(result.getContentExpirationTime().getTime()).toBeLessThanOrEqual(new Date(Date.now() + 60000).getTime());
+    expect(result.getContentExpirationTime().getTime()).toBeGreaterThanOrEqual(new Date(Date.now() + 58000).getTime());
   });
 
   it('should record stats', async () => {
