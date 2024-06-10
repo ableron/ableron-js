@@ -102,10 +102,24 @@ describe('FragmentCache', () => {
     expect(fragmentCache.autoRefreshTimers.size).toBe(0);
   });
 
-  it('should only refresh cache with cacheable fragment', async () => {
+  it('should not auto refresh cached fragment when status code is not cacheable', async () => {
     // given
     const newFragment = (status: number) => new Fragment(status, 'fragment', undefined, new Date(Date.now() + 300));
     fragmentCache.set('key', newFragment(200), () => Promise.resolve(newFragment(500)));
+
+    // expect
+    expect(fragmentCache.get('key')).toBeDefined();
+    await sleep(300);
+    expect(fragmentCache.get('key')).toBeUndefined();
+    // @ts-ignore
+    expect(fragmentCache.autoRefreshTimers.size).toBe(1);
+  });
+
+  it('should not auto refresh cached fragment when fragment is marked as not cacheable', async () => {
+    // given
+    fragmentCache.set('key', new Fragment(200, 'fragment', undefined, new Date(Date.now() + 250)), () =>
+      Promise.resolve(new Fragment(200, 'fragment'))
+    );
 
     // expect
     expect(fragmentCache.get('key')).toBeDefined();
