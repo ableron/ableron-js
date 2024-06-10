@@ -69,7 +69,6 @@ export default class FragmentCache {
             this.handleSuccessfulCacheRefresh(cacheKey, oldCacheEntry);
           } else {
             this.handleFailedCacheRefreshAttempt(cacheKey, autoRefresh);
-            this.handleFailedCacheRefreshAttempt(cacheKey, autoRefresh);
           }
         });
       }, refreshDelayMs)
