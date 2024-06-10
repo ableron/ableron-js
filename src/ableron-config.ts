@@ -42,9 +42,9 @@ export default class AbleronConfig {
   readonly cacheVaryByRequestHeaders: string[] = [];
 
   /**
-   * Whether to enable auto-refreshing of cached fragments, before the cache entries expire.
+   * Whether to enable auto-refreshing of cached fragments, before they expire.
    */
-  readonly cacheAutoRefreshFragments: boolean = false;
+  readonly cacheAutoRefreshEnabled: boolean = false;
 
   /**
    * Whether to append UI composition stats as HTML comment to the content.

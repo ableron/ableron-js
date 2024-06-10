@@ -110,11 +110,11 @@ Default: `[]`
 Fragment request headers which influence the requested fragment aside from its URL. Used to create fragment cache keys.
 Must be a subset of `fragmentRequestHeadersToPass`. Common example are headers used for steering A/B-tests.
 
-#### `cacheAutoRefreshFragments`
+#### `cacheAutoRefreshEnabled`
 
 Default: `false`
 
-Whether to enable auto-refreshing of cached fragments, before the cache entries expire.
+Whether to enable auto-refreshing of cached fragments, before they expire.
 If set to `true`, cached fragments are getting asynchronously refreshed before they expire. This introduces additional
 traffic, because the cached fragments are loaded again even before their actual expiration time.
 On the other hand, enabling auto-refreshing of fragments will have a positive impact on overall latency, as it reduces

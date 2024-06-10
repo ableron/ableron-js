@@ -12,13 +12,13 @@ export default class FragmentCache {
   private static readonly MAX_SET_TIMEOUT_DELAY_MS = 0x7fffffff;
   private readonly logger: LoggerInterface;
   private readonly cache: TTLCache<string, Fragment>;
-  private readonly autoRefreshFragments: boolean;
+  private readonly autoRefreshEnabled: boolean;
   private readonly autoRefreshTimers: Map<string, NodeJS.Timeout> = new Map();
   private readonly autoRefreshRetries: Map<string, number> = new Map();
   private readonly autoRefreshMaxRetries: number = 3;
 
-  constructor(autoRefreshFragments: boolean, logger: LoggerInterface) {
-    this.autoRefreshFragments = autoRefreshFragments;
+  constructor(autoRefreshEnabled: boolean, logger: LoggerInterface) {
+    this.autoRefreshEnabled = autoRefreshEnabled;
     this.logger = logger;
     this.cache = this.initCache();
   }
@@ -37,7 +37,7 @@ export default class FragmentCache {
         ttl: Math.min(fragmentTtl, FragmentCache.MAX_SET_TIMEOUT_DELAY_MS)
       });
 
-      if (this.autoRefreshFragments && autoRefresh) {
+      if (this.autoRefreshEnabled && autoRefresh) {
         this.registerAutoRefresh(cacheKey, autoRefresh, this.calculateFragmentRefreshDelay(fragmentTtl));
       }
     }

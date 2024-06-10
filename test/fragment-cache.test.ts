@@ -7,7 +7,7 @@ import FragmentCache from '../src/fragment-cache';
 const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay));
 const config = new AbleronConfig({
   fragmentRequestTimeoutMillis: 1000,
-  cacheAutoRefreshFragments: true
+  cacheAutoRefreshEnabled: true
 });
 const fragmentCache = new TransclusionProcessor(config, console).getFragmentCache();
 
@@ -31,7 +31,7 @@ describe('FragmentCache', () => {
     // given
     const fragmentCache = new TransclusionProcessor(
       new AbleronConfig({
-        cacheAutoRefreshFragments: false
+        cacheAutoRefreshEnabled: false
       }),
       console
     ).getFragmentCache();
@@ -49,7 +49,7 @@ describe('FragmentCache', () => {
     // given
     const fragmentCache = new TransclusionProcessor(
       new AbleronConfig({
-        cacheAutoRefreshFragments: true
+        cacheAutoRefreshEnabled: true
       }),
       console
     ).getFragmentCache();
