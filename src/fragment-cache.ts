@@ -63,11 +63,7 @@ export default class FragmentCache {
         autoRefresh().then((fragment) => {
           this.autoRefreshTimers.delete(cacheKey);
 
-          if (
-            !fragment ||
-            !HttpUtil.HTTP_STATUS_CODES_CACHEABLE.includes(fragment.statusCode) ||
-            fragment.expirationTime <= new Date()
-          ) {
+          if (!this.isFragmentCacheable(fragment)) {
             const retryCount = (this.autoRefreshRetries.get(cacheKey) ?? 0) + 1;
             this.autoRefreshRetries.set(cacheKey, retryCount);
 
@@ -85,16 +81,9 @@ export default class FragmentCache {
           }
 
           const oldCacheEntry = this.get(cacheKey);
-          this.set(cacheKey, fragment, autoRefresh);
+          this.set(cacheKey, fragment!, autoRefresh);
           this.autoRefreshRetries.delete(cacheKey);
-
-          if (oldCacheEntry) {
-            this.logger.error(
-              `[Ableron] Refreshed cache entry ${cacheKey} ${oldCacheEntry.expirationTime.getTime() - Date.now()}ms before expiration`
-            );
-          } else {
-            this.logger.error(`[Ableron] Refreshed already expired cache entry ${cacheKey} via auto refresh`);
-          }
+          this.logSuccessfulCacheRefresh(cacheKey, oldCacheEntry);
         });
       }, refreshDelayMs)
     );
@@ -102,6 +91,24 @@ export default class FragmentCache {
 
   private calculateFragmentRefreshDelay(fragmentTtl: number): number {
     return Math.max(Math.min(fragmentTtl * 0.85, FragmentCache.MAX_SET_TIMEOUT_DELAY_MS), 10);
+  }
+
+  private isFragmentCacheable(fragment?: Fragment | null): boolean {
+    return (
+      fragment != null &&
+      HttpUtil.HTTP_STATUS_CODES_CACHEABLE.includes(fragment.statusCode) &&
+      fragment.expirationTime > new Date()
+    );
+  }
+
+  private logSuccessfulCacheRefresh(cacheKey: string, oldCacheEntry?: Fragment): void {
+    if (oldCacheEntry) {
+      this.logger.debug(
+        `[Ableron] Refreshed cache entry ${cacheKey} ${oldCacheEntry.expirationTime.getTime() - Date.now()}ms before expiration`
+      );
+    } else {
+      this.logger.debug(`[Ableron] Refreshed already expired cache entry ${cacheKey} via auto refresh`);
+    }
   }
 
   private initCache(): TTLCache<string, Fragment> {
