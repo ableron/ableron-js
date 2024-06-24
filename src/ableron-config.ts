@@ -42,7 +42,7 @@ export default class AbleronConfig {
   readonly cacheVaryByRequestHeaders: string[] = [];
 
   /**
-   * Whether to enable auto-refreshing of cached fragments, before they expire.
+   * Whether to enable auto-refreshing of cached fragments.
    */
   readonly cacheAutoRefreshEnabled: boolean = false;
 
