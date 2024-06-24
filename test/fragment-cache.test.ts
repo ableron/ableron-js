@@ -5,11 +5,13 @@ import Fragment from '../src/fragment';
 import FragmentCache from '../src/fragment-cache';
 
 const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay));
-const config = new AbleronConfig({
-  fragmentRequestTimeoutMillis: 1000,
-  cacheAutoRefreshEnabled: true
-});
-const fragmentCache = new TransclusionProcessor(config, console).getFragmentCache();
+const fragmentCache = new TransclusionProcessor(
+  new AbleronConfig({
+    fragmentRequestTimeoutMillis: 1000,
+    cacheAutoRefreshEnabled: true
+  }),
+  console
+).getFragmentCache();
 
 beforeEach(() => {
   fragmentCache.clear();
@@ -47,12 +49,6 @@ describe('FragmentCache', () => {
 
   it('should auto refresh fragments if enabled', async () => {
     // given
-    const fragmentCache = new TransclusionProcessor(
-      new AbleronConfig({
-        cacheAutoRefreshEnabled: true
-      }),
-      console
-    ).getFragmentCache();
     const newFragment = () => new Fragment(200, 'fragment', undefined, new Date(Date.now() + 1000));
     fragmentCache.set('cacheKey', newFragment(), () => Promise.resolve(newFragment()));
 
@@ -100,6 +96,8 @@ describe('FragmentCache', () => {
     expect(fragmentCache.get('key')).toBeUndefined();
     // @ts-ignore
     expect(fragmentCache.autoRefreshTimers.size).toBe(0);
+    // @ts-ignore
+    expect(fragmentCache.autoRefreshRetries.size).toBe(0);
   });
 
   it('should not auto refresh cached fragment when status code is not cacheable', async () => {
