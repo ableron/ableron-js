@@ -3,6 +3,7 @@ import { AbleronConfig } from '../src';
 import TransclusionProcessor from '../src/transclusion-processor';
 import Fragment from '../src/fragment';
 import FragmentCache from '../src/fragment-cache';
+import { NoOpLogger } from '../src/logger';
 
 const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay));
 const fragmentCache = new TransclusionProcessor(
@@ -10,7 +11,7 @@ const fragmentCache = new TransclusionProcessor(
     fragmentRequestTimeoutMillis: 1000,
     cacheAutoRefreshEnabled: true
   }),
-  console
+  new NoOpLogger()
 ).getFragmentCache();
 
 beforeEach(() => {
@@ -35,7 +36,7 @@ describe('FragmentCache', () => {
       new AbleronConfig({
         cacheAutoRefreshEnabled: false
       }),
-      console
+      new NoOpLogger()
     ).getFragmentCache();
     const newFragment = () => new Fragment(200, 'fragment', undefined, new Date(Date.now() + 1000));
     fragmentCache.set('cacheKey', newFragment(), () => Promise.resolve(newFragment()));

@@ -3,8 +3,8 @@ import * as crypto from 'crypto';
 import AbleronConfig from './ableron-config.js';
 import HttpUtil from './http-util.js';
 import { LoggerInterface, NoOpLogger } from './logger.js';
-import Stats from './stats';
-import FragmentCache from './fragment-cache';
+import Stats from './stats.js';
+import FragmentCache from './fragment-cache.js';
 
 export default class Include {
   /**

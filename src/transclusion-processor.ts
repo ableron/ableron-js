@@ -3,8 +3,8 @@ import TransclusionResult from './transclusion-result.js';
 import Include from './include.js';
 import Fragment from './fragment.js';
 import { LoggerInterface } from './logger.js';
-import Stats from './stats';
-import FragmentCache from './fragment-cache';
+import Stats from './stats.js';
+import FragmentCache from './fragment-cache.js';
 
 export default class TransclusionProcessor {
   /**

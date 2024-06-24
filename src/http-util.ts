@@ -1,5 +1,5 @@
 import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http2';
-import { LoggerInterface } from './logger';
+import { LoggerInterface } from './logger.js';
 
 export default abstract class HttpUtil {
   /**

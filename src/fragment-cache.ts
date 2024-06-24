@@ -1,8 +1,8 @@
 import TTLCache from '@isaacs/ttlcache';
-import Fragment from './fragment';
-import { LoggerInterface } from './logger';
+import Fragment from './fragment.js';
+import { LoggerInterface } from './logger.js';
 import { clearTimeout } from 'timers';
-import HttpUtil from './http-util';
+import HttpUtil from './http-util.js';
 
 export default class FragmentCache {
   /**
