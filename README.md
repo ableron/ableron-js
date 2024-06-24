@@ -115,10 +115,11 @@ Must be a subset of `fragmentRequestHeadersToPass`. Common example are headers u
 Default: `false`
 
 Whether to enable auto-refreshing of cached fragments, before they expire.
-If set to `true`, cached fragments are getting asynchronously refreshed before they expire. This introduces additional
-traffic, because the cached fragments are loaded again even before their actual expiration time.
-On the other hand, enabling auto-refreshing of fragments will have a positive impact on overall latency, as it reduces
-the number of fragments that have to be loaded from their remote source due to cache misses.
+If set to `true`, cached fragments are getting asynchronously refreshed before they expire. This reduces the cache miss
+rate and thus have a positive impact on latency. On the other hand, additional traffic is introduced, because the cached
+fragments are loaded again even before their actual expiration time.
+Fragments are tried to be refreshed when only 15% of their initial time to live remains. In case of failure, refresh is
+repeated three times with a static delay of one second.
 
 #### `statsAppendToContent`
 

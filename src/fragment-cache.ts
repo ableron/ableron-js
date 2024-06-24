@@ -48,6 +48,7 @@ export default class FragmentCache {
   public clear(): this {
     this.autoRefreshTimers.forEach((value) => clearTimeout(value));
     this.autoRefreshTimers.clear();
+    this.autoRefreshRetries.clear();
     this.cache.clear();
     return this;
   }
@@ -87,6 +88,15 @@ export default class FragmentCache {
     );
   }
 
+  private handleSuccessfulCacheRefresh(cacheKey: string, oldCacheEntry?: Fragment): void {
+    this.autoRefreshRetries.delete(cacheKey);
+    this.logger.debug(
+      oldCacheEntry
+        ? `[Ableron] Refreshed cache entry ${cacheKey} ${oldCacheEntry.expirationTime.getTime() - Date.now()}ms before expiration`
+        : `[Ableron] Refreshed already expired cache entry ${cacheKey} via auto refresh`
+    );
+  }
+
   private handleFailedCacheRefreshAttempt(cacheKey: string, autoRefresh: () => Promise<Fragment | null>): void {
     const retryCount = (this.autoRefreshRetries.get(cacheKey) ?? 0) + 1;
     this.autoRefreshRetries.set(cacheKey, retryCount);
@@ -99,18 +109,6 @@ export default class FragmentCache {
         `[Ableron] Unable to refresh cache entry ${cacheKey}. ${this.autoRefreshMaxRetries} consecutive attempts failed`
       );
       this.autoRefreshRetries.delete(cacheKey);
-    }
-  }
-
-  private handleSuccessfulCacheRefresh(cacheKey: string, oldCacheEntry?: Fragment): void {
-    this.autoRefreshRetries.delete(cacheKey);
-
-    if (oldCacheEntry) {
-      this.logger.debug(
-        `[Ableron] Refreshed cache entry ${cacheKey} ${oldCacheEntry.expirationTime.getTime() - Date.now()}ms before expiration`
-      );
-    } else {
-      this.logger.debug(`[Ableron] Refreshed already expired cache entry ${cacheKey} via auto refresh`);
     }
   }
 
