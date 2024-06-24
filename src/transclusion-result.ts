@@ -125,7 +125,7 @@ export default class TransclusionResult {
   ) {
     const pageExpirationTime: Date = HttpUtil.calculateResponseExpirationTime(headers);
     const pageMaxAge: number =
-      pageExpirationTime > new Date() ? Math.ceil((pageExpirationTime.getTime() - new Date().getTime()) / 1000) : 0;
+      pageExpirationTime > new Date() ? Math.ceil((pageExpirationTime.getTime() - Date.now()) / 1000) : 0;
     return this.calculateCacheControlHeaderValue(pageMaxAge);
   }
 
@@ -190,7 +190,7 @@ export default class TransclusionResult {
       return 'not cacheable';
     }
 
-    return 'expires in ' + Math.ceil((fragmentExpirationTime.getTime() - new Date().getTime()) / 1000) + 's';
+    return 'expires in ' + Math.ceil((fragmentExpirationTime.getTime() - Date.now()) / 1000) + 's';
   }
 
   private getProcessedIncludeStatFragmentUrl(include: Include): string {

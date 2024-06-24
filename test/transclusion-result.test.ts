@@ -56,19 +56,19 @@ describe('TransclusionResult', () => {
 
   it.each([
     [new Date(0), undefined, 'no-store'],
-    [new Date(new Date().getTime() - 5000), undefined, 'no-store'],
+    [new Date(Date.now() - 5000), undefined, 'no-store'],
     [new Date(), undefined, 'no-store'],
-    [new Date(new Date().getTime() + 300000), undefined, 'no-store'],
+    [new Date(Date.now() + 300000), undefined, 'no-store'],
     [new Date(0), 0, 'no-store'],
-    [new Date(new Date().getTime() - 5000), 0, 'no-store'],
+    [new Date(Date.now() - 5000), 0, 'no-store'],
     [new Date(), 0, 'no-store'],
-    [new Date(new Date().getTime() + 300000), 0, 'no-store'],
+    [new Date(Date.now() + 300000), 0, 'no-store'],
     [new Date(0), 120, 'no-store'],
-    [new Date(new Date().getTime() - 5000), 120, 'no-store'],
+    [new Date(Date.now() - 5000), 120, 'no-store'],
     [new Date(), 120, 'no-store'],
-    [new Date(new Date().getTime() + 300000), 120, 'max-age=120'],
-    [new Date(new Date().getTime() + 360000), 300, 'max-age=300'],
-    [new Date(new Date().getTime() + 300000), 600, 'max-age=300']
+    [new Date(Date.now() + 300000), 120, 'max-age=120'],
+    [new Date(Date.now() + 360000), 300, 'max-age=300'],
+    [new Date(Date.now() + 300000), 600, 'max-age=300']
   ])(
     'should calculate cache control header value',
     (fragmentExpirationTime: Date, pageMaxAge: number | undefined, expectedCacheControlHeaderValue: string) => {
@@ -85,23 +85,23 @@ describe('TransclusionResult', () => {
 
   it.each([
     [new Date(0), new Headers(), 'no-store'],
-    [new Date(new Date().getTime() - 5000), new Headers(), 'no-store'],
+    [new Date(Date.now() - 5000), new Headers(), 'no-store'],
     [new Date(), new Headers(), 'no-store'],
-    [new Date(new Date().getTime() + 300000), new Headers(), 'no-store'],
+    [new Date(Date.now() + 300000), new Headers(), 'no-store'],
     [new Date(0), new Headers([['Cache-Control', 'no-cache']]), 'no-store'],
-    [new Date(new Date().getTime() - 5000), new Headers([['Cache-Control', 'no-cache']]), 'no-store'],
+    [new Date(Date.now() - 5000), new Headers([['Cache-Control', 'no-cache']]), 'no-store'],
     [new Date(), new Headers([['Cache-Control', 'no-cache']]), 'no-store'],
-    [new Date(new Date().getTime() + 300000), new Headers([['Cache-Control', 'no-cache']]), 'no-store'],
+    [new Date(Date.now() + 300000), new Headers([['Cache-Control', 'no-cache']]), 'no-store'],
     [new Date(0), new Headers([['Cache-Control', 'max-age=0']]), 'no-store'],
-    [new Date(new Date().getTime() - 5000), new Headers([['Cache-Control', 'max-age=0']]), 'no-store'],
+    [new Date(Date.now() - 5000), new Headers([['Cache-Control', 'max-age=0']]), 'no-store'],
     [new Date(), new Headers([['Cache-Control', 'max-age=0']]), 'no-store'],
-    [new Date(new Date().getTime() + 300000), new Headers([['Cache-Control', 'max-age=0']]), 'no-store'],
+    [new Date(Date.now() + 300000), new Headers([['Cache-Control', 'max-age=0']]), 'no-store'],
     [new Date(0), new Headers([['Cache-Control', 'max-age=120']]), 'no-store'],
-    [new Date(new Date().getTime() - 5000), new Headers([['Cache-Control', 'max-age=120']]), 'no-store'],
+    [new Date(Date.now() - 5000), new Headers([['Cache-Control', 'max-age=120']]), 'no-store'],
     [new Date(), new Headers([['Cache-Control', 'max-age=120']]), 'no-store'],
-    [new Date(new Date().getTime() + 300000), new Headers([['Cache-Control', 'max-age=120']]), 'max-age=120'],
-    [new Date(new Date().getTime() + 300000), new Headers([['Cache-Control', 'max-age=300']]), 'max-age=300'],
-    [new Date(new Date().getTime() + 300000), new Headers([['Cache-Control', 'max-age=600']]), 'max-age=300']
+    [new Date(Date.now() + 300000), new Headers([['Cache-Control', 'max-age=120']]), 'max-age=120'],
+    [new Date(Date.now() + 300000), new Headers([['Cache-Control', 'max-age=300']]), 'max-age=300'],
+    [new Date(Date.now() + 300000), new Headers([['Cache-Control', 'max-age=600']]), 'max-age=300']
   ])(
     'should calculate cache control header value based on given response headers',
     (fragmentExpirationTime: Date, responseHeaders: Headers, expectedCacheControlHeaderValue: string) => {

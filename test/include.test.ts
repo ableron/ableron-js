@@ -410,8 +410,8 @@ describe('Include', () => {
   });
 
   it.each([
-    [new Date(new Date().getTime() + 5000), 'fragment from cache', 'cached src'],
-    [new Date(new Date().getTime() - 5000), 'fragment from src', 'remote src']
+    [new Date(Date.now() + 5000), 'fragment from cache', 'cached src'],
+    [new Date(Date.now() - 5000), 'fragment from src', 'remote src']
   ])(
     'should use cached fragment if not expired',
     async (expirationTime: Date, expectedFragmentContent: string, expectedFragmentSource: string) => {
@@ -423,9 +423,7 @@ describe('Include', () => {
       await server.listen();
 
       // when
-      fragmentCache.set(serverAddress('/src'), new Fragment(200, 'fragment from cache', undefined, expirationTime), {
-        ttl: Math.max(1, expirationTime.getTime() - new Date().getTime())
-      });
+      fragmentCache.set(serverAddress('/src'), new Fragment(200, 'fragment from cache', undefined, expirationTime));
       await sleep(2);
       const include = await new Include('', new Map([['src', serverAddress('/src')]])).resolve(
         config,
@@ -529,8 +527,8 @@ describe('Include', () => {
     expect(include.isResolved()).toBe(true);
     expect(include.getResolvedFragment().content).toBe('fragment from src');
     expect(cachedFragment).toBeDefined();
-    expect(cachedFragment.expirationTime < new Date(new Date().getTime() + 604800000 + 1000)).toBe(true);
-    expect(cachedFragment.expirationTime > new Date(new Date().getTime() + 604800000 - 1000)).toBe(true);
+    expect(cachedFragment.expirationTime < new Date(Date.now() + 604800000 + 1000)).toBe(true);
+    expect(cachedFragment.expirationTime > new Date(Date.now() + 604800000 - 1000)).toBe(true);
   });
 
   it('should cache fragment for max-age seconds if directive is present', async () => {
@@ -557,8 +555,8 @@ describe('Include', () => {
     expect(include.isResolved()).toBe(true);
     expect(include.getResolvedFragment().content).toBe('fragment from src');
     expect(cachedFragment).toBeDefined();
-    expect(cachedFragment.expirationTime < new Date(new Date().getTime() + 3600000 + 1000)).toBe(true);
-    expect(cachedFragment.expirationTime > new Date(new Date().getTime() + 3600000 - 1000)).toBe(true);
+    expect(cachedFragment.expirationTime < new Date(Date.now() + 3600000 + 1000)).toBe(true);
+    expect(cachedFragment.expirationTime > new Date(Date.now() + 3600000 - 1000)).toBe(true);
   });
 
   it('should treat http header names as case insensitive', async () => {
@@ -580,8 +578,8 @@ describe('Include', () => {
     // then
     expect(include.getResolvedFragment().content).toBe('fragment from src');
     expect(cachedFragment).toBeDefined();
-    expect(cachedFragment.expirationTime < new Date(new Date().getTime() + 3600000 + 1000)).toBe(true);
-    expect(cachedFragment.expirationTime > new Date(new Date().getTime() + 3600000 - 1000)).toBe(true);
+    expect(cachedFragment.expirationTime < new Date(Date.now() + 3600000 + 1000)).toBe(true);
+    expect(cachedFragment.expirationTime > new Date(Date.now() + 3600000 - 1000)).toBe(true);
   });
 
   it('should cache fragment for max-age seconds minus Age seconds if directive is present and Age header is set', async () => {
@@ -608,8 +606,8 @@ describe('Include', () => {
     // then
     expect(include.getResolvedFragment().content).toBe('fragment from src');
     expect(cachedFragment).toBeDefined();
-    expect(cachedFragment.expirationTime < new Date(new Date().getTime() + 3000000 + 1000)).toBe(true);
-    expect(cachedFragment.expirationTime > new Date(new Date().getTime() + 3000000 - 1000)).toBe(true);
+    expect(cachedFragment.expirationTime < new Date(Date.now() + 3000000 + 1000)).toBe(true);
+    expect(cachedFragment.expirationTime > new Date(Date.now() + 3000000 - 1000)).toBe(true);
   });
 
   it('should use absolute value of Age header for cache expiration calculation', async () => {
@@ -636,8 +634,8 @@ describe('Include', () => {
     // then
     expect(include.getResolvedFragment().content).toBe('fragment from src');
     expect(cachedFragment).toBeDefined();
-    expect(cachedFragment.expirationTime < new Date(new Date().getTime() + 3500000 + 1000)).toBe(true);
-    expect(cachedFragment.expirationTime > new Date(new Date().getTime() + 3500000 - 1000)).toBe(true);
+    expect(cachedFragment.expirationTime < new Date(Date.now() + 3500000 + 1000)).toBe(true);
+    expect(cachedFragment.expirationTime > new Date(Date.now() + 3500000 - 1000)).toBe(true);
   });
 
   it('should cache fragment based on Expires header and current time if Cache-Control header and Date header are not present', async () => {
@@ -709,8 +707,8 @@ describe('Include', () => {
     // then
     expect(include.getResolvedFragment().content).toBe('fragment from src');
     expect(cachedFragment).toBeDefined();
-    expect(cachedFragment.expirationTime < new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000 + 1000)).toBe(true);
-    expect(cachedFragment.expirationTime > new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000 - 1000)).toBe(true);
+    expect(cachedFragment.expirationTime < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 + 1000)).toBe(true);
+    expect(cachedFragment.expirationTime > new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 - 1000)).toBe(true);
   });
 
   it('should not cache fragment if Cache-Control header is set but without max-age directives', async () => {

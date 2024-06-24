@@ -1,10 +1,10 @@
 import AbleronConfig from './ableron-config.js';
 import TransclusionResult from './transclusion-result.js';
 import Include from './include.js';
-import TTLCache from '@isaacs/ttlcache';
 import Fragment from './fragment.js';
 import { LoggerInterface } from './logger.js';
 import Stats from './stats';
+import FragmentCache from './fragment-cache';
 
 export default class TransclusionProcessor {
   /**
@@ -21,17 +21,17 @@ export default class TransclusionProcessor {
 
   private readonly ableronConfig: AbleronConfig;
 
-  private readonly fragmentCache: TTLCache<string, Fragment>;
+  private readonly fragmentCache: FragmentCache;
 
   private readonly stats: Stats = new Stats();
 
   constructor(ableronConfig: AbleronConfig, logger: LoggerInterface) {
     this.ableronConfig = ableronConfig;
     this.logger = logger;
-    this.fragmentCache = this.buildFragmentCache();
+    this.fragmentCache = new FragmentCache(this.ableronConfig.cacheAutoRefreshEnabled, this.logger);
   }
 
-  getFragmentCache(): TTLCache<string, Fragment> {
+  getFragmentCache(): FragmentCache {
     return this.fragmentCache;
   }
 
@@ -88,7 +88,7 @@ export default class TransclusionProcessor {
     );
     transclusionResult.addResolvedInclude(
       include.resolveWith(
-        new Fragment(200, include.getFallbackContent(), undefined, new Date(new Date().getTime() + 60000)),
+        new Fragment(200, include.getFallbackContent(), undefined, new Date(Date.now() + 60000)),
         Date.now() - resolveStartTimeMillis
       )
     );
@@ -103,9 +103,5 @@ export default class TransclusionProcessor {
     }
 
     return attributes;
-  }
-
-  private buildFragmentCache(): TTLCache<string, Fragment> {
-    return new TTLCache({ max: 1000, ttl: 24 * 60 * 60 * 1000, checkAgeOnGet: false });
   }
 }
