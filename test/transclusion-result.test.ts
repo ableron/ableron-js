@@ -134,7 +134,7 @@ describe('TransclusionResult', () => {
         '<!-- Ableron stats:\n' +
         'Processed 0 include(s) in 0ms\n' +
         '\n' +
-        'Cache Stats: 0 overall hits, 0 overall misses\n' +
+        'Cache Stats: 0 hits, 0 misses, 0 successful refreshs, 0 failed refreshs\n' +
         '-->'
     );
   });
@@ -198,7 +198,7 @@ describe('TransclusionResult', () => {
         'XXXms | 3 | remote src | expires in XXXs | http://localhost:80/cacheable-fragment-1\n' +
         'XXXms | 4 | cached fallback-src | expires in 10s | http://localhost:80/cacheable-fragment-2\n' +
         '\n' +
-        'Cache Stats: 1 overall hits, 3 overall misses\n' +
+        'Cache Stats: 1 hits, 3 misses, 0 successful refreshs, 0 failed refreshs\n' +
         '-->'
     );
   });
@@ -220,7 +220,7 @@ describe('TransclusionResult', () => {
         '------------------------------------------------------\n' +
         '71ms | da39a3e | src | not cacheable\n' +
         '\n' +
-        'Cache Stats: 0 overall hits, 0 overall misses\n' +
+        'Cache Stats: 0 hits, 0 misses, 0 successful refreshs, 0 failed refreshs\n' +
         '-->'
     );
   });
@@ -244,7 +244,7 @@ describe('TransclusionResult', () => {
         '------------------------------------------------------\n' +
         '0ms | ceef048 (primary) | fallback content | -\n' +
         '\n' +
-        'Cache Stats: 0 overall hits, 0 overall misses\n' +
+        'Cache Stats: 0 hits, 0 misses, 0 successful refreshs, 0 failed refreshs\n' +
         '-->'
     );
   });
@@ -272,7 +272,7 @@ describe('TransclusionResult', () => {
         '33ms | a57865f (primary) | fallback content | -\n' +
         '0ms | ceef048 (primary) | fallback content | -\n' +
         '\n' +
-        'Cache Stats: 0 overall hits, 0 overall misses\n' +
+        'Cache Stats: 0 hits, 0 misses, 0 successful refreshs, 0 failed refreshs\n' +
         '-->'
     );
   });

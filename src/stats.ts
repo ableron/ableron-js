@@ -1,6 +1,8 @@
 export default class Stats {
   private totalCacheHits: number = 0;
   private totalCacheMisses: number = 0;
+  private totalSuccessfulCacheRefreshs: number = 0;
+  private totalFailedCacheRefreshs: number = 0;
 
   public getTotalCacheHits(): number {
     return this.totalCacheHits;
@@ -16,5 +18,21 @@ export default class Stats {
 
   public recordCacheMiss(): void {
     this.totalCacheMisses++;
+  }
+
+  public getTotalSuccessfulCacheRefreshs(): number {
+    return this.totalSuccessfulCacheRefreshs;
+  }
+
+  public recordSuccessfulCacheRefresh(): void {
+    this.totalSuccessfulCacheRefreshs++;
+  }
+
+  public getTotalFailedCacheRefreshs(): number {
+    return this.totalFailedCacheRefreshs;
+  }
+
+  public recordFailedCacheRefresh(): void {
+    this.totalFailedCacheRefreshs++;
   }
 }

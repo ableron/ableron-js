@@ -3,6 +3,7 @@ import Fragment from './fragment.js';
 import { LoggerInterface } from './logger.js';
 import { clearTimeout } from 'timers';
 import HttpUtil from './http-util.js';
+import Stats from './stats.js';
 
 export default class FragmentCache {
   /**
@@ -16,9 +17,11 @@ export default class FragmentCache {
   private readonly autoRefreshTimers: Map<string, NodeJS.Timeout> = new Map();
   private readonly autoRefreshRetries: Map<string, number> = new Map();
   private readonly autoRefreshMaxRetries: number = 3;
+  private readonly stats: Stats;
 
-  constructor(autoRefreshEnabled: boolean, logger: LoggerInterface) {
+  constructor(autoRefreshEnabled: boolean, stats: Stats, logger: LoggerInterface) {
     this.autoRefreshEnabled = autoRefreshEnabled;
+    this.stats = stats;
     this.logger = logger;
     this.cache = this.initCache();
   }
@@ -90,6 +93,7 @@ export default class FragmentCache {
 
   private handleSuccessfulCacheRefresh(cacheKey: string, oldCacheEntry?: Fragment): void {
     this.autoRefreshRetries.delete(cacheKey);
+    this.stats.recordSuccessfulCacheRefresh();
     this.logger.debug(
       oldCacheEntry
         ? `[Ableron] Refreshed cache entry ${cacheKey} ${oldCacheEntry.expirationTime.getTime() - Date.now()}ms before expiration`
@@ -100,6 +104,7 @@ export default class FragmentCache {
   private handleFailedCacheRefreshAttempt(cacheKey: string, autoRefresh: () => Promise<Fragment | null>): void {
     const retryCount = (this.autoRefreshRetries.get(cacheKey) ?? 0) + 1;
     this.autoRefreshRetries.set(cacheKey, retryCount);
+    this.stats.recordFailedCacheRefresh();
 
     if (retryCount < this.autoRefreshMaxRetries) {
       this.logger.error(`[Ableron] Unable to refresh cache entry ${cacheKey}: Retry in 1s`);

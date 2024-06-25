@@ -623,7 +623,7 @@ describe('TransclusionProcessor', () => {
         'XXXms | h (primary) | remote src | not cacheable\n' +
         'XXXms | z | remote fallback-src | not cacheable\n' +
         '\n' +
-        'Cache Stats: 5 overall hits, 18 overall misses\n' +
+        'Cache Stats: 5 hits, 18 misses, 0 successful refreshs, 0 failed refreshs\n' +
         '-->'
     );
   });
