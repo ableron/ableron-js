@@ -412,49 +412,6 @@ describe('TransclusionProcessor', () => {
     expect(result.getContent()).toBe('before' + expectedResult + 'after');
   });
 
-  // test('should perform only one request per URL', async () => {
-  //   // given
-  //   server = Fastify();
-  //   let counter = 1;
-  //   const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay));
-  //   server.get('/1', async function (request, reply) {
-  //     await sleep(200);
-  //     reply.status(200).send('fragment-' + counter++);
-  //   });
-  //   await server.listen();
-  //
-  //   // when
-  //   const result = await transclusionProcessor.resolveIncludes(
-  //     `<html>
-  //      <head>
-  //        <ableron-include src="${serverAddress('/1')}"><!-- failed loading 1st fragment --></ableron-include>
-  //        <title>Foo</title>
-  //        <ableron-include src="${serverAddress('/1')}"><!-- failed loading 2nd fragment --></ableron-include>
-  //      </head>
-  //      <body>
-  //        <ableron-include src="${serverAddress('/1')}"><!-- failed loading 3rd fragment --></ableron-include>
-  //        <ableron-include src="${serverAddress('/expect-404')}"><!-- failed loading 4th fragment --></ableron-include>
-  //      </body>
-  //      </html>`,
-  //     new Headers()
-  //   );
-  //
-  //   // then
-  //   expect(result.getContent()).toBe(
-  //     `<html>
-  //      <head>
-  //        fragment-1
-  //        <title>Foo</title>
-  //        fragment-1
-  //      </head>
-  //      <body>
-  //        fragment-1
-  //        <!-- failed loading 4th fragment -->
-  //      </body>
-  //      </html>`
-  //   );
-  // });
-
   it('should resolve includes in parallel', async () => {
     // given
     server = Fastify();
