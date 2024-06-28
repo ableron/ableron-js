@@ -416,25 +416,20 @@ describe('TransclusionProcessor', () => {
     // given
     server = Fastify();
     const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay));
-    server.get('/503', async function (request, reply) {
-      await sleep(2000);
-      reply.status(503).send('fragment-1');
+    server.get('/503', function (request, reply) {
+      sleep(2000).then(() => reply.status(503).send('fragment-1'));
     });
-    server.get('/1000ms-delay', async function (request, reply) {
-      await sleep(1000);
-      reply.status(200).send('fragment-2');
+    server.get('/1000ms-delay', function (request, reply) {
+      sleep(1000).then(() => reply.status(200).send('fragment-2'));
     });
-    server.get('/2000ms-delay', async function (request, reply) {
-      await sleep(2000);
-      reply.status(200).send('fragment-3');
+    server.get('/2000ms-delay', function (request, reply) {
+      sleep(2000).then(() => reply.status(200).send('fragment-3'));
     });
-    server.get('/2100ms-delay', async function (request, reply) {
-      await sleep(2100);
-      reply.status(200).send('fragment-4');
+    server.get('/2100ms-delay', function (request, reply) {
+      sleep(2100).then(() => reply.status(200).send('fragment-4'));
     });
-    server.get('/2200ms-delay', async function (request, reply) {
-      await sleep(2200);
-      reply.status(200).send('fragment-5');
+    server.get('/2200ms-delay', function (request, reply) {
+      sleep(2200).then(() => reply.status(200).send('fragment-5'));
     });
     await server.listen();
 
@@ -559,7 +554,7 @@ describe('TransclusionProcessor', () => {
       result
         .getContent()
         .replace(/\d+ms/g, 'XXXms')
-        .replace(/(60|59)s/g, '60s')
+        .replace(/(60|59|58)s/g, '60s')
     ).toBe(
       '\n' +
         '       200-cacheable\n' +

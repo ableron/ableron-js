@@ -782,9 +782,8 @@ describe('Include', () => {
   it('should apply request timeout', async () => {
     // given
     server = Fastify();
-    server.get('/src', async function (request, reply) {
-      await sleep(2000);
-      reply.status(200).send('fragment from src');
+    server.get('/src', function (request, reply) {
+      sleep(2000).then(() => reply.status(200).send('fragment from src'));
     });
     await server.listen();
 
@@ -811,9 +810,8 @@ describe('Include', () => {
     async (srcAttributeName: string, timeoutAttribute: Map<string, string>, expectedFragmentContent: string) => {
       // given
       server = Fastify();
-      server.get('/', async function (request, reply) {
-        await sleep(1200);
-        reply.status(200).send('fragment');
+      server.get('/', function (request, reply) {
+        sleep(1200).then(() => reply.status(200).send('fragment'));
       });
       await server.listen();
 
@@ -1034,12 +1032,13 @@ describe('Include', () => {
     // given
     server = Fastify();
     let reqCounter = 0;
-    server.get('/src', async function (request, reply) {
-      await sleep(200);
-      reply
-        .status(200)
-        .header('Cache-Control', 'max-age=30')
-        .send('request ' + ++reqCounter);
+    server.get('/src', function (request, reply) {
+      sleep(200).then(() =>
+        reply
+          .status(200)
+          .header('Cache-Control', 'max-age=30')
+          .send('request ' + ++reqCounter)
+      );
     });
     await server.listen();
     const include = new Include('', new Map([['src', serverAddress('/src')]]));

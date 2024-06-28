@@ -64,18 +64,26 @@ export default class FragmentCache {
     this.autoRefreshTimers.set(
       cacheKey,
       setTimeout(() => {
-        autoRefresh().then((fragment) => {
-          this.autoRefreshTimers.delete(cacheKey);
+        try {
+          autoRefresh()
+            .then((fragment) => {
+              this.autoRefreshTimers.delete(cacheKey);
 
-          if (this.isFragmentCacheable(fragment)) {
-            const oldCacheEntry = this.get(cacheKey);
-            this.set(cacheKey, fragment!, autoRefresh);
-            this.handleSuccessfulCacheRefresh(cacheKey, oldCacheEntry);
-          } else {
-            this.handleFailedCacheRefreshAttempt(cacheKey, autoRefresh);
-          }
-        });
-      }, refreshDelayMs)
+              if (this.isFragmentCacheable(fragment)) {
+                const oldCacheEntry = this.get(cacheKey);
+                this.set(cacheKey, fragment!, autoRefresh);
+                this.handleSuccessfulCacheRefresh(cacheKey, oldCacheEntry);
+              } else {
+                this.handleFailedCacheRefreshAttempt(cacheKey, autoRefresh);
+              }
+            })
+            .catch((e: Error) => {
+              this.logger.error(`[Ableron] Unable to refresh cached fragment '${cacheKey}': ${e.stack || e.message}`);
+            });
+        } catch (e: any) {
+          this.logger.error(`[Ableron] Unable to refresh cached fragment '${cacheKey}': ${e.stack || e.message}`);
+        }
+      }, refreshDelayMs).unref()
     );
   }
 
