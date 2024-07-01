@@ -271,60 +271,22 @@ export default class Include {
               return null;
             }
 
-            let responseBody;
-
-            try {
-              responseBody = await response.text().catch((e: Error) => {
-                this.logger.error(`[Ableron] Unable to read response body of ${url}: ${e.stack || e.message}`);
-                return null;
-              });
-            } catch (e: any) {
-              this.logger.error(`[Ableron] Unable to read response body of ${url}: ${e.stack || e.message}`);
-              return null;
-            }
-
-            if (responseBody === null) {
-              return null;
-            }
-
             if (!HttpUtil.HTTP_STATUS_CODES_CACHEABLE.includes(response.status)) {
               this.logger.error(`[Ableron] Fragment ${this.id} returned status code ${response.status}`);
               this.recordErroredPrimaryFragment(
-                new Fragment(
-                  response.status,
-                  responseBody,
-                  url,
-                  undefined,
-                  this.filterHeaders(response.headers, config.primaryFragmentResponseHeadersToPass)
-                ),
+                await this.toFragment(response, url, config.primaryFragmentResponseHeadersToPass, true),
                 fragmentSource
               );
               return null;
             }
 
-            return new Fragment(
-              response.status,
-              responseBody,
-              url,
-              HttpUtil.calculateResponseExpirationTime(response.headers),
-              this.filterHeaders(response.headers, config.primaryFragmentResponseHeadersToPass)
-            );
+            return this.toFragment(response, url, config.primaryFragmentResponseHeadersToPass);
           })
           .then((fragment) => {
             if (fragment) {
               fragmentCache.set(fragmentCacheKey, fragment, () =>
                 HttpUtil.loadUrl(url, requestHeaders, requestTimeoutMillis).then(async (response: Response | null) => {
-                  if (!response) {
-                    return null;
-                  }
-
-                  return new Fragment(
-                    response.status,
-                    await response.text(),
-                    url,
-                    HttpUtil.calculateResponseExpirationTime(response.headers),
-                    this.filterHeaders(response.headers, config.primaryFragmentResponseHeadersToPass)
-                  );
+                  return response ? this.toFragment(response, url, config.primaryFragmentResponseHeadersToPass) : null;
                 })
               );
             }
@@ -342,6 +304,26 @@ export default class Include {
       this.resolvedFragmentSource = fragmentSource;
       return fragment;
     });
+  }
+
+  private async toFragment(
+    response: Response,
+    url: string,
+    primaryFragmentResponseHeadersToPass: string[],
+    preventCaching: boolean = false
+  ): Promise<Fragment> {
+    return response
+      .text()
+      .then(
+        (responseBody) =>
+          new Fragment(
+            response.status,
+            responseBody,
+            url,
+            preventCaching ? undefined : HttpUtil.calculateResponseExpirationTime(response.headers),
+            this.filterHeaders(response.headers, primaryFragmentResponseHeadersToPass)
+          )
+      );
   }
 
   private recordErroredPrimaryFragment(fragment: Fragment, fragmentSource: string): void {
