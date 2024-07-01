@@ -271,7 +271,21 @@ export default class Include {
               return null;
             }
 
-            const responseBody = await response.text();
+            let responseBody;
+
+            try {
+              responseBody = await response.text().catch((e: Error) => {
+                this.logger.error(`[Ableron] Unable to read response body of ${url}: ${e.stack || e.message}`);
+                return null;
+              });
+            } catch (e: any) {
+              this.logger.error(`[Ableron] Unable to read response body of ${url}: ${e.stack || e.message}`);
+              return null;
+            }
+
+            if (responseBody === null) {
+              return null;
+            }
 
             if (!HttpUtil.HTTP_STATUS_CODES_CACHEABLE.includes(response.status)) {
               this.logger.error(`[Ableron] Fragment ${this.id} returned status code ${response.status}`);
@@ -304,10 +318,9 @@ export default class Include {
                     return null;
                   }
 
-                  const responseBody = await response.text();
                   return new Fragment(
                     response.status,
-                    responseBody,
+                    await response.text(),
                     url,
                     HttpUtil.calculateResponseExpirationTime(response.headers),
                     this.filterHeaders(response.headers, config.primaryFragmentResponseHeadersToPass)
