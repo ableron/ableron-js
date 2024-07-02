@@ -4,8 +4,8 @@ import Fastify, { FastifyInstance } from 'fastify';
 import { AbleronConfig } from '../src/index.js';
 import TransclusionProcessor from '../src/transclusion-processor.js';
 import Fragment from '../src/fragment.js';
-import { NoOpLogger } from '../src/logger';
-import Stats from '../src/stats';
+import { NoOpLogger } from '../src/logger.js';
+import Stats from '../src/stats.js';
 
 const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay));
 
@@ -30,10 +30,14 @@ afterEach(async () => {
 
 function serverAddress(path: string): string {
   if (server) {
-    const address = ['127.0.0.1', '::1'].includes(server.addresses()[0].address)
-      ? 'localhost'
-      : server.addresses()[0].address;
-    return 'http://' + address + ':' + server.addresses()[0].port + '/' + path.replace(/^\//, '');
+    try {
+      const address = ['127.0.0.1', '::1'].includes(server.addresses()[0].address)
+        ? 'localhost'
+        : server.addresses()[0].address;
+      return `http://${address}:${server.addresses()[0].port}/${path.replace(/^\//, '')}`;
+    } catch (e) {
+      console.error('Unable to compose server address: ' + e);
+    }
   }
 
   return 'undefined';

@@ -21,10 +21,14 @@ afterEach(async () => {
 
 function serverAddress(path: string): string {
   if (server) {
-    const address = ['127.0.0.1', '::1'].includes(server.addresses()[0].address)
-      ? 'localhost'
-      : server.addresses()[0].address;
-    return 'http://' + address + ':' + server.addresses()[0].port + '/' + path.replace(/^\//, '');
+    try {
+      const address = ['127.0.0.1', '::1'].includes(server.addresses()[0].address)
+        ? 'localhost'
+        : server.addresses()[0].address;
+      return `http://${address}:${server.addresses()[0].port}/${path.replace(/^\//, '')}`;
+    } catch (e) {
+      console.error('Unable to compose server address: ' + e);
+    }
   }
 
   return 'undefined';
