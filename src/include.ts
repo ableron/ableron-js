@@ -3,7 +3,7 @@ import * as crypto from 'crypto';
 import AbleronConfig from './ableron-config.js';
 import HttpUtil from './http-util.js';
 import { LoggerInterface, NoOpLogger } from './logger.js';
-import Stats from './stats.js';
+import CacheStats from './cache-stats.js';
 import FragmentCache from './fragment-cache.js';
 
 export default class Include {
@@ -176,7 +176,7 @@ export default class Include {
   resolve(
     config: AbleronConfig,
     fragmentCache: FragmentCache,
-    stats: Stats,
+    stats: CacheStats,
     parentRequestHeaders?: Headers
   ): Promise<Include> {
     const resolveStartTime = Date.now();
@@ -254,7 +254,7 @@ export default class Include {
     fragmentCache: FragmentCache,
     config: AbleronConfig,
     urlSource: string,
-    stats: Stats
+    stats: CacheStats
   ): Promise<Fragment | null> {
     if (!url) {
       return null;
@@ -389,7 +389,11 @@ export default class Include {
     return cacheKey;
   }
 
-  private getFragmentFromCache(cacheKey: string, fragmentCache: FragmentCache, stats: Stats): Fragment | undefined {
+  private getFragmentFromCache(
+    cacheKey: string,
+    fragmentCache: FragmentCache,
+    stats: CacheStats
+  ): Fragment | undefined {
     const fragmentFromCache = fragmentCache.get(cacheKey);
 
     if (fragmentFromCache) {

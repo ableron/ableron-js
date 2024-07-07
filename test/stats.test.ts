@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import Stats from '../src/stats.js';
+import CacheStats from '../src/cache-stats.js';
 
-describe('Stats', () => {
+describe('CacheStats', () => {
   it('should record cache hit', () => {
     // given
-    const stats = new Stats();
+    const stats = new CacheStats();
 
     // expect
     expect(stats.getTotalCacheHits()).toBe(0);
@@ -16,7 +16,7 @@ describe('Stats', () => {
 
   it('should record cache miss', () => {
     // given
-    const stats = new Stats();
+    const stats = new CacheStats();
 
     // expect
     expect(stats.getTotalCacheMisses()).toBe(0);
@@ -28,7 +28,7 @@ describe('Stats', () => {
 
   it('should record successful cache refresh', () => {
     // given
-    const stats = new Stats();
+    const stats = new CacheStats();
 
     // expect
     expect(stats.getTotalSuccessfulCacheRefreshs()).toBe(0);
@@ -40,7 +40,7 @@ describe('Stats', () => {
 
   it('should record failed cache refresh', () => {
     // given
-    const stats = new Stats();
+    const stats = new CacheStats();
 
     // expect
     expect(stats.getTotalFailedCacheRefreshs()).toBe(0);

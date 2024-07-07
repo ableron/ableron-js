@@ -3,7 +3,7 @@ import TransclusionResult from './transclusion-result.js';
 import Include from './include.js';
 import Fragment from './fragment.js';
 import { LoggerInterface } from './logger.js';
-import Stats from './stats.js';
+import CacheStats from './cache-stats.js';
 import FragmentCache from './fragment-cache.js';
 
 export default class TransclusionProcessor {
@@ -23,7 +23,7 @@ export default class TransclusionProcessor {
 
   private readonly fragmentCache: FragmentCache;
 
-  private readonly stats: Stats = new Stats();
+  private readonly stats: CacheStats = new CacheStats();
 
   constructor(ableronConfig: AbleronConfig, logger: LoggerInterface) {
     this.ableronConfig = ableronConfig;

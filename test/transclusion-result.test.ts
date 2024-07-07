@@ -5,12 +5,12 @@ import Fragment from '../src/fragment.js';
 import Fastify, { FastifyInstance } from 'fastify';
 import TransclusionProcessor from '../src/transclusion-processor';
 import { NoOpLogger } from '../src/logger';
-import Stats from '../src/stats';
+import CacheStats from '../src/cache-stats';
 
 describe('TransclusionResult', () => {
   it('should return reasonable defaults', () => {
     // given
-    const transclusionResult = new TransclusionResult('content', new Stats());
+    const transclusionResult = new TransclusionResult('content', new CacheStats());
 
     // expect
     expect(transclusionResult.getContent()).toBe('content');
@@ -24,7 +24,7 @@ describe('TransclusionResult', () => {
 
   it('should set processing time', () => {
     // given
-    const transclusionResult = new TransclusionResult('content', new Stats());
+    const transclusionResult = new TransclusionResult('content', new CacheStats());
 
     // when
     transclusionResult.setProcessingTimeMillis(111);
@@ -35,7 +35,7 @@ describe('TransclusionResult', () => {
 
   it('should handle resolved include correctly', () => {
     // given
-    const transclusionResult = new TransclusionResult('content: <include>', new Stats());
+    const transclusionResult = new TransclusionResult('content: <include>', new CacheStats());
 
     // when
     transclusionResult.addResolvedInclude(
@@ -73,7 +73,7 @@ describe('TransclusionResult', () => {
     'should calculate cache control header value',
     (fragmentExpirationTime: Date, pageMaxAge: number | undefined, expectedCacheControlHeaderValue: string) => {
       // given
-      const transclusionResult = new TransclusionResult('content', new Stats());
+      const transclusionResult = new TransclusionResult('content', new CacheStats());
       transclusionResult.addResolvedInclude(
         new Include('').resolveWith(new Fragment(200, '', undefined, fragmentExpirationTime))
       );
@@ -106,7 +106,7 @@ describe('TransclusionResult', () => {
     'should calculate cache control header value based on given response headers',
     (fragmentExpirationTime: Date, responseHeaders: Headers, expectedCacheControlHeaderValue: string) => {
       // given
-      const transclusionResult = new TransclusionResult('content', new Stats());
+      const transclusionResult = new TransclusionResult('content', new CacheStats());
       transclusionResult.addResolvedInclude(
         new Include('').resolveWith(new Fragment(200, '', undefined, fragmentExpirationTime))
       );
@@ -120,16 +120,16 @@ describe('TransclusionResult', () => {
 
   it('should handle missing content expiration time when calculating cache control header value', () => {
     expect(
-      new TransclusionResult('', new Stats()).calculateCacheControlHeaderValueByResponseHeaders(new Headers())
+      new TransclusionResult('', new CacheStats()).calculateCacheControlHeaderValueByResponseHeaders(new Headers())
     ).toBe('no-store');
   });
 
   it('should not append stats to content by default', () => {
-    expect(new TransclusionResult('content', new Stats()).getContent()).toBe('content');
+    expect(new TransclusionResult('content', new CacheStats()).getContent()).toBe('content');
   });
 
   it('should append stats to content - zero includes', () => {
-    expect(new TransclusionResult('content', new Stats(), true).getContent()).toBe(
+    expect(new TransclusionResult('content', new CacheStats(), true).getContent()).toBe(
       'content\n' +
         '<!-- Ableron stats:\n' +
         'Processed 0 include(s) in 0ms\n' +
@@ -205,7 +205,7 @@ describe('TransclusionResult', () => {
 
   it('should not expose fragment URL to stats by default', () => {
     // given
-    const transclusionResult = new TransclusionResult('', new Stats(), true);
+    const transclusionResult = new TransclusionResult('', new CacheStats(), true);
 
     // when
     transclusionResult.addResolvedInclude(new Include('').resolveWith(new Fragment(200, '', 'example.com'), 71, 'src'));
@@ -227,7 +227,7 @@ describe('TransclusionResult', () => {
 
   it('should append stats for primary include', () => {
     // given
-    const transclusionResult = new TransclusionResult('', new Stats(), true);
+    const transclusionResult = new TransclusionResult('', new CacheStats(), true);
 
     // when
     transclusionResult.addResolvedInclude(
@@ -251,7 +251,7 @@ describe('TransclusionResult', () => {
 
   it('should append stats for multiple primary includes', () => {
     // given
-    const transclusionResult = new TransclusionResult('', new Stats(), true);
+    const transclusionResult = new TransclusionResult('', new CacheStats(), true);
 
     // when
     transclusionResult.addResolvedInclude(

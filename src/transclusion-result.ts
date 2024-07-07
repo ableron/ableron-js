@@ -3,7 +3,7 @@ import Fragment from './fragment.js';
 import HttpUtil from './http-util.js';
 import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http2';
 import { LoggerInterface, NoOpLogger } from './logger.js';
-import Stats from './stats.js';
+import CacheStats from './cache-stats.js';
 
 export default class TransclusionResult {
   private readonly logger: LoggerInterface;
@@ -12,7 +12,7 @@ export default class TransclusionResult {
   private hasPrimaryInclude: boolean = false;
   private statusCodeOverride?: number;
   private readonly responseHeadersToPass: Headers = new Headers();
-  private readonly stats: Stats;
+  private readonly stats: CacheStats;
   private readonly appendStatsToContent: boolean;
   private readonly exposeFragmentUrl: boolean;
   private processingTimeMillis: number = 0;
@@ -20,7 +20,7 @@ export default class TransclusionResult {
 
   constructor(
     content: string,
-    stats: Stats,
+    stats: CacheStats,
     appendStatsToContent: boolean = false,
     exposeFragmentUrl: boolean = false,
     logger?: LoggerInterface

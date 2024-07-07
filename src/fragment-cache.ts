@@ -3,7 +3,7 @@ import Fragment from './fragment.js';
 import { LoggerInterface } from './logger.js';
 import { clearTimeout } from 'timers';
 import HttpUtil from './http-util.js';
-import Stats from './stats.js';
+import CacheStats from './cache-stats.js';
 
 export default class FragmentCache {
   /**
@@ -17,9 +17,9 @@ export default class FragmentCache {
   private readonly autoRefreshTimers: Map<string, NodeJS.Timeout> = new Map();
   private readonly autoRefreshRetries: Map<string, number> = new Map();
   private readonly autoRefreshMaxRetries: number = 3;
-  private readonly stats: Stats;
+  private readonly stats: CacheStats;
 
-  constructor(autoRefreshEnabled: boolean, stats: Stats, logger: LoggerInterface) {
+  constructor(autoRefreshEnabled: boolean, stats: CacheStats, logger: LoggerInterface) {
     this.autoRefreshEnabled = autoRefreshEnabled;
     this.stats = stats;
     this.logger = logger;

@@ -5,7 +5,7 @@ import { AbleronConfig } from '../src/index.js';
 import TransclusionProcessor from '../src/transclusion-processor.js';
 import Fragment from '../src/fragment.js';
 import { NoOpLogger } from '../src/logger.js';
-import Stats from '../src/stats.js';
+import CacheStats from '../src/cache-stats.js';
 
 const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay));
 
@@ -14,12 +14,12 @@ const config = new AbleronConfig({
   fragmentRequestTimeoutMillis: 1000
 });
 const fragmentCache = new TransclusionProcessor(config, new NoOpLogger()).getFragmentCache();
-let stats: Stats;
+let stats: CacheStats;
 
 beforeEach(() => {
   server = undefined;
   fragmentCache.clear();
-  stats = new Stats();
+  stats = new CacheStats();
 });
 
 afterEach(async () => {

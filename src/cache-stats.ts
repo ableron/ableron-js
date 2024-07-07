@@ -1,4 +1,4 @@
-export default class Stats {
+export default class CacheStats {
   private totalCacheHits: number = 0;
   private totalCacheMisses: number = 0;
   private totalSuccessfulCacheRefreshs: number = 0;
