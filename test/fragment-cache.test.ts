@@ -25,7 +25,7 @@ describe('FragmentCache', () => {
       fragmentCache.set('fragment-' + i, new Fragment(200, 'fragment', undefined, new Date(Date.now() + 60000)));
     }
 
-    //then
+    // then
     // @ts-ignore
     expect(fragmentCache.cache.size).toBe(1000);
   });
