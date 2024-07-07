@@ -17,11 +17,10 @@ export default class FragmentCache {
   private readonly autoRefreshTimers: Map<string, NodeJS.Timeout> = new Map();
   private readonly autoRefreshRetries: Map<string, number> = new Map();
   private readonly autoRefreshMaxRetries: number = 3;
-  private readonly stats: CacheStats;
+  private readonly stats: CacheStats = new CacheStats();
 
-  constructor(autoRefreshEnabled: boolean, stats: CacheStats, logger: LoggerInterface) {
+  constructor(autoRefreshEnabled: boolean, logger: LoggerInterface) {
     this.autoRefreshEnabled = autoRefreshEnabled;
-    this.stats = stats;
     this.logger = logger;
     this.cache = this.initCache();
   }
@@ -62,6 +61,10 @@ export default class FragmentCache {
     this.autoRefreshRetries.clear();
     this.cache.clear();
     return this;
+  }
+
+  public getStats(): CacheStats {
+    return this.stats;
   }
 
   private registerAutoRefresh(

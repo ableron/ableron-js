@@ -3,7 +3,6 @@ import TransclusionResult from './transclusion-result.js';
 import Include from './include.js';
 import Fragment from './fragment.js';
 import { LoggerInterface } from './logger.js';
-import CacheStats from './cache-stats.js';
 import FragmentCache from './fragment-cache.js';
 
 export default class TransclusionProcessor {
@@ -23,12 +22,10 @@ export default class TransclusionProcessor {
 
   private readonly fragmentCache: FragmentCache;
 
-  private readonly cacheStats: CacheStats = new CacheStats();
-
   constructor(ableronConfig: AbleronConfig, logger: LoggerInterface) {
     this.ableronConfig = ableronConfig;
     this.logger = logger;
-    this.fragmentCache = new FragmentCache(this.ableronConfig.cacheAutoRefreshEnabled, this.cacheStats, this.logger);
+    this.fragmentCache = new FragmentCache(this.ableronConfig.cacheAutoRefreshEnabled, this.logger);
   }
 
   getFragmentCache(): FragmentCache {
@@ -54,7 +51,7 @@ export default class TransclusionProcessor {
     const startTime = Date.now();
     const transclusionResult = new TransclusionResult(
       content,
-      this.cacheStats,
+      this.fragmentCache.getStats(),
       this.ableronConfig.statsAppendToContent,
       this.ableronConfig.statsExposeFragmentUrl,
       this.logger
