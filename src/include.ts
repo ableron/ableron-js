@@ -3,7 +3,6 @@ import * as crypto from 'crypto';
 import AbleronConfig from './ableron-config.js';
 import HttpUtil from './http-util.js';
 import { LoggerInterface, NoOpLogger } from './logger.js';
-import CacheStats from './cache-stats.js';
 import FragmentCache from './fragment-cache.js';
 
 export default class Include {
@@ -173,12 +172,7 @@ export default class Include {
     return this.resolveTimeMillis;
   }
 
-  resolve(
-    config: AbleronConfig,
-    fragmentCache: FragmentCache,
-    stats: CacheStats,
-    parentRequestHeaders?: Headers
-  ): Promise<Include> {
+  resolve(config: AbleronConfig, fragmentCache: FragmentCache, parentRequestHeaders?: Headers): Promise<Include> {
     const resolveStartTime = Date.now();
     const fragmentRequestHeaders = this.filterHeaders(
       parentRequestHeaders || new Headers(),
@@ -192,8 +186,7 @@ export default class Include {
       this.getRequestTimeout(this.srcTimeoutMillis, config),
       fragmentCache,
       config,
-      this.ATTR_SOURCE,
-      stats
+      this.ATTR_SOURCE
     )
       .then(
         (fragment) =>
@@ -204,8 +197,7 @@ export default class Include {
             this.getRequestTimeout(this.fallbackSrcTimeoutMillis, config),
             fragmentCache,
             config,
-            this.ATTR_FALLBACK_SOURCE,
-            stats
+            this.ATTR_FALLBACK_SOURCE
           )
       )
       .then((fragment) => {
@@ -253,15 +245,14 @@ export default class Include {
     requestTimeoutMillis: number,
     fragmentCache: FragmentCache,
     config: AbleronConfig,
-    urlSource: string,
-    stats: CacheStats
+    urlSource: string
   ): Promise<Fragment | null> {
     if (!url) {
       return null;
     }
 
     const fragmentCacheKey = this.buildFragmentCacheKey(url, requestHeaders, config.cacheVaryByRequestHeaders);
-    const fragmentFromCache = this.getFragmentFromCache(fragmentCacheKey, fragmentCache, stats);
+    const fragmentFromCache = this.getFragmentFromCache(fragmentCacheKey, fragmentCache);
     const fragmentSource = (fragmentFromCache ? 'cached ' : 'remote ') + urlSource;
     const fragment: Promise<Fragment | null> = fragmentFromCache
       ? Promise.resolve(fragmentFromCache)
@@ -389,19 +380,7 @@ export default class Include {
     return cacheKey;
   }
 
-  private getFragmentFromCache(
-    cacheKey: string,
-    fragmentCache: FragmentCache,
-    stats: CacheStats
-  ): Fragment | undefined {
-    const fragmentFromCache = fragmentCache.get(cacheKey);
-
-    if (fragmentFromCache) {
-      stats.recordHit();
-    } else {
-      stats.recordMiss();
-    }
-
-    return fragmentFromCache;
+  private getFragmentFromCache(cacheKey: string, fragmentCache: FragmentCache): Fragment | undefined {
+    return fragmentCache.get(cacheKey);
   }
 }

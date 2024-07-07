@@ -12,7 +12,7 @@ export default class TransclusionResult {
   private hasPrimaryInclude: boolean = false;
   private statusCodeOverride?: number;
   private readonly responseHeadersToPass: Headers = new Headers();
-  private readonly stats: CacheStats;
+  private readonly cacheStats: CacheStats;
   private readonly appendStatsToContent: boolean;
   private readonly exposeFragmentUrl: boolean;
   private processingTimeMillis: number = 0;
@@ -20,14 +20,14 @@ export default class TransclusionResult {
 
   constructor(
     content: string,
-    stats: CacheStats,
+    cacheStats: CacheStats,
     appendStatsToContent: boolean = false,
     exposeFragmentUrl: boolean = false,
     logger?: LoggerInterface
   ) {
     this.logger = logger || new NoOpLogger();
     this.content = content;
-    this.stats = stats;
+    this.cacheStats = cacheStats;
     this.appendStatsToContent = appendStatsToContent;
     this.exposeFragmentUrl = exposeFragmentUrl;
   }
@@ -159,10 +159,10 @@ export default class TransclusionResult {
 
   private getCacheStats(): string {
     return (
-      `\n\nCache Stats: ${this.stats.getHitCount()} hits` +
-      `, ${this.stats.getMissCount()} misses` +
-      `, ${this.stats.getRefreshSuccessCount()} successful refreshs` +
-      `, ${this.stats.getRefreshFailureCount()} failed refreshs`
+      `\n\nCache Stats: ${this.cacheStats.getHitCount()} hits` +
+      `, ${this.cacheStats.getMissCount()} misses` +
+      `, ${this.cacheStats.getRefreshSuccessCount()} successful refreshs` +
+      `, ${this.cacheStats.getRefreshFailureCount()} failed refreshs`
     );
   }
 

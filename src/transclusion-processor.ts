@@ -23,12 +23,12 @@ export default class TransclusionProcessor {
 
   private readonly fragmentCache: FragmentCache;
 
-  private readonly stats: CacheStats = new CacheStats();
+  private readonly cacheStats: CacheStats = new CacheStats();
 
   constructor(ableronConfig: AbleronConfig, logger: LoggerInterface) {
     this.ableronConfig = ableronConfig;
     this.logger = logger;
-    this.fragmentCache = new FragmentCache(this.ableronConfig.cacheAutoRefreshEnabled, this.stats, this.logger);
+    this.fragmentCache = new FragmentCache(this.ableronConfig.cacheAutoRefreshEnabled, this.cacheStats, this.logger);
   }
 
   getFragmentCache(): FragmentCache {
@@ -54,7 +54,7 @@ export default class TransclusionProcessor {
     const startTime = Date.now();
     const transclusionResult = new TransclusionResult(
       content,
-      this.stats,
+      this.cacheStats,
       this.ableronConfig.statsAppendToContent,
       this.ableronConfig.statsExposeFragmentUrl,
       this.logger
@@ -63,7 +63,7 @@ export default class TransclusionProcessor {
       Array.from(this.findIncludes(content)).map((include) => {
         try {
           return include
-            .resolve(this.ableronConfig, this.fragmentCache, this.stats, parentRequestHeaders)
+            .resolve(this.ableronConfig, this.fragmentCache, parentRequestHeaders)
             .then(() => transclusionResult.addResolvedInclude(include))
             .catch((e) => this.handleResolveError(include, e, transclusionResult, startTime));
         } catch (e: any) {

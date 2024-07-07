@@ -27,7 +27,15 @@ export default class FragmentCache {
   }
 
   public get(cacheKey: string): Fragment | undefined {
-    return this.cache.get(cacheKey);
+    const fragmentFromCache = this.cache.get(cacheKey);
+
+    if (fragmentFromCache) {
+      this.stats.recordHit();
+    } else {
+      this.stats.recordMiss();
+    }
+
+    return fragmentFromCache;
   }
 
   public set(cacheKey: string, fragment: Fragment, autoRefresh?: () => Promise<Fragment | null>): this {
