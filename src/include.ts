@@ -252,7 +252,7 @@ export default class Include {
     }
 
     const fragmentCacheKey = this.buildFragmentCacheKey(url, requestHeaders, config.cacheVaryByRequestHeaders);
-    const fragmentFromCache = this.getFragmentFromCache(fragmentCacheKey, fragmentCache);
+    const fragmentFromCache = fragmentCache.get(fragmentCacheKey);
     const fragmentSource = (fragmentFromCache ? 'cached ' : 'remote ') + urlSource;
     const fragment: Promise<Fragment | null> = fragmentFromCache
       ? Promise.resolve(fragmentFromCache)
@@ -378,9 +378,5 @@ export default class Include {
       }
     });
     return cacheKey;
-  }
-
-  private getFragmentFromCache(cacheKey: string, fragmentCache: FragmentCache): Fragment | undefined {
-    return fragmentCache.get(cacheKey);
   }
 }
