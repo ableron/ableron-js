@@ -7,11 +7,11 @@ describe('CacheStats', () => {
     const stats = new CacheStats();
 
     // expect
-    expect(stats.getTotalCacheHits()).toBe(0);
-    stats.recordCacheHit();
-    expect(stats.getTotalCacheHits()).toBe(1);
-    stats.recordCacheHit();
-    expect(stats.getTotalCacheHits()).toBe(2);
+    expect(stats.getHitCount()).toBe(0);
+    stats.recordHit();
+    expect(stats.getHitCount()).toBe(1);
+    stats.recordHit();
+    expect(stats.getHitCount()).toBe(2);
   });
 
   it('should record cache miss', () => {
@@ -19,11 +19,11 @@ describe('CacheStats', () => {
     const stats = new CacheStats();
 
     // expect
-    expect(stats.getTotalCacheMisses()).toBe(0);
-    stats.recordCacheMiss();
-    expect(stats.getTotalCacheMisses()).toBe(1);
-    stats.recordCacheMiss();
-    expect(stats.getTotalCacheMisses()).toBe(2);
+    expect(stats.getMissCount()).toBe(0);
+    stats.recordMiss();
+    expect(stats.getMissCount()).toBe(1);
+    stats.recordMiss();
+    expect(stats.getMissCount()).toBe(2);
   });
 
   it('should record successful cache refresh', () => {
@@ -31,11 +31,11 @@ describe('CacheStats', () => {
     const stats = new CacheStats();
 
     // expect
-    expect(stats.getTotalSuccessfulCacheRefreshs()).toBe(0);
-    stats.recordSuccessfulCacheRefresh();
-    expect(stats.getTotalSuccessfulCacheRefreshs()).toBe(1);
-    stats.recordSuccessfulCacheRefresh();
-    expect(stats.getTotalSuccessfulCacheRefreshs()).toBe(2);
+    expect(stats.getRefreshSuccessCount()).toBe(0);
+    stats.recordRefreshSuccess();
+    expect(stats.getRefreshSuccessCount()).toBe(1);
+    stats.recordRefreshSuccess();
+    expect(stats.getRefreshSuccessCount()).toBe(2);
   });
 
   it('should record failed cache refresh', () => {
@@ -43,10 +43,10 @@ describe('CacheStats', () => {
     const stats = new CacheStats();
 
     // expect
-    expect(stats.getTotalFailedCacheRefreshs()).toBe(0);
-    stats.recordFailedCacheRefresh();
-    expect(stats.getTotalFailedCacheRefreshs()).toBe(1);
-    stats.recordFailedCacheRefresh();
-    expect(stats.getTotalFailedCacheRefreshs()).toBe(2);
+    expect(stats.getRefreshFailureCount()).toBe(0);
+    stats.recordRefreshFailure();
+    expect(stats.getRefreshFailureCount()).toBe(1);
+    stats.recordRefreshFailure();
+    expect(stats.getRefreshFailureCount()).toBe(2);
   });
 });

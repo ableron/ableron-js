@@ -397,9 +397,9 @@ export default class Include {
     const fragmentFromCache = fragmentCache.get(cacheKey);
 
     if (fragmentFromCache) {
-      stats.recordCacheHit();
+      stats.recordHit();
     } else {
-      stats.recordCacheMiss();
+      stats.recordMiss();
     }
 
     return fragmentFromCache;

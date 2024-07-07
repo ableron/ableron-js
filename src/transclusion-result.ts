@@ -159,10 +159,10 @@ export default class TransclusionResult {
 
   private getCacheStats(): string {
     return (
-      `\n\nCache Stats: ${this.stats.getTotalCacheHits()} hits` +
-      `, ${this.stats.getTotalCacheMisses()} misses` +
-      `, ${this.stats.getTotalSuccessfulCacheRefreshs()} successful refreshs` +
-      `, ${this.stats.getTotalFailedCacheRefreshs()} failed refreshs`
+      `\n\nCache Stats: ${this.stats.getHitCount()} hits` +
+      `, ${this.stats.getMissCount()} misses` +
+      `, ${this.stats.getRefreshSuccessCount()} successful refreshs` +
+      `, ${this.stats.getRefreshFailureCount()} failed refreshs`
     );
   }
 

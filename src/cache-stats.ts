@@ -1,38 +1,38 @@
 export default class CacheStats {
-  private totalCacheHits: number = 0;
-  private totalCacheMisses: number = 0;
-  private totalSuccessfulCacheRefreshs: number = 0;
-  private totalFailedCacheRefreshs: number = 0;
+  private hitCount: number = 0;
+  private missCount: number = 0;
+  private refreshSuccessCount: number = 0;
+  private refreshFailureCount: number = 0;
 
-  public getTotalCacheHits(): number {
-    return this.totalCacheHits;
+  public getHitCount(): number {
+    return this.hitCount;
   }
 
-  public recordCacheHit(): void {
-    this.totalCacheHits++;
+  public recordHit(): void {
+    this.hitCount++;
   }
 
-  public getTotalCacheMisses(): number {
-    return this.totalCacheMisses;
+  public getMissCount(): number {
+    return this.missCount;
   }
 
-  public recordCacheMiss(): void {
-    this.totalCacheMisses++;
+  public recordMiss(): void {
+    this.missCount++;
   }
 
-  public getTotalSuccessfulCacheRefreshs(): number {
-    return this.totalSuccessfulCacheRefreshs;
+  public getRefreshSuccessCount(): number {
+    return this.refreshSuccessCount;
   }
 
-  public recordSuccessfulCacheRefresh(): void {
-    this.totalSuccessfulCacheRefreshs++;
+  public recordRefreshSuccess(): void {
+    this.refreshSuccessCount++;
   }
 
-  public getTotalFailedCacheRefreshs(): number {
-    return this.totalFailedCacheRefreshs;
+  public getRefreshFailureCount(): number {
+    return this.refreshFailureCount;
   }
 
-  public recordFailedCacheRefresh(): void {
-    this.totalFailedCacheRefreshs++;
+  public recordRefreshFailure(): void {
+    this.refreshFailureCount++;
   }
 }
