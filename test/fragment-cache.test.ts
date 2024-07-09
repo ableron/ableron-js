@@ -60,6 +60,19 @@ describe('FragmentCache', () => {
     expect(fragmentCache.get('cacheKey')).toBeDefined();
   });
 
+  it('should handle cache refresh failure', async () => {
+    // given
+    fragmentCache.set('cacheKey', new Fragment(200, 'fragment', undefined, new Date(Date.now() + 1000)), () =>
+      Promise.resolve(null)
+    );
+
+    // when
+    await sleep(1200);
+
+    // then
+    expect(fragmentCache.get('cacheKey')).toBeUndefined();
+  });
+
   it('should use fragment expiration time as cache entry ttl', async () => {
     // when
     fragmentCache.set('key', new Fragment(200, 'fragment', undefined, new Date(Date.now() + 1000)));
