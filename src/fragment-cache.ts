@@ -81,7 +81,7 @@ export default class FragmentCache {
               this.autoRefreshTimers.delete(cacheKey);
 
               if (this.isFragmentCacheable(fragment)) {
-                const oldCacheEntry = this.get(cacheKey);
+                const oldCacheEntry = this.cache.get(cacheKey);
                 this.set(cacheKey, fragment!, autoRefresh);
                 this.handleSuccessfulCacheRefresh(cacheKey, oldCacheEntry);
               } else {

@@ -195,4 +195,18 @@ describe('FragmentCache', () => {
     // @ts-ignore
     expect(fragmentCache.autoRefreshRetries.size).toBe(0);
   });
+
+  it('should not pollute stats when refreshing cache', async () => {
+    // given
+    const newFragment = () => new Fragment(200, 'fragment', undefined, new Date(Date.now() + 200));
+    const fragmentCache = new FragmentCache(true, new NoOpLogger());
+    fragmentCache.set('key', newFragment(), () => Promise.resolve(newFragment()));
+
+    // expect
+    expect(fragmentCache.getStats().getHitCount()).toBe(0);
+    expect(fragmentCache.getStats().getMissCount()).toBe(0);
+    await sleep(750);
+    expect(fragmentCache.getStats().getHitCount()).toBe(0);
+    expect(fragmentCache.getStats().getMissCount()).toBe(0);
+  });
 });
