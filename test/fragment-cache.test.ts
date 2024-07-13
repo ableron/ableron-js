@@ -205,8 +205,12 @@ describe('FragmentCache', () => {
     // expect
     expect(fragmentCache.getStats().getHitCount()).toBe(0);
     expect(fragmentCache.getStats().getMissCount()).toBe(0);
+    expect(fragmentCache.getStats().getRefreshSuccessCount()).toBe(0);
+    expect(fragmentCache.getStats().getRefreshFailureCount()).toBe(0);
     await sleep(750);
     expect(fragmentCache.getStats().getHitCount()).toBe(0);
     expect(fragmentCache.getStats().getMissCount()).toBe(0);
+    expect(fragmentCache.getStats().getRefreshSuccessCount()).toBe(4);
+    expect(fragmentCache.getStats().getRefreshFailureCount()).toBe(0);
   });
 });

@@ -5,6 +5,7 @@ import { AbleronConfig } from '../src/index.js';
 import TransclusionProcessor from '../src/transclusion-processor.js';
 import Fragment from '../src/fragment.js';
 import { NoOpLogger } from '../src/logger.js';
+import FragmentCache from '../src/fragment-cache.js';
 
 const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay));
 
@@ -1148,5 +1149,28 @@ describe('Include', () => {
     expect(resolvedInclude2.getResolvedFragment().content).toBe('request 1');
     expect(resolvedInclude3.getResolvedFragment().content).toBe('request 1');
     expect(resolvedInclude4.getResolvedFragment().content).toBe('request 2');
+  });
+
+  it('should configure auto refresh for cached Fragments', async () => {
+    // given
+    server = Fastify();
+    server.get('/', function (request, reply) {
+      reply.status(200).header('Cache-Control', 'max-age=1').send('fragment');
+    });
+    await server.listen();
+    const fragmentCache = new FragmentCache(true, new NoOpLogger());
+
+    // when
+    for (let i = 0; i < 4; i++) {
+      await new Include('', new Map([['src', serverAddress('/')]]))
+        .resolve(new AbleronConfig({ cacheAutoRefreshEnabled: true }), fragmentCache)
+        .then(() => sleep(800));
+    }
+
+    // then
+    expect(fragmentCache.getStats().getHitCount()).toBe(3);
+    expect(fragmentCache.getStats().getMissCount()).toBe(1);
+    expect(fragmentCache.getStats().getRefreshSuccessCount()).toBe(3);
+    expect(fragmentCache.getStats().getRefreshFailureCount()).toBe(0);
   });
 });
