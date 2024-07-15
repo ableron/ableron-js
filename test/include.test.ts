@@ -1161,16 +1161,16 @@ describe('Include', () => {
     const fragmentCache = new FragmentCache(true, new NoOpLogger());
 
     // when
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 4; i++) {
       await new Include('', new Map([['src', serverAddress('/')]]))
         .resolve(new AbleronConfig({ cacheAutoRefreshEnabled: true }), fragmentCache)
-        .then(() => sleep(500));
+        .then(() => sleep(1000));
     }
 
     // then
-    expect(fragmentCache.getStats().getHitCount()).toBe(5);
+    expect(fragmentCache.getStats().getHitCount()).toBe(3);
     expect(fragmentCache.getStats().getMissCount()).toBe(1);
-    expect(fragmentCache.getStats().getRefreshSuccessCount()).toBe(3);
+    expect(fragmentCache.getStats().getRefreshSuccessCount()).toBe(4);
     expect(fragmentCache.getStats().getRefreshFailureCount()).toBe(0);
   });
 });
