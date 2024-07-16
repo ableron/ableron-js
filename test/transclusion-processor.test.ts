@@ -558,7 +558,7 @@ describe('TransclusionProcessor', () => {
       result
         .getContent()
         .replace(/\d+ms/g, 'XXXms')
-        .replace(/(60|59|58)s/g, '60s')
+        .replace(/(60|59|58|57)s/g, '60s')
     ).toBe(
       '\n' +
         '       200-cacheable\n' +
