@@ -115,8 +115,8 @@ export default class FragmentCache {
     this.stats.recordRefreshSuccess();
     this.logger.debug(
       oldCacheEntry
-        ? `[Ableron] Refreshed cache entry ${cacheKey} ${oldCacheEntry.expirationTime.getTime() - Date.now()}ms before expiration`
-        : `[Ableron] Refreshed already expired cache entry ${cacheKey} via auto refresh`
+        ? `[Ableron] Refreshed cache entry '${cacheKey}' ${oldCacheEntry.expirationTime.getTime() - Date.now()}ms before expiration`
+        : `[Ableron] Refreshed already expired cache entry '${cacheKey}' via auto refresh`
     );
   }
 
@@ -126,11 +126,11 @@ export default class FragmentCache {
     this.stats.recordRefreshFailure();
 
     if (retryCount < this.autoRefreshMaxRetries) {
-      this.logger.error(`[Ableron] Unable to refresh cache entry ${cacheKey}: Retry in 1s`);
+      this.logger.error(`[Ableron] Unable to refresh cache entry '${cacheKey}': Retry in 1s`);
       this.registerAutoRefresh(cacheKey, autoRefresh, 1000);
     } else {
       this.logger.error(
-        `[Ableron] Unable to refresh cache entry ${cacheKey}. ${this.autoRefreshMaxRetries} consecutive attempts failed`
+        `[Ableron] Unable to refresh cache entry '${cacheKey}'. ${this.autoRefreshMaxRetries} consecutive attempts failed`
       );
       this.autoRefreshRetries.delete(cacheKey);
     }

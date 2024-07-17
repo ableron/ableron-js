@@ -79,7 +79,7 @@ export default class TransclusionProcessor {
     resolveStartTimeMillis: number
   ): void {
     this.logger.error(
-      `[Ableron] Unable to resolve include ${include.getId()}: ${
+      `[Ableron] Unable to resolve include '${include.getId()}': ${
         e.stack || e.message + (e.cause ? ` (${e.cause})` : '')
       }`
     );

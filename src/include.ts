@@ -235,7 +235,7 @@ export default class Include {
     this.resolvedFragment = fragment;
     this.resolvedFragmentSource = resolvedFragmentSource;
     this.resolveTimeMillis = resolveTimeMillis || 0;
-    this.logger.debug('[Ableron] Resolved include %s in %dms', this.id, this.resolveTimeMillis);
+    this.logger.debug("[Ableron] Resolved include '%s' in %dms", this.id, this.resolveTimeMillis);
     return this;
   }
 
@@ -263,7 +263,7 @@ export default class Include {
             }
 
             if (!HttpUtil.HTTP_STATUS_CODES_CACHEABLE.includes(response.status)) {
-              this.logger.error(`[Ableron] Fragment ${this.id} returned status code ${response.status}`);
+              this.logger.error(`[Ableron] Fragment '${this.id}' returned status code ${response.status}`);
               this.recordErroredPrimaryFragment(
                 await this.toFragment(response, url, config.primaryFragmentResponseHeadersToPass, true),
                 fragmentSource
@@ -287,7 +287,7 @@ export default class Include {
 
     return fragment.then((fragment) => {
       if (fragment && !this.HTTP_STATUS_CODES_SUCCESS.includes(fragment.statusCode)) {
-        this.logger.error(`[Ableron] Fragment ${this.id} returned status code ${fragment.statusCode}`);
+        this.logger.error(`[Ableron] Fragment '${this.id}' returned status code ${fragment.statusCode}`);
         this.recordErroredPrimaryFragment(fragment, fragmentSource);
         return null;
       }
