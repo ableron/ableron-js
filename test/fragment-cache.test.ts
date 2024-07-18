@@ -20,14 +20,22 @@ beforeEach(() => {
 
 describe('FragmentCache', () => {
   it('should have limited capacity to prevent out of memory problems', () => {
+    // given
+    const fragmentCache = new TransclusionProcessor(
+      new AbleronConfig({
+        cacheMaxItems: 100
+      }),
+      new NoOpLogger()
+    ).getFragmentCache();
+
     // when
-    for (let i = 0; i < 1100; i++) {
-      fragmentCache.set('fragment-' + i, new Fragment(200, 'fragment', undefined, new Date(Date.now() + 60000)));
+    for (let i = 0; i < 150; i++) {
+      fragmentCache.set('fragment-' + i, new Fragment(200, 'fragment', undefined, new Date(Date.now() + 10000)));
     }
 
     // then
     // @ts-ignore
-    expect(fragmentCache.cache.size).toBe(1000);
+    expect(fragmentCache.cache.size).toBe(100);
   });
 
   it('should not auto refresh fragments if disabled', async () => {
@@ -199,7 +207,7 @@ describe('FragmentCache', () => {
   it('should not pollute stats when refreshing cache', async () => {
     // given
     const newFragment = () => new Fragment(200, 'fragment', undefined, new Date(Date.now() + 200));
-    const fragmentCache = new FragmentCache(true, new NoOpLogger());
+    const fragmentCache = new FragmentCache(10, true, new NoOpLogger());
     fragmentCache.set('key', newFragment(), () => Promise.resolve(newFragment()));
 
     // expect

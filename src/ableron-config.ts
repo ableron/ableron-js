@@ -37,6 +37,11 @@ export default class AbleronConfig {
   readonly primaryFragmentResponseHeadersToPass: string[] = ['Content-Language', 'Location', 'Refresh'];
 
   /**
+   * Maximum number of items, the fragment cache may hold.
+   */
+  readonly cacheMaxItems: number = 10000;
+
+  /**
    * Fragment request headers which influence the requested fragment aside from its URL.
    */
   readonly cacheVaryByRequestHeaders: string[] = [];

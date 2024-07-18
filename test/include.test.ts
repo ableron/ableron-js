@@ -1158,7 +1158,7 @@ describe('Include', () => {
       reply.status(200).header('Cache-Control', 'max-age=1').send('fragment');
     });
     await server.listen();
-    const fragmentCache = new FragmentCache(true, new NoOpLogger());
+    const fragmentCache = new FragmentCache(10, true, new NoOpLogger());
 
     // when
     for (let i = 0; i < 4; i++) {

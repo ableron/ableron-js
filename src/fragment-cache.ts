@@ -19,10 +19,10 @@ export default class FragmentCache {
   private readonly autoRefreshMaxRetries: number = 3;
   private readonly stats: CacheStats = new CacheStats();
 
-  constructor(autoRefreshEnabled: boolean, logger: LoggerInterface) {
+  constructor(maxItemCount: number, autoRefreshEnabled: boolean, logger: LoggerInterface) {
     this.autoRefreshEnabled = autoRefreshEnabled;
     this.logger = logger;
-    this.cache = this.initCache();
+    this.cache = this.initCache(maxItemCount);
   }
 
   public get(cacheKey: string): Fragment | undefined {
@@ -136,7 +136,7 @@ export default class FragmentCache {
     }
   }
 
-  private initCache(): TTLCache<string, Fragment> {
-    return new TTLCache({ max: 1000, checkAgeOnGet: false });
+  private initCache(maxItemCount: number): TTLCache<string, Fragment> {
+    return new TTLCache({ max: maxItemCount, checkAgeOnGet: false });
   }
 }

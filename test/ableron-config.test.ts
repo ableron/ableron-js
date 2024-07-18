@@ -24,6 +24,7 @@ describe('AbleronConfig', () => {
     ]);
     expect(config.fragmentAdditionalRequestHeadersToPass).toEqual([]);
     expect(config.primaryFragmentResponseHeadersToPass).toEqual(['Content-Language', 'Location', 'Refresh']);
+    expect(config.cacheMaxItems).toEqual(10000);
     expect(config.cacheVaryByRequestHeaders).toEqual([]);
     expect(config.statsAppendToContent).toBe(false);
     expect(config.statsExposeFragmentUrl).toBe(false);
@@ -37,6 +38,7 @@ describe('AbleronConfig', () => {
       fragmentRequestHeadersToPass: ['X-Test-Request-Header', 'X-Test-Request-Header-2'],
       fragmentAdditionalRequestHeadersToPass: ['X-Additional-Req-Header', 'X-Additional-Req-Header-2'],
       primaryFragmentResponseHeadersToPass: ['X-Test-Response-Header', 'X-Test-Response-Header-2'],
+      cacheMaxItems: 999,
       cacheVaryByRequestHeaders: ['X-ACME-Test-Groups'],
       statsAppendToContent: true,
       statsExposeFragmentUrl: true
@@ -51,6 +53,7 @@ describe('AbleronConfig', () => {
       'X-Additional-Req-Header-2'
     ]);
     expect(config.primaryFragmentResponseHeadersToPass).toEqual(['X-Test-Response-Header', 'X-Test-Response-Header-2']);
+    expect(config.cacheMaxItems).toEqual(999);
     expect(config.cacheVaryByRequestHeaders).toEqual(['X-ACME-Test-Groups']);
     expect(config.statsAppendToContent).toBe(true);
     expect(config.statsExposeFragmentUrl).toBe(true);

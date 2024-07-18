@@ -103,6 +103,12 @@ Default: `['Content-Language', 'Location', 'Refresh']`
 
 Response headers of primary fragments to pass to the page response, if present.
 
+#### `cacheMaxItems`
+
+Default: `10000`
+
+Maximum number of items, the fragment cache may hold.
+
 #### `cacheVaryByRequestHeaders`
 
 Default: `[]`
