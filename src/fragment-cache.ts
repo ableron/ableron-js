@@ -17,6 +17,9 @@ export default class FragmentCache {
   private readonly autoRefreshTimers: Map<string, NodeJS.Timeout> = new Map();
   private readonly autoRefreshRetries: Map<string, number> = new Map();
   private readonly autoRefreshMaxRetries: number = 3;
+  private readonly autoRefreshAliveCacheEntries: Set<string> = new Set();
+  private readonly autoRefreshInactiveEntryMaxRefreshCount: number = 5;
+  private readonly autoRefreshInactiveEntryRefreshCount: Map<string, number> = new Map();
   private readonly stats: CacheStats = new CacheStats();
 
   constructor(maxItemCount: number, autoRefreshEnabled: boolean, logger: LoggerInterface) {
@@ -30,6 +33,10 @@ export default class FragmentCache {
 
     if (fragmentFromCache) {
       this.stats.recordHit();
+
+      if (this.autoRefreshTimers.get(cacheKey)) {
+        this.autoRefreshAliveCacheEntries.add(cacheKey);
+      }
     } else {
       this.stats.recordMiss();
     }
@@ -59,6 +66,8 @@ export default class FragmentCache {
     this.autoRefreshTimers.forEach((value) => clearTimeout(value));
     this.autoRefreshTimers.clear();
     this.autoRefreshRetries.clear();
+    this.autoRefreshAliveCacheEntries.clear();
+    this.autoRefreshInactiveEntryRefreshCount.clear();
     this.cache.clear();
     return this;
   }
@@ -76,21 +85,27 @@ export default class FragmentCache {
       cacheKey,
       setTimeout(() => {
         try {
-          autoRefresh()
-            .then((fragment) => {
-              this.autoRefreshTimers.delete(cacheKey);
+          if (this.shouldPerformAutoRefresh(cacheKey)) {
+            autoRefresh()
+              .then((fragment) => {
+                this.autoRefreshTimers.delete(cacheKey);
 
-              if (this.isFragmentCacheable(fragment)) {
-                const oldCacheEntry = this.cache.get(cacheKey);
-                this.set(cacheKey, fragment!, autoRefresh);
-                this.handleSuccessfulCacheRefresh(cacheKey, oldCacheEntry);
-              } else {
-                this.handleFailedCacheRefreshAttempt(cacheKey, autoRefresh);
-              }
-            })
-            .catch((e: Error) => {
-              this.logger.error(`[Ableron] Unable to refresh cached fragment '${cacheKey}': ${e.stack || e.message}`);
-            });
+                if (this.isFragmentCacheable(fragment)) {
+                  const oldCacheEntry = this.cache.get(cacheKey);
+                  this.set(cacheKey, fragment!, autoRefresh);
+                  this.handleSuccessfulCacheRefresh(cacheKey, oldCacheEntry);
+                } else {
+                  this.handleFailedCacheRefreshAttempt(cacheKey, autoRefresh);
+                }
+              })
+              .catch((e: Error) => {
+                this.logger.error(`[Ableron] Unable to refresh cached fragment '${cacheKey}': ${e.stack || e.message}`);
+              });
+          } else {
+            this.logger.debug(
+              `[Ableron] Stopping auto refresh of fragment '${cacheKey}': Condition for continuing not satisfied`
+            );
+          }
         } catch (e: any) {
           this.logger.error(`[Ableron] Unable to refresh cached fragment '${cacheKey}': ${e.stack || e.message}`);
         }
@@ -100,6 +115,13 @@ export default class FragmentCache {
 
   private calculateFragmentRefreshDelay(fragmentTtl: number): number {
     return Math.max(Math.min(fragmentTtl * 0.85, FragmentCache.MAX_SET_TIMEOUT_DELAY_MS), 10);
+  }
+
+  private shouldPerformAutoRefresh(cacheKey: string): boolean {
+    return (
+      this.autoRefreshAliveCacheEntries.has(cacheKey) ||
+      this.autoRefreshInactiveEntryRefreshCount.get(cacheKey) !== this.autoRefreshInactiveEntryMaxRefreshCount
+    );
   }
 
   private isFragmentCacheable(fragment?: Fragment | null): boolean {
@@ -112,6 +134,17 @@ export default class FragmentCache {
 
   private handleSuccessfulCacheRefresh(cacheKey: string, oldCacheEntry?: Fragment): void {
     this.autoRefreshRetries.delete(cacheKey);
+
+    if (this.autoRefreshAliveCacheEntries.has(cacheKey)) {
+      this.autoRefreshAliveCacheEntries.delete(cacheKey);
+      this.autoRefreshInactiveEntryRefreshCount.delete(cacheKey);
+    } else {
+      this.autoRefreshInactiveEntryRefreshCount.set(
+        cacheKey,
+        (this.autoRefreshInactiveEntryRefreshCount.get(cacheKey) ?? 0) + 1
+      );
+    }
+
     this.stats.recordRefreshSuccess();
     this.logger.debug(
       oldCacheEntry
@@ -133,6 +166,8 @@ export default class FragmentCache {
         `[Ableron] Unable to refresh cache entry '${cacheKey}'. ${this.autoRefreshMaxRetries} consecutive attempts failed`
       );
       this.autoRefreshRetries.delete(cacheKey);
+      this.autoRefreshAliveCacheEntries.delete(cacheKey);
+      this.autoRefreshInactiveEntryRefreshCount.delete(cacheKey);
     }
   }
 
