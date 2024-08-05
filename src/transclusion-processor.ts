@@ -25,11 +25,7 @@ export default class TransclusionProcessor {
   constructor(ableronConfig: AbleronConfig, logger: LoggerInterface) {
     this.ableronConfig = ableronConfig;
     this.logger = logger;
-    this.fragmentCache = new FragmentCache(
-      this.ableronConfig.cacheMaxItems,
-      this.ableronConfig.cacheAutoRefreshEnabled,
-      this.logger
-    );
+    this.fragmentCache = new FragmentCache(this.ableronConfig, this.logger);
   }
 
   getFragmentCache(): FragmentCache {

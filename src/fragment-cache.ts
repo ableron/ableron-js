@@ -4,6 +4,7 @@ import { LoggerInterface } from './logger.js';
 import { clearTimeout } from 'timers';
 import HttpUtil from './http-util.js';
 import CacheStats from './cache-stats.js';
+import AbleronConfig from './ableron-config';
 
 export default class FragmentCache {
   /**
@@ -22,10 +23,10 @@ export default class FragmentCache {
   private readonly autoRefreshInactiveEntryRefreshCount: Map<string, number> = new Map();
   private readonly stats: CacheStats = new CacheStats();
 
-  constructor(maxItemCount: number, autoRefreshEnabled: boolean, logger: LoggerInterface) {
-    this.autoRefreshEnabled = autoRefreshEnabled;
+  constructor(config: AbleronConfig, logger: LoggerInterface) {
+    this.autoRefreshEnabled = config.cacheAutoRefreshEnabled;
     this.logger = logger;
-    this.cache = this.initCache(maxItemCount);
+    this.cache = this.initCache(config.cacheMaxItems);
   }
 
   public get(cacheKey: string): Fragment | undefined {

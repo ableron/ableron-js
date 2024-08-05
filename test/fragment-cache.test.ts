@@ -207,7 +207,10 @@ describe('FragmentCache', () => {
   it('should not pollute stats when refreshing cache', async () => {
     // given
     const newFragment = () => new Fragment(200, 'fragment', undefined, new Date(Date.now() + 200));
-    const fragmentCache = new FragmentCache(10, true, new NoOpLogger());
+    const fragmentCache = new FragmentCache(
+      new AbleronConfig({ cacheMaxItems: 10, cacheAutoRefreshEnabled: true }),
+      new NoOpLogger()
+    );
     fragmentCache.set('key', newFragment(), () => Promise.resolve(newFragment()));
 
     // expect
