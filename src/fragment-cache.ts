@@ -19,12 +19,13 @@ export default class FragmentCache {
   private readonly autoRefreshRetries: Map<string, number> = new Map();
   private readonly autoRefreshMaxRetries: number = 3;
   private readonly autoRefreshAliveCacheEntries: Set<string> = new Set();
-  private readonly autoRefreshInactiveEntryMaxRefreshCount: number = 5;
+  private readonly autoRefreshInactiveEntryMaxRefreshCount: number;
   private readonly autoRefreshInactiveEntryRefreshCount: Map<string, number> = new Map();
   private readonly stats: CacheStats = new CacheStats();
 
   constructor(config: AbleronConfig, logger: LoggerInterface) {
     this.autoRefreshEnabled = config.cacheAutoRefreshEnabled;
+    this.autoRefreshInactiveEntryMaxRefreshCount = config.cacheAutoRefreshInactiveEntryMaxRefreshs;
     this.logger = logger;
     this.cache = this.initCache(config.cacheMaxItems);
   }
