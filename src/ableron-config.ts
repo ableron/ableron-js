@@ -52,6 +52,13 @@ export default class AbleronConfig {
   readonly cacheAutoRefreshEnabled: boolean = false;
 
   /**
+   * Maximum number of consecutive refreshs of unused cached fragments.<br>
+   * A fragment is considered unused, if the cache has not been queried
+   * for the fragment between two cache refreshs.
+   */
+  readonly cacheAutoRefreshInactiveEntryMaxRefreshs: number = 2;
+
+  /**
    * Whether to append UI composition stats as HTML comment to the content.
    */
   readonly statsAppendToContent: boolean = false;
