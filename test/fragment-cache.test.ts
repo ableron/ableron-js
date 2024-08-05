@@ -120,6 +120,10 @@ describe('FragmentCache', () => {
     expect(fragmentCache.autoRefreshTimers.size).toBe(0);
     // @ts-ignore
     expect(fragmentCache.autoRefreshRetries.size).toBe(0);
+    // @ts-ignore
+    expect(fragmentCache.autoRefreshAliveCacheEntries.size).toBe(0);
+    // @ts-ignore
+    expect(fragmentCache.autoRefreshInactiveEntryRefreshCount.size).toBe(0);
   });
 
   it('should not auto refresh cached fragment when status code is not cacheable', async () => {
@@ -227,5 +231,33 @@ describe('FragmentCache', () => {
     expect(fragmentCache.getStats().getMissCount()).toBe(0);
     expect(fragmentCache.getStats().getRefreshSuccessCount()).toBe(4);
     expect(fragmentCache.getStats().getRefreshFailureCount()).toBe(0);
+  });
+
+  it('should stop refreshing unused fragments', async () => {
+    // given
+    const newFragment = () => new Fragment(200, 'fragment', undefined, new Date(Date.now() + 200));
+    const fragmentCache = new FragmentCache(
+      new AbleronConfig({
+        cacheMaxItems: 10,
+        cacheAutoRefreshEnabled: true,
+        cacheAutoRefreshInactiveEntryMaxRefreshs: 1
+      }),
+      new NoOpLogger()
+    );
+
+    // when
+    fragmentCache.set('key', newFragment(), () => Promise.resolve(newFragment()));
+    await sleep(400);
+
+    // then
+    expect(fragmentCache.getStats().getRefreshSuccessCount()).toBe(1);
+
+    // when
+    fragmentCache.set('key', newFragment(), () => Promise.resolve(newFragment()));
+    fragmentCache.get('key');
+    await sleep(400);
+
+    // then
+    expect(fragmentCache.getStats().getRefreshSuccessCount()).toBe(3);
   });
 });
