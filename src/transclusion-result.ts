@@ -99,15 +99,17 @@ export default class TransclusionResult {
     const now = new Date();
 
     if (
-      this.contentExpirationTime === undefined ||
-      this.contentExpirationTime < now ||
+      (this.contentExpirationTime && this.contentExpirationTime < now) ||
       pageMaxAgeInSeconds === undefined ||
       pageMaxAgeInSeconds <= 0
     ) {
       return 'no-store';
     }
 
-    if (this.contentExpirationTime < new Date(now.getTime() + pageMaxAgeInSeconds * 1000)) {
+    if (
+      this.contentExpirationTime &&
+      this.contentExpirationTime < new Date(now.getTime() + pageMaxAgeInSeconds * 1000)
+    ) {
       return 'max-age=' + Math.ceil(this.contentExpirationTime.getTime() / 1000 - now.getTime() / 1000);
     }
 

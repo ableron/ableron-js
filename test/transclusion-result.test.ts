@@ -124,6 +124,14 @@ describe('TransclusionResult', () => {
     ).toBe('no-store');
   });
 
+  it('should calculate content expiration time correctly for content without fragments', () => {
+    expect(
+      new TransclusionResult('', new CacheStats()).calculateCacheControlHeaderValueByResponseHeaders(
+        new Headers([['Cache-Control', 'max-age=60']])
+      )
+    ).toBe('max-age=60');
+  });
+
   it('should not append stats to content by default', () => {
     expect(new TransclusionResult('content', new CacheStats()).getContent()).toBe('content');
   });
