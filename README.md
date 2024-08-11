@@ -14,6 +14,15 @@ npm i @ableron/ableron
 
 ## Usage
 
+Normally, you do not want to use `ableron-js` directly, because intercepting and modifying
+the response body within your service may be tricky. Instead, you may want to use an existing
+framework integration, which uses `ableron-js` under the hood, e.g.
+
+- [ableron-express](https://github.com/ableron/ableron-express)
+- [ableron-fastify](https://github.com/ableron/ableron-fastify)
+
+To use `ableron-js` directly, do something like this:
+
 ```ts
 import { Ableron } from '@ableron/ableron';
 
