@@ -213,7 +213,6 @@ describe('FragmentCache', () => {
     const newFragment = () => new Fragment(200, 'fragment', undefined, new Date(Date.now() + 200));
     const fragmentCache = new FragmentCache(
       new AbleronConfig({
-        cacheMaxItems: 10,
         cacheAutoRefreshEnabled: true,
         cacheAutoRefreshInactiveEntryMaxRefreshs: 4
       }),
@@ -238,7 +237,6 @@ describe('FragmentCache', () => {
     const newFragment = () => new Fragment(200, 'fragment', undefined, new Date(Date.now() + 200));
     const fragmentCache = new FragmentCache(
       new AbleronConfig({
-        cacheMaxItems: 10,
         cacheAutoRefreshEnabled: true,
         cacheAutoRefreshInactiveEntryMaxRefreshs: 1
       }),
