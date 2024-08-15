@@ -27,6 +27,7 @@ describe('AbleronConfig', () => {
     expect(config.cacheMaxItems).toEqual(10000);
     expect(config.cacheVaryByRequestHeaders).toEqual([]);
     expect(config.cacheAutoRefreshEnabled).toBe(false);
+    expect(config.cacheAutoRefreshMaxAttempts).toBe(3);
     expect(config.cacheAutoRefreshInactiveEntryMaxRefreshs).toBe(2);
     expect(config.statsAppendToContent).toBe(false);
     expect(config.statsExposeFragmentUrl).toBe(false);
@@ -43,6 +44,7 @@ describe('AbleronConfig', () => {
       cacheMaxItems: 999,
       cacheVaryByRequestHeaders: ['X-ACME-Test-Groups'],
       cacheAutoRefreshEnabled: true,
+      cacheAutoRefreshMaxAttempts: 5,
       cacheAutoRefreshInactiveEntryMaxRefreshs: 7,
       statsAppendToContent: true,
       statsExposeFragmentUrl: true
@@ -60,6 +62,7 @@ describe('AbleronConfig', () => {
     expect(config.cacheMaxItems).toEqual(999);
     expect(config.cacheVaryByRequestHeaders).toEqual(['X-ACME-Test-Groups']);
     expect(config.cacheAutoRefreshEnabled).toBe(true);
+    expect(config.cacheAutoRefreshMaxAttempts).toBe(5);
     expect(config.cacheAutoRefreshInactiveEntryMaxRefreshs).toBe(7);
     expect(config.statsAppendToContent).toBe(true);
     expect(config.statsExposeFragmentUrl).toBe(true);

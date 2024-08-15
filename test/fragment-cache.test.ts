@@ -168,7 +168,7 @@ describe('FragmentCache', () => {
     expect(fragmentCache.get('key')).toBeDefined();
   });
 
-  it('should retry to refresh cache on failure with max 3 attempts', { timeout: 10000 }, async () => {
+  it('should make 3 attempts to refresh cached fragments', { timeout: 10000 }, async () => {
     // given
     let counter = 0;
     const newFragment = () => {
@@ -187,7 +187,7 @@ describe('FragmentCache', () => {
 
     // expect
     expect(fragmentCache.get('key')).toBeDefined();
-    await sleep(1100);
+    await sleep(1200);
     expect(fragmentCache.get('key')).toBeUndefined();
     await sleep(1000);
     expect(fragmentCache.get('key')).toBeUndefined();
@@ -196,7 +196,7 @@ describe('FragmentCache', () => {
     // @ts-ignore
     expect(fragmentCache.autoRefreshRetries.size).toBe(0);
 
-    await sleep(1100);
+    await sleep(1200);
     expect(fragmentCache.get('key')).toBeUndefined();
     await sleep(1000);
     expect(fragmentCache.get('key')).toBeUndefined();
