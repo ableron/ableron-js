@@ -16,8 +16,8 @@ export default class FragmentCache {
   private readonly cache: TTLCache<string, Fragment>;
   private readonly autoRefreshEnabled: boolean;
   private readonly autoRefreshMaxAttempts: number;
+  private readonly autoRefreshAttempts: Map<string, number> = new Map();
   private readonly autoRefreshTimers: Map<string, NodeJS.Timeout> = new Map();
-  private readonly autoRefreshRetries: Map<string, number> = new Map();
   private readonly autoRefreshAliveCacheEntries: Set<string> = new Set();
   private readonly autoRefreshInactiveEntryMaxRefreshCount: number;
   private readonly autoRefreshInactiveEntryRefreshCount: Map<string, number> = new Map();
@@ -68,7 +68,7 @@ export default class FragmentCache {
   public clear(): this {
     this.autoRefreshTimers.forEach((value) => clearTimeout(value));
     this.autoRefreshTimers.clear();
-    this.autoRefreshRetries.clear();
+    this.autoRefreshAttempts.clear();
     this.autoRefreshAliveCacheEntries.clear();
     this.autoRefreshInactiveEntryRefreshCount.clear();
     this.cache.clear();
@@ -137,7 +137,7 @@ export default class FragmentCache {
   }
 
   private handleSuccessfulCacheRefresh(cacheKey: string, oldCacheEntry?: Fragment): void {
-    this.autoRefreshRetries.delete(cacheKey);
+    this.autoRefreshAttempts.delete(cacheKey);
 
     if (this.autoRefreshAliveCacheEntries.has(cacheKey)) {
       this.autoRefreshAliveCacheEntries.delete(cacheKey);
@@ -158,18 +158,18 @@ export default class FragmentCache {
   }
 
   private handleFailedCacheRefreshAttempt(cacheKey: string, autoRefresh: () => Promise<Fragment | null>): void {
-    const failedAttempts = (this.autoRefreshRetries.get(cacheKey) ?? 0) + 1;
-    this.autoRefreshRetries.set(cacheKey, failedAttempts);
+    const attempts = (this.autoRefreshAttempts.get(cacheKey) ?? 0) + 1;
     this.stats.recordRefreshFailure();
 
-    if (failedAttempts < this.autoRefreshMaxAttempts) {
+    if (attempts < this.autoRefreshMaxAttempts) {
       this.logger.error(`[Ableron] Unable to refresh cache entry '${cacheKey}': Retry in 1s`);
+      this.autoRefreshAttempts.set(cacheKey, attempts);
       this.registerAutoRefresh(cacheKey, autoRefresh, 1000);
     } else {
       this.logger.error(
         `[Ableron] Unable to refresh cache entry '${cacheKey}'. ${this.autoRefreshMaxAttempts} consecutive attempts failed`
       );
-      this.autoRefreshRetries.delete(cacheKey);
+      this.autoRefreshAttempts.delete(cacheKey);
       this.autoRefreshAliveCacheEntries.delete(cacheKey);
       this.autoRefreshInactiveEntryRefreshCount.delete(cacheKey);
     }
