@@ -119,7 +119,7 @@ describe('FragmentCache', () => {
     // @ts-ignore
     expect(fragmentCache.autoRefreshTimers.size).toBe(0);
     // @ts-ignore
-    expect(fragmentCache.autoRefreshRetries.size).toBe(0);
+    expect(fragmentCache.autoRefreshAttempts.size).toBe(0);
     // @ts-ignore
     expect(fragmentCache.autoRefreshAliveCacheEntries.size).toBe(0);
     // @ts-ignore
@@ -194,7 +194,7 @@ describe('FragmentCache', () => {
     await sleep(1000);
     expect(fragmentCache.get('key')).toBeDefined();
     // @ts-ignore
-    expect(fragmentCache.autoRefreshRetries.size).toBe(0);
+    expect(fragmentCache.autoRefreshAttempts.size).toBe(0);
 
     await sleep(1200);
     expect(fragmentCache.get('key')).toBeUndefined();
@@ -205,7 +205,7 @@ describe('FragmentCache', () => {
     await sleep(1000);
     expect(fragmentCache.get('key')).toBeUndefined();
     // @ts-ignore
-    expect(fragmentCache.autoRefreshRetries.size).toBe(0);
+    expect(fragmentCache.autoRefreshAttempts.size).toBe(0);
   });
 
   it('should not pollute stats when refreshing cache', async () => {
