@@ -106,9 +106,7 @@ export default class FragmentCache {
               });
           } else {
             this.autoRefreshInactiveEntryRefreshCount.delete(cacheKey);
-            this.logger.debug(
-              `[Ableron] Stopping auto refresh of fragment '${cacheKey}': Condition for continuing not satisfied`
-            );
+            this.logger.debug(`[Ableron] Stopping auto refresh of fragment '${cacheKey}': Inactive fragment`);
           }
         } catch (e: any) {
           this.logger.error(`[Ableron] Unable to refresh cached fragment '${cacheKey}': ${e.stack || e.message}`);
@@ -152,8 +150,8 @@ export default class FragmentCache {
     this.stats.recordRefreshSuccess();
     this.logger.debug(
       oldCacheEntry
-        ? `[Ableron] Refreshed cache entry '${cacheKey}' ${oldCacheEntry.expirationTime.getTime() - Date.now()}ms before expiration`
-        : `[Ableron] Refreshed already expired cache entry '${cacheKey}' via auto refresh`
+        ? `[Ableron] Refreshed cached fragment '${cacheKey}' ${oldCacheEntry.expirationTime.getTime() - Date.now()}ms before expiration`
+        : `[Ableron] Refreshed expired cached fragment '${cacheKey}'`
     );
   }
 
@@ -162,12 +160,14 @@ export default class FragmentCache {
     this.stats.recordRefreshFailure();
 
     if (attempts < this.autoRefreshMaxAttempts) {
-      this.logger.error(`[Ableron] Unable to refresh cache entry '${cacheKey}': Retry in 1s`);
+      this.logger.error(
+        `[Ableron] Unable to refresh cached fragment '${cacheKey}': Attempt #${attempts} failed. Retry in 1s`
+      );
       this.autoRefreshAttempts.set(cacheKey, attempts);
       this.registerAutoRefresh(cacheKey, autoRefresh, 1000);
     } else {
       this.logger.error(
-        `[Ableron] Unable to refresh cache entry '${cacheKey}'. ${this.autoRefreshMaxAttempts} consecutive attempts failed`
+        `[Ableron] Unable to refresh cached fragment '${cacheKey}' after ${this.autoRefreshMaxAttempts} attempts. Stopping auto refresh`
       );
       this.autoRefreshAttempts.delete(cacheKey);
       this.autoRefreshAliveCacheEntries.delete(cacheKey);
