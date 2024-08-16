@@ -122,7 +122,7 @@ export default class FragmentCache {
   private shouldPerformAutoRefresh(cacheKey: string): boolean {
     return (
       this.activeFragments.has(cacheKey) ||
-      this.inactiveFragmentRefreshs.get(cacheKey) !== this.inactiveFragmentMaxRefreshs
+      (this.inactiveFragmentRefreshs.get(cacheKey) || 0) < this.inactiveFragmentMaxRefreshs
     );
   }
 
