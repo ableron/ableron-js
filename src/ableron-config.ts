@@ -57,9 +57,9 @@ export default class AbleronConfig {
   readonly cacheAutoRefreshMaxAttempts: number = 3;
 
   /**
-   * Maximum number of consecutive refreshs of unused cached fragments.<br>
-   * A fragment is considered unused, if the cache has not been queried
-   * for the fragment between two cache refreshs.
+   * Maximum number of consecutive refreshs of inactive cached fragments.<br>
+   * Fragments are considered inactive, if they have not been read from cache
+   * between writing to cache and a refresh attempt.
    */
   readonly cacheAutoRefreshInactiveFragmentMaxRefreshs: number = 2;
 
