@@ -117,13 +117,13 @@ describe('FragmentCache', () => {
     await sleep(300);
     expect(fragmentCache.get('key')).toBeUndefined();
     // @ts-ignore
-    expect(fragmentCache.autoRefreshTimers.size).toBe(0);
+    expect(fragmentCache.refreshTimers.size).toBe(0);
     // @ts-ignore
-    expect(fragmentCache.autoRefreshAttempts.size).toBe(0);
+    expect(fragmentCache.refreshAttempts.size).toBe(0);
     // @ts-ignore
-    expect(fragmentCache.autoRefreshAliveCacheEntries.size).toBe(0);
+    expect(fragmentCache.activeFragments.size).toBe(0);
     // @ts-ignore
-    expect(fragmentCache.autoRefreshInactiveEntryRefreshCount.size).toBe(0);
+    expect(fragmentCache.inactiveFragmentRefreshs.size).toBe(0);
   });
 
   it('should not auto refresh cached fragment when status code is not cacheable', async () => {
@@ -136,7 +136,7 @@ describe('FragmentCache', () => {
     await sleep(300);
     expect(fragmentCache.get('key')).toBeUndefined();
     // @ts-ignore
-    expect(fragmentCache.autoRefreshTimers.size).toBe(1);
+    expect(fragmentCache.refreshTimers.size).toBe(1);
   });
 
   it('should not auto refresh cached fragment when fragment is marked as not cacheable', async () => {
@@ -150,7 +150,7 @@ describe('FragmentCache', () => {
     await sleep(300);
     expect(fragmentCache.get('key')).toBeUndefined();
     // @ts-ignore
-    expect(fragmentCache.autoRefreshTimers.size).toBe(1);
+    expect(fragmentCache.refreshTimers.size).toBe(1);
   });
 
   it('should continuously refresh cache', async () => {
@@ -194,7 +194,7 @@ describe('FragmentCache', () => {
     await sleep(1000);
     expect(fragmentCache.get('key')).toBeDefined();
     // @ts-ignore
-    expect(fragmentCache.autoRefreshAttempts.size).toBe(0);
+    expect(fragmentCache.refreshAttempts.size).toBe(0);
 
     await sleep(1200);
     expect(fragmentCache.get('key')).toBeUndefined();
@@ -205,7 +205,7 @@ describe('FragmentCache', () => {
     await sleep(1000);
     expect(fragmentCache.get('key')).toBeUndefined();
     // @ts-ignore
-    expect(fragmentCache.autoRefreshAttempts.size).toBe(0);
+    expect(fragmentCache.refreshAttempts.size).toBe(0);
   });
 
   it('should not pollute stats when refreshing cache', async () => {
@@ -214,7 +214,7 @@ describe('FragmentCache', () => {
     const fragmentCache = new FragmentCache(
       new AbleronConfig({
         cacheAutoRefreshEnabled: true,
-        cacheAutoRefreshInactiveEntryMaxRefreshs: 4
+        cacheAutoRefreshInactiveFragmentMaxRefreshs: 4
       }),
       new NoOpLogger()
     );
@@ -238,7 +238,7 @@ describe('FragmentCache', () => {
     const fragmentCache = new FragmentCache(
       new AbleronConfig({
         cacheAutoRefreshEnabled: true,
-        cacheAutoRefreshInactiveEntryMaxRefreshs: 1
+        cacheAutoRefreshInactiveFragmentMaxRefreshs: 1
       }),
       new NoOpLogger()
     );

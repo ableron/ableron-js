@@ -61,7 +61,7 @@ export default class AbleronConfig {
    * A fragment is considered unused, if the cache has not been queried
    * for the fragment between two cache refreshs.
    */
-  readonly cacheAutoRefreshInactiveEntryMaxRefreshs: number = 2;
+  readonly cacheAutoRefreshInactiveFragmentMaxRefreshs: number = 2;
 
   /**
    * Whether to append UI composition stats as HTML comment to the content.
