@@ -19,14 +19,14 @@ export default class FragmentCache {
   private readonly refreshAttempts: Map<string, number> = new Map();
   private readonly refreshTimers: Map<string, NodeJS.Timeout> = new Map();
   private readonly activeFragments: Set<string> = new Set();
-  private readonly inactiveFragmentMaxRefreshs: number;
+  private readonly inactiveFragmentsMaxRefreshs: number;
   private readonly inactiveFragmentRefreshs: Map<string, number> = new Map();
   private readonly stats: CacheStats = new CacheStats();
 
   constructor(config: AbleronConfig, logger: LoggerInterface) {
     this.autoRefreshEnabled = config.cacheAutoRefreshEnabled;
     this.maxRefreshAttempts = config.cacheAutoRefreshMaxAttempts;
-    this.inactiveFragmentMaxRefreshs = config.cacheAutoRefreshInactiveFragmentMaxRefreshs;
+    this.inactiveFragmentsMaxRefreshs = config.cacheAutoRefreshInactiveFragmentsMaxRefreshs;
     this.logger = logger;
     this.cache = this.initCache(config.cacheMaxItems);
   }
@@ -122,7 +122,7 @@ export default class FragmentCache {
   private shouldPerformAutoRefresh(cacheKey: string): boolean {
     return (
       this.activeFragments.has(cacheKey) ||
-      (this.inactiveFragmentRefreshs.get(cacheKey) || 0) < this.inactiveFragmentMaxRefreshs
+      (this.inactiveFragmentRefreshs.get(cacheKey) || 0) < this.inactiveFragmentsMaxRefreshs
     );
   }
 

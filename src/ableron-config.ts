@@ -61,7 +61,7 @@ export default class AbleronConfig {
    * Fragments are considered inactive, if they have not been read from cache
    * between writing to cache and a refresh attempt.
    */
-  readonly cacheAutoRefreshInactiveFragmentMaxRefreshs: number = 2;
+  readonly cacheAutoRefreshInactiveFragmentsMaxRefreshs: number = 2;
 
   /**
    * Whether to append UI composition stats as HTML comment to the content.

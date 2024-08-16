@@ -214,7 +214,7 @@ describe('FragmentCache', () => {
     const fragmentCache = new FragmentCache(
       new AbleronConfig({
         cacheAutoRefreshEnabled: true,
-        cacheAutoRefreshInactiveFragmentMaxRefreshs: 4
+        cacheAutoRefreshInactiveFragmentsMaxRefreshs: 4
       }),
       new NoOpLogger()
     );
@@ -232,13 +232,13 @@ describe('FragmentCache', () => {
     expect(fragmentCache.getStats().getRefreshFailureCount()).toBe(0);
   });
 
-  it('should stop refreshing unused fragments with cacheAutoRefreshInactiveFragmentMaxRefreshs=1', async () => {
+  it('should stop refreshing unused fragments with cacheAutoRefreshInactiveFragmentsMaxRefreshs=1', async () => {
     // given
     const newFragment = () => new Fragment(200, 'fragment', undefined, new Date(Date.now() + 200));
     const fragmentCache = new FragmentCache(
       new AbleronConfig({
         cacheAutoRefreshEnabled: true,
-        cacheAutoRefreshInactiveFragmentMaxRefreshs: 1
+        cacheAutoRefreshInactiveFragmentsMaxRefreshs: 1
       }),
       new NoOpLogger()
     );
@@ -259,13 +259,13 @@ describe('FragmentCache', () => {
     expect(fragmentCache.getStats().getRefreshSuccessCount()).toBe(3);
   });
 
-  it('should stop refreshing unused fragments with cacheAutoRefreshInactiveFragmentMaxRefreshs=0', async () => {
+  it('should stop refreshing unused fragments with cacheAutoRefreshInactiveFragmentsMaxRefreshs=0', async () => {
     // given
     const newFragment = () => new Fragment(200, 'fragment', undefined, new Date(Date.now() + 200));
     const fragmentCache = new FragmentCache(
       new AbleronConfig({
         cacheAutoRefreshEnabled: true,
-        cacheAutoRefreshInactiveFragmentMaxRefreshs: 0
+        cacheAutoRefreshInactiveFragmentsMaxRefreshs: 0
       }),
       new NoOpLogger()
     );
