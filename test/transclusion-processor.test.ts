@@ -492,8 +492,8 @@ describe('TransclusionProcessor', () => {
       /^<!-- fallback content -->\n<!-- Ableron stats:\nProcessed 1 include\(s\) in \d+ms/gm
     );
     expect(result.getContent()).toMatch(/^\d+ms \| ce164c3 \| fallback content \| -$/gm);
-    expect(result.getContentExpirationTime().getTime()).toBeLessThanOrEqual(new Date(Date.now() + 60000).getTime());
-    expect(result.getContentExpirationTime().getTime()).toBeGreaterThanOrEqual(new Date(Date.now() + 58000).getTime());
+    expect(result.getContentExpirationTime()?.getTime()).toBeLessThanOrEqual(new Date(Date.now() + 60000).getTime());
+    expect(result.getContentExpirationTime()?.getTime()).toBeGreaterThanOrEqual(new Date(Date.now() + 58000).getTime());
   });
 
   it('should record stats', async () => {

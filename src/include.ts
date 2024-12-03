@@ -176,7 +176,7 @@ export default class Include {
     const resolveStartTime = Date.now();
     const fragmentRequestHeaders = this.filterHeaders(
       parentRequestHeaders || new Headers(),
-      config.fragmentRequestHeadersToPass.concat(config.fragmentAdditionalRequestHeadersToPass)
+      config.fragmentRequestHeadersToPass
     );
     this.erroredPrimaryFragment = undefined;
 

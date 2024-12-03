@@ -15,11 +15,6 @@ export default class AbleronConfig {
   readonly fragmentRequestHeadersToPass: string[] = ['Correlation-ID', 'X-Correlation-ID', 'X-Request-ID'];
 
   /**
-   * Request headers that are passed to fragment requests in addition to fragmentRequestHeadersToPass.
-   */
-  readonly fragmentAdditionalRequestHeadersToPass: string[] = [];
-
-  /**
    * Response headers of primary fragments to pass to the page response if present.
    */
   readonly primaryFragmentResponseHeadersToPass: string[] = ['Content-Language', 'Location', 'Refresh'];

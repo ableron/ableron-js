@@ -786,8 +786,7 @@ describe('Include', () => {
     // when
     await new Include('', new Map([['src', serverAddress('/src')]])).resolve(
       new AbleronConfig({
-        fragmentRequestHeadersToPass: ['X-Default'],
-        fragmentAdditionalRequestHeadersToPass: ['X-Additional']
+        fragmentRequestHeadersToPass: ['X-Default', 'X-Additional']
       }),
       fragmentCache,
       new Headers([
@@ -799,35 +798,6 @@ describe('Include', () => {
     // then
     expect(lastRecordedRequestHeaders['x-default']).toBe('Foo');
     expect(lastRecordedRequestHeaders['x-additional']).toBe('Bar');
-  });
-
-  it('should extend default allowed fragment request headers with additional allowed fragment request headers', async () => {
-    // given
-    server = Fastify();
-    let lastRecordedRequestHeaders: IncomingHttpHeaders = {};
-    server.get('/src', function (request, reply) {
-      lastRecordedRequestHeaders = request.headers;
-      reply.status(204).send();
-    });
-    await server.listen();
-
-    // when
-    await new Include('', new Map([['src', serverAddress('/src')]])).resolve(
-      new AbleronConfig({
-        fragmentAdditionalRequestHeadersToPass: ['X-Additional']
-      }),
-      fragmentCache,
-      new Headers([
-        ['X-Correlation-ID', 'Foo'],
-        ['X-Additional', 'Bar'],
-        ['X-Test', 'Baz']
-      ])
-    );
-
-    // then
-    expect(lastRecordedRequestHeaders['x-correlation-id']).toBe('Foo');
-    expect(lastRecordedRequestHeaders['x-additional']).toBe('Bar');
-    expect(lastRecordedRequestHeaders['x-test']).toBeUndefined();
   });
 
   it('should treat fragment request headers allow list as case insensitive', async () => {
