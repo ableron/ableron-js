@@ -81,11 +81,7 @@ Timeout in milliseconds for requesting fragments.
 Default:
 
 ```js
-[
-  'Correlation-ID',
-  'X-Correlation-ID',
-  'X-Request-ID'
-];
+['Correlation-ID', 'X-Correlation-ID', 'X-Request-ID'];
 ```
 
 Request headers that are passed to fragment requests, if present.
