@@ -6,6 +6,7 @@ import TransclusionProcessor from '../src/transclusion-processor.js';
 import Fragment from '../src/fragment.js';
 import { NoOpLogger } from '../src/logger.js';
 import FragmentCache from '../src/fragment-cache.js';
+import { IncomingHttpHeaders } from 'http2';
 
 const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay));
 
@@ -28,14 +29,10 @@ afterEach(async () => {
 
 function serverAddress(path: string): string {
   if (server) {
-    try {
-      const address = ['127.0.0.1', '::1'].includes(server.addresses()[0].address)
-        ? 'localhost'
-        : server.addresses()[0].address;
-      return `http://${address}:${server.addresses()[0].port}/${path.replace(/^\//, '')}`;
-    } catch (e) {
-      console.error('Unable to compose server address: ' + e);
-    }
+    const address = ['127.0.0.1', '::1'].includes(server.addresses()[0].address)
+      ? 'localhost'
+      : server.addresses()[0].address;
+    return `http://${address}:${server.addresses()[0].port}/${path.replace(/^\//, '')}`;
   }
 
   return 'undefined';
@@ -132,8 +129,8 @@ describe('Include', () => {
 
     // then
     expect(include.isResolved()).toBe(true);
-    expect(include.getResolvedFragment().content).toBe('response');
-    expect(include.getResolvedFragment().statusCode).toBe(206);
+    expect(include.getResolvedFragment()?.content).toBe('response');
+    expect(include.getResolvedFragment()?.statusCode).toBe(206);
     expect(include.getResolvedFragmentSource()).toBe('remote src');
     expect(include.getResolveTimeMillis()).toBeGreaterThan(0);
   });
@@ -160,8 +157,8 @@ describe('Include', () => {
 
     // then
     expect(include.isResolved()).toBe(true);
-    expect(include.getResolvedFragment().content).toBe('fragment from fallback-src');
-    expect(include.getResolvedFragment().statusCode).toBe(200);
+    expect(include.getResolvedFragment()?.content).toBe('fragment from fallback-src');
+    expect(include.getResolvedFragment()?.statusCode).toBe(200);
     expect(include.getResolvedFragmentSource()).toBe('remote fallback-src');
     expect(include.getResolveTimeMillis()).toBeGreaterThan(0);
   });
@@ -189,8 +186,8 @@ describe('Include', () => {
 
     // then
     expect(include.isResolved()).toBe(true);
-    expect(include.getResolvedFragment().content).toBe('fallback content');
-    expect(include.getResolvedFragment().statusCode).toBe(200);
+    expect(include.getResolvedFragment()?.content).toBe('fallback content');
+    expect(include.getResolvedFragment()?.statusCode).toBe(200);
     expect(include.getResolvedFragmentSource()).toBe('fallback content');
     expect(include.getResolveTimeMillis()).toBeGreaterThan(0);
   });
@@ -201,8 +198,8 @@ describe('Include', () => {
 
     // then
     expect(include.isResolved()).toBe(true);
-    expect(include.getResolvedFragment().content).toBe('');
-    expect(include.getResolvedFragment().statusCode).toBe(200);
+    expect(include.getResolvedFragment()?.content).toBe('');
+    expect(include.getResolvedFragment()?.statusCode).toBe(200);
     expect(include.getResolvedFragmentSource()).toBe('fallback content');
   });
 
@@ -225,8 +222,8 @@ describe('Include', () => {
 
     // then
     expect(include.isResolved()).toBe(true);
-    expect(include.getResolvedFragment().content).toBe('fragment from src');
-    expect(include.getResolvedFragment().statusCode).toBe(503);
+    expect(include.getResolvedFragment()?.content).toBe('fragment from src');
+    expect(include.getResolvedFragment()?.statusCode).toBe(503);
     expect(include.getResolvedFragmentSource()).toBe('remote src');
     expect(include.getResolveTimeMillis()).toBeGreaterThan(0);
   });
@@ -250,8 +247,8 @@ describe('Include', () => {
 
     // then
     expect(include.isResolved()).toBe(true);
-    expect(include.getResolvedFragment().content).toBe('fragment from fallback-src-503');
-    expect(include.getResolvedFragment().statusCode).toBe(503);
+    expect(include.getResolvedFragment()?.content).toBe('fragment from fallback-src-503');
+    expect(include.getResolvedFragment()?.statusCode).toBe(503);
     expect(include.getResolvedFragmentSource()).toBe('remote fallback-src');
     expect(include.getResolveTimeMillis()).toBeGreaterThan(0);
   });
@@ -279,8 +276,8 @@ describe('Include', () => {
 
     // then
     expect(include.isResolved()).toBe(true);
-    expect(include.getResolvedFragment().content).toBe('fragment from fallback-src');
-    expect(include.getResolvedFragment().statusCode).toBe(206);
+    expect(include.getResolvedFragment()?.content).toBe('fragment from fallback-src');
+    expect(include.getResolvedFragment()?.statusCode).toBe(206);
     expect(include.getResolvedFragmentSource()).toBe('remote fallback-src');
     expect(include.getResolveTimeMillis()).toBeGreaterThan(0);
   });
@@ -308,8 +305,8 @@ describe('Include', () => {
 
     // then
     expect(include.isResolved()).toBe(true);
-    expect(include.getResolvedFragment().content).toBe('fragment from src');
-    expect(include.getResolvedFragment().statusCode).toBe(503);
+    expect(include.getResolvedFragment()?.content).toBe('fragment from src');
+    expect(include.getResolvedFragment()?.statusCode).toBe(503);
     expect(include.getResolvedFragmentSource()).toBe('remote src');
     expect(include.getResolveTimeMillis()).toBeGreaterThan(0);
   });
@@ -343,8 +340,8 @@ describe('Include', () => {
 
     // then
     expect(include.isResolved()).toBe(true);
-    expect(include.getResolvedFragment().content).toBe('fragment from src');
-    expect(include.getResolvedFragment().statusCode).toBe(503);
+    expect(include.getResolvedFragment()?.content).toBe('fragment from src');
+    expect(include.getResolvedFragment()?.statusCode).toBe(503);
     expect(include.getResolvedFragmentSource()).toBe('remote src');
     expect(include.getResolveTimeMillis()).toBeGreaterThan(0);
 
@@ -353,8 +350,8 @@ describe('Include', () => {
 
     // then
     expect(include.isResolved()).toBe(true);
-    expect(include.getResolvedFragment().content).toBe('fragment from src 2nd call');
-    expect(include.getResolvedFragment().statusCode).toBe(504);
+    expect(include.getResolvedFragment()?.content).toBe('fragment from src 2nd call');
+    expect(include.getResolvedFragment()?.statusCode).toBe(504);
     expect(include.getResolvedFragmentSource()).toBe('remote src');
     expect(include.getResolveTimeMillis()).toBeGreaterThan(0);
   });
@@ -379,8 +376,8 @@ describe('Include', () => {
 
     // then
     expect(include.isResolved()).toBe(true);
-    expect(include.getResolvedFragment().content).toBe('fragment from src');
-    expect(include.getResolvedFragment().statusCode).toBe(503);
+    expect(include.getResolvedFragment()?.content).toBe('fragment from src');
+    expect(include.getResolvedFragment()?.statusCode).toBe(503);
     expect(include.getResolvedFragmentSource()).toBe('remote src');
     expect(include.getResolveTimeMillis()).toBeGreaterThan(0);
   });
@@ -404,8 +401,8 @@ describe('Include', () => {
 
     // then
     expect(include.isResolved()).toBe(true);
-    expect(include.getResolvedFragment().content).toBe('fallback content');
-    expect(include.getResolvedFragment().statusCode).toBe(200);
+    expect(include.getResolvedFragment()?.content).toBe('fallback content');
+    expect(include.getResolvedFragment()?.statusCode).toBe(200);
     expect(include.getResolvedFragmentSource()).toBe('fallback content');
     expect(include.getResolveTimeMillis()).toBeGreaterThan(0);
   });
@@ -430,8 +427,8 @@ describe('Include', () => {
 
       // then
       expect(include.isResolved()).toBe(true);
-      expect(include.getResolvedFragment().content).toBe(expectedFragmentContent);
-      expect(include.getResolvedFragment().statusCode).toBe(200);
+      expect(include.getResolvedFragment()?.content).toBe(expectedFragmentContent);
+      expect(include.getResolvedFragment()?.statusCode).toBe(200);
       expect(include.getResolvedFragmentSource()).toBe(expectedFragmentSource);
     }
   );
@@ -487,8 +484,8 @@ describe('Include', () => {
 
       // then
       expect(include.isResolved()).toBe(true);
-      expect(include.getResolvedFragment().content).toBe(expectedFragment);
-      expect(include.getResolvedFragment().statusCode).toBe(expectedFragmentStatusCode);
+      expect(include.getResolvedFragment()?.content).toBe(expectedFragment);
+      expect(include.getResolvedFragment()?.statusCode).toBe(expectedFragmentStatusCode);
       expect(include.getResolvedFragmentSource()).toBe(expectedFragment == ':(' ? 'fallback content' : 'remote src');
 
       if (expectedFragmentCached) {
@@ -517,7 +514,7 @@ describe('Include', () => {
 
     // then
     expect(include.isResolved()).toBe(true);
-    expect(include.getResolvedFragment().content).toBe('fragment from src');
+    expect(include.getResolvedFragment()?.content).toBe('fragment from src');
     expect(cachedFragment).toBeDefined();
     expect(cachedFragment.expirationTime < new Date(Date.now() + 604800000 + 1000)).toBe(true);
     expect(cachedFragment.expirationTime > new Date(Date.now() + 604800000 - 1000)).toBe(true);
@@ -541,7 +538,7 @@ describe('Include', () => {
 
     // then
     expect(include.isResolved()).toBe(true);
-    expect(include.getResolvedFragment().content).toBe('fragment from src');
+    expect(include.getResolvedFragment()?.content).toBe('fragment from src');
     expect(cachedFragment).toBeDefined();
     expect(cachedFragment.expirationTime < new Date(Date.now() + 3600000 + 1000)).toBe(true);
     expect(cachedFragment.expirationTime > new Date(Date.now() + 3600000 - 1000)).toBe(true);
@@ -560,7 +557,7 @@ describe('Include', () => {
     const cachedFragment = fragmentCache.get(serverAddress('/src')) as Fragment;
 
     // then
-    expect(include.getResolvedFragment().content).toBe('fragment from src');
+    expect(include.getResolvedFragment()?.content).toBe('fragment from src');
     expect(cachedFragment).toBeDefined();
     expect(cachedFragment.expirationTime < new Date(Date.now() + 3600000 + 1000)).toBe(true);
     expect(cachedFragment.expirationTime > new Date(Date.now() + 3600000 - 1000)).toBe(true);
@@ -584,7 +581,7 @@ describe('Include', () => {
     const cachedFragment = fragmentCache.get(serverAddress('/src')) as Fragment;
 
     // then
-    expect(include.getResolvedFragment().content).toBe('fragment from src');
+    expect(include.getResolvedFragment()?.content).toBe('fragment from src');
     expect(cachedFragment).toBeDefined();
     expect(cachedFragment.expirationTime < new Date(Date.now() + 3000000 + 1000)).toBe(true);
     expect(cachedFragment.expirationTime > new Date(Date.now() + 3000000 - 1000)).toBe(true);
@@ -608,7 +605,7 @@ describe('Include', () => {
     const cachedFragment = fragmentCache.get(serverAddress('/src')) as Fragment;
 
     // then
-    expect(include.getResolvedFragment().content).toBe('fragment from src');
+    expect(include.getResolvedFragment()?.content).toBe('fragment from src');
     expect(cachedFragment).toBeDefined();
     expect(cachedFragment.expirationTime < new Date(Date.now() + 3500000 + 1000)).toBe(true);
     expect(cachedFragment.expirationTime > new Date(Date.now() + 3500000 - 1000)).toBe(true);
@@ -631,7 +628,7 @@ describe('Include', () => {
     const cachedFragment = fragmentCache.get(serverAddress('/src')) as Fragment;
 
     // then
-    expect(include.getResolvedFragment().content).toBe('fragment from src');
+    expect(include.getResolvedFragment()?.content).toBe('fragment from src');
     expect(cachedFragment).toBeDefined();
     expect(cachedFragment.expirationTime.toUTCString()).toBe('Wed, 12 Oct 2050 07:28:00 GMT');
   });
@@ -648,7 +645,7 @@ describe('Include', () => {
     const include = await new Include('', new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
 
     // then
-    expect(include.getResolvedFragment().content).toBe('fragment from src');
+    expect(include.getResolvedFragment()?.content).toBe('fragment from src');
     expect(fragmentCache.get(serverAddress('/src'))).toBeUndefined();
   });
 
@@ -669,7 +666,7 @@ describe('Include', () => {
     const cachedFragment = fragmentCache.get(serverAddress('/src')) as Fragment;
 
     // then
-    expect(include.getResolvedFragment().content).toBe('fragment from src');
+    expect(include.getResolvedFragment()?.content).toBe('fragment from src');
     expect(cachedFragment).toBeDefined();
     expect(cachedFragment.expirationTime < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 + 1000)).toBe(true);
     expect(cachedFragment.expirationTime > new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 - 1000)).toBe(true);
@@ -687,7 +684,7 @@ describe('Include', () => {
     const include = await new Include('', new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
 
     // then
-    expect(include.getResolvedFragment().content).toBe('fragment from src');
+    expect(include.getResolvedFragment()?.content).toBe('fragment from src');
     expect(fragmentCache.get(serverAddress('/src'))).toBeUndefined();
   });
 
@@ -711,7 +708,7 @@ describe('Include', () => {
       const include = await new Include('', new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
 
       // then
-      expect(include.getResolvedFragment().content).toBe('fragment from src');
+      expect(include.getResolvedFragment()?.content).toBe('fragment from src');
     }
   );
 
@@ -727,7 +724,7 @@ describe('Include', () => {
     const include = await new Include('', new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
 
     // then
-    expect(include.getResolvedFragment().content).toBe('fragment from src');
+    expect(include.getResolvedFragment()?.content).toBe('fragment from src');
     expect(fragmentCache.get(serverAddress('/src'))).toBeUndefined();
   });
 
@@ -746,7 +743,7 @@ describe('Include', () => {
     );
 
     // then
-    expect(include.getResolvedFragment().content).toBe('fallback content');
+    expect(include.getResolvedFragment()?.content).toBe('fallback content');
   });
 
   it.each([
@@ -772,14 +769,14 @@ describe('Include', () => {
       const include = await new Include('', rawAttributes).resolve(config, fragmentCache);
 
       // then
-      expect(include.getResolvedFragment().content).toBe(expectedFragmentContent);
+      expect(include.getResolvedFragment()?.content).toBe(expectedFragmentContent);
     }
   );
 
   it('should pass allowed request headers to fragment requests', async () => {
     // given
     server = Fastify();
-    let lastRecordedRequestHeaders;
+    let lastRecordedRequestHeaders: IncomingHttpHeaders = {};
     server.get('/src', function (request, reply) {
       lastRecordedRequestHeaders = request.headers;
       reply.status(204).send();
@@ -800,14 +797,14 @@ describe('Include', () => {
     );
 
     // then
-    expect(new Headers(lastRecordedRequestHeaders).get('X-default')).toBe('Foo');
-    expect(new Headers(lastRecordedRequestHeaders).get('X-additional')).toBe('Bar');
+    expect(lastRecordedRequestHeaders['x-default']).toBe('Foo');
+    expect(lastRecordedRequestHeaders['x-additional']).toBe('Bar');
   });
 
   it('should extend default allowed fragment request headers with additional allowed fragment request headers', async () => {
     // given
     server = Fastify();
-    let lastRecordedRequestHeaders;
+    let lastRecordedRequestHeaders: IncomingHttpHeaders = {};
     server.get('/src', function (request, reply) {
       lastRecordedRequestHeaders = request.headers;
       reply.status(204).send();
@@ -828,15 +825,15 @@ describe('Include', () => {
     );
 
     // then
-    expect(new Headers(lastRecordedRequestHeaders).get('X-Correlation-ID')).toBe('Foo');
-    expect(new Headers(lastRecordedRequestHeaders).get('X-Additional')).toBe('Bar');
-    expect(new Headers(lastRecordedRequestHeaders).get('X-Test')).toBeNull;
+    expect(lastRecordedRequestHeaders['x-correlation-id']).toBe('Foo');
+    expect(lastRecordedRequestHeaders['x-additional']).toBe('Bar');
+    expect(lastRecordedRequestHeaders['x-test']).toBeUndefined();
   });
 
   it('should treat fragment request headers allow list as case insensitive', async () => {
     // given
     server = Fastify();
-    let lastRecordedRequestHeaders;
+    let lastRecordedRequestHeaders: IncomingHttpHeaders = {};
     server.get('/src', function (request, reply) {
       lastRecordedRequestHeaders = request.headers;
       reply.status(204).send();
@@ -851,13 +848,13 @@ describe('Include', () => {
     );
 
     // then
-    expect(new Headers(lastRecordedRequestHeaders).get('X-Test')).toBe('Foo');
+    expect(lastRecordedRequestHeaders['x-test']).toBe('Foo');
   });
 
   it('should not pass non-allowed request headers to fragment requests', async () => {
     // given
     server = Fastify();
-    let lastRecordedRequestHeaders;
+    let lastRecordedRequestHeaders: IncomingHttpHeaders = {};
     server.get('/src', function (request, reply) {
       lastRecordedRequestHeaders = request.headers;
       reply.status(204).send();
@@ -872,13 +869,13 @@ describe('Include', () => {
     );
 
     // then
-    expect(new Headers(lastRecordedRequestHeaders).get('X-Test')).toBeNull();
+    expect(lastRecordedRequestHeaders['x-test']).toBeUndefined();
   });
 
   it('should pass default User-Agent header to fragment requests', async () => {
     // given
     server = Fastify();
-    let lastRecordedRequestHeaders;
+    let lastRecordedRequestHeaders: IncomingHttpHeaders = {};
     server.get('/src', function (request, reply) {
       lastRecordedRequestHeaders = request.headers;
       reply.status(204).send();
@@ -889,15 +886,13 @@ describe('Include', () => {
     await new Include('', new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
 
     // then
-    expect(
-      ['undici', 'node'].includes(new Headers(lastRecordedRequestHeaders).get('User-Agent') as string)
-    ).toBeTruthy();
+    expect(lastRecordedRequestHeaders['user-agent']).toBe('Ableron/2.0');
   });
 
-  it('should pass provided User-Agent header to fragment requests by default', async () => {
+  it('should pass provided User-Agent header to fragment requests if enabled via fragmentRequestHeadersToPass', async () => {
     // given
     server = Fastify();
-    let lastRecordedRequestHeaders;
+    let lastRecordedRequestHeaders: IncomingHttpHeaders = {};
     server.get('/src', function (request, reply) {
       lastRecordedRequestHeaders = request.headers;
       reply.status(204).send();
@@ -906,13 +901,13 @@ describe('Include', () => {
 
     // when
     await new Include('', new Map([['src', serverAddress('/src')]])).resolve(
-      config,
+      new AbleronConfig({ fragmentRequestHeadersToPass: ['User-Agent'] }),
       fragmentCache,
-      new Headers([['user-agent', 'test']])
+      new Headers([['user-AGENT', 'test']])
     );
 
     // then
-    expect(new Headers(lastRecordedRequestHeaders).get('User-Agent')).toBe('test');
+    expect(lastRecordedRequestHeaders['user-agent']).toBe('test');
   });
 
   it('should pass allowed response headers of primary fragment to transclusion result', async () => {
@@ -930,7 +925,7 @@ describe('Include', () => {
     );
 
     // then
-    expect(include.getResolvedFragment().responseHeaders).toEqual(new Headers([['x-test', 'Test']]));
+    expect(include.getResolvedFragment()?.responseHeaders).toEqual(new Headers([['x-test', 'Test']]));
   });
 
   it('should not pass allowed response headers of non-primary fragment to transclusion result', async () => {
@@ -945,7 +940,7 @@ describe('Include', () => {
     const include = await new Include('', new Map([['src', serverAddress('/src')]])).resolve(config, fragmentCache);
 
     // then
-    expect(include.getResolvedFragment().responseHeaders).toEqual(new Headers());
+    expect(include.getResolvedFragment()?.responseHeaders).toEqual(new Headers());
   });
 
   it('should treat fragment response headers allow list as case insensitive', async () => {
@@ -966,7 +961,7 @@ describe('Include', () => {
     ).resolve(new AbleronConfig({ primaryFragmentResponseHeadersToPass: ['X-TeSt'] }), fragmentCache);
 
     // then
-    expect(include.getResolvedFragment().responseHeaders.get('x-test')).toBe('Test');
+    expect(include.getResolvedFragment()?.responseHeaders.get('x-test')).toBe('Test');
   });
 
   it('should not collapse requests', async () => {
@@ -1080,14 +1075,14 @@ describe('Include', () => {
     );
 
     // then
-    expect(resolvedInclude1.getResolvedFragment().content).toBe('request X-AB-Test=A | 1');
-    expect(resolvedInclude2.getResolvedFragment().content).toBe('request X-AB-Test=A | 1');
-    expect(resolvedInclude3.getResolvedFragment().content).toBe('request X-AB-Test=B | 2');
-    expect(resolvedInclude4.getResolvedFragment().content).toBe('request X-AB-Test=B | 2');
-    expect(resolvedInclude5.getResolvedFragment().content).toBe('request X-AB-Test=undefined | 3');
-    expect(resolvedInclude6.getResolvedFragment().content).toBe('request X-AB-Test=A | 1');
-    expect(resolvedInclude7.getResolvedFragment().content).toBe('request X-AB-Test=A | 4');
-    expect(resolvedInclude8.getResolvedFragment().content).toBe('request X-AB-Test=A | 4');
+    expect(resolvedInclude1.getResolvedFragment()?.content).toBe('request X-AB-Test=A | 1');
+    expect(resolvedInclude2.getResolvedFragment()?.content).toBe('request X-AB-Test=A | 1');
+    expect(resolvedInclude3.getResolvedFragment()?.content).toBe('request X-AB-Test=B | 2');
+    expect(resolvedInclude4.getResolvedFragment()?.content).toBe('request X-AB-Test=B | 2');
+    expect(resolvedInclude5.getResolvedFragment()?.content).toBe('request X-AB-Test=undefined | 3');
+    expect(resolvedInclude6.getResolvedFragment()?.content).toBe('request X-AB-Test=A | 1');
+    expect(resolvedInclude7.getResolvedFragment()?.content).toBe('request X-AB-Test=A | 4');
+    expect(resolvedInclude8.getResolvedFragment()?.content).toBe('request X-AB-Test=A | 4');
   });
 
   it('should use consistent order of cacheVaryByRequestHeaders for cache key generation', async () => {
@@ -1145,10 +1140,10 @@ describe('Include', () => {
     );
 
     // then
-    expect(resolvedInclude1.getResolvedFragment().content).toBe('request 1');
-    expect(resolvedInclude2.getResolvedFragment().content).toBe('request 1');
-    expect(resolvedInclude3.getResolvedFragment().content).toBe('request 1');
-    expect(resolvedInclude4.getResolvedFragment().content).toBe('request 2');
+    expect(resolvedInclude1.getResolvedFragment()?.content).toBe('request 1');
+    expect(resolvedInclude2.getResolvedFragment()?.content).toBe('request 1');
+    expect(resolvedInclude3.getResolvedFragment()?.content).toBe('request 1');
+    expect(resolvedInclude4.getResolvedFragment()?.content).toBe('request 2');
   });
 
   it('should configure auto refresh for cached Fragments', async () => {

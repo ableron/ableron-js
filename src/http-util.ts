@@ -13,6 +13,7 @@ export default abstract class HttpUtil {
   private static readonly HEADER_CACHE_CONTROL: string = 'Cache-Control';
   private static readonly HEADER_DATE: string = 'Date';
   private static readonly HEADER_EXPIRES: string = 'Expires';
+  private static readonly HEADER_USER_AGENT: string = 'User-Agent';
 
   public static loadUrl(
     url: string,
@@ -24,6 +25,10 @@ export default abstract class HttpUtil {
 
     try {
       requestHeaders.set('Accept-Encoding', 'gzip');
+
+      if (!requestHeaders.has(this.HEADER_USER_AGENT)) {
+        requestHeaders.set(this.HEADER_USER_AGENT, 'Ableron/2.0');
+      }
 
       return fetch(url, {
         headers: requestHeaders,
