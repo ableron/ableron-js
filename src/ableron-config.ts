@@ -12,19 +12,7 @@ export default class AbleronConfig {
   /**
    * Request headers that are passed to fragment requests if present.
    */
-  readonly fragmentRequestHeadersToPass: string[] = [
-    'Accept-Language',
-    'Correlation-ID',
-    'Forwarded',
-    'Referer',
-    'User-Agent',
-    'X-Correlation-ID',
-    'X-Forwarded-For',
-    'X-Forwarded-Proto',
-    'X-Forwarded-Host',
-    'X-Real-IP',
-    'X-Request-ID'
-  ];
+  readonly fragmentRequestHeadersToPass: string[] = ['Correlation-ID', 'X-Correlation-ID', 'X-Request-ID'];
 
   /**
    * Request headers that are passed to fragment requests in addition to fragmentRequestHeadersToPass.

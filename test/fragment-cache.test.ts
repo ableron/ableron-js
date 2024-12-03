@@ -86,7 +86,7 @@ describe('FragmentCache', () => {
     fragmentCache.set('key', new Fragment(200, 'fragment', undefined, new Date(Date.now() + 1000)));
 
     // then
-    expect(fragmentCache.get('key').content).toBe('fragment');
+    expect(fragmentCache.get('key')?.content).toBe('fragment');
 
     // and
     await sleep(1010);
@@ -180,7 +180,7 @@ describe('FragmentCache', () => {
         case 8:
           return new Fragment(200, 'fragment', undefined, new Date(Date.now() + 1000));
         default:
-          return null;
+          return new Fragment(500, '');
       }
     };
     fragmentCache.set('key', newFragment(), () => Promise.resolve(newFragment()));

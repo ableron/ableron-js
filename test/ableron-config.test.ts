@@ -9,19 +9,7 @@ describe('AbleronConfig', () => {
     // then
     expect(config.enabled).toBe(true);
     expect(config.fragmentRequestTimeoutMillis).toBe(3000);
-    expect(config.fragmentRequestHeadersToPass).toEqual([
-      'Accept-Language',
-      'Correlation-ID',
-      'Forwarded',
-      'Referer',
-      'User-Agent',
-      'X-Correlation-ID',
-      'X-Forwarded-For',
-      'X-Forwarded-Proto',
-      'X-Forwarded-Host',
-      'X-Real-IP',
-      'X-Request-ID'
-    ]);
+    expect(config.fragmentRequestHeadersToPass).toEqual(['Correlation-ID', 'X-Correlation-ID', 'X-Request-ID']);
     expect(config.fragmentAdditionalRequestHeadersToPass).toEqual([]);
     expect(config.primaryFragmentResponseHeadersToPass).toEqual(['Content-Language', 'Location', 'Refresh']);
     expect(config.cacheMaxItems).toEqual(10000);
