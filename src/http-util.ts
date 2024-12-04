@@ -15,39 +15,37 @@ export default abstract class HttpUtil {
   private static readonly HEADER_EXPIRES: string = 'Expires';
   private static readonly HEADER_USER_AGENT: string = 'User-Agent';
 
-  public static loadUrl(
+  public static async loadUrl(
     url: string,
     requestHeaders: Headers,
     requestTimeoutMillis: number,
     logger?: LoggerInterface
   ): Promise<Response | null> {
     logger && logger.debug(`[Ableron] Loading ${url} with timeout ${requestTimeoutMillis}ms`);
+    requestHeaders.set('Accept-Encoding', 'gzip');
+
+    if (!requestHeaders.has(this.HEADER_USER_AGENT)) {
+      requestHeaders.set(this.HEADER_USER_AGENT, 'Ableron/2.0');
+    }
 
     try {
-      requestHeaders.set('Accept-Encoding', 'gzip');
-
-      if (!requestHeaders.has(this.HEADER_USER_AGENT)) {
-        requestHeaders.set(this.HEADER_USER_AGENT, 'Ableron/2.0');
-      }
-
-      return fetch(url, {
+      return await fetch(url, {
         headers: requestHeaders,
         redirect: 'manual',
         signal: AbortSignal.timeout(requestTimeoutMillis)
-      }).catch((e: Error) => {
-        if (e.name === 'TimeoutError') {
-          logger && logger.error(`[Ableron] Unable to load ${url}: ${requestTimeoutMillis}ms timeout exceeded`);
-        } else {
-          logger && logger.error(`[Ableron] Unable to load ${url}: ${e?.message}${e?.cause ? ` (${e?.cause})` : ''}`);
-        }
-
-        return null;
       });
-    } catch (e) {
-      const error: Error = e as Error;
-      logger &&
-        logger.error(`[Ableron] Unable to load ${url}: ${error.message}${error.cause ? ` (${error.cause})` : ''}`);
-      return Promise.resolve(null);
+    } catch (e: any) {
+      if (logger) {
+        logger.error(
+          `[Ableron] Unable to load ${url}: ${
+            e?.name === 'TimeoutError'
+              ? `${requestTimeoutMillis}ms timeout exceeded`
+              : `${e?.message}${e?.cause ? ` (${e?.cause})` : ''}`
+          }`
+        );
+      }
+
+      return null;
     }
   }
 

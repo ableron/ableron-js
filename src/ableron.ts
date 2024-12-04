@@ -10,6 +10,7 @@ export default class Ableron {
   private readonly logger: LoggerInterface;
   private readonly ableronConfig: AbleronConfig;
   private readonly transclusionProcessor: TransclusionProcessor;
+  private readonly emptyCacheStats: CacheStats = new CacheStats();
 
   constructor(ableronConfig: Partial<AbleronConfig>, logger?: LoggerInterface) {
     this.logger = logger || new NoOpLogger();
@@ -40,6 +41,6 @@ export default class Ableron {
       return transclusionResult;
     }
 
-    return new TransclusionResult(content, new CacheStats(), false, false, this.logger);
+    return new TransclusionResult(content, this.emptyCacheStats, false, false, this.logger);
   }
 }
