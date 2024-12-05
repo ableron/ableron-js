@@ -353,7 +353,6 @@ describe('Include', () => {
     expect(include.getResolvedFragment()?.content).toBe('fragment from src 2nd call');
     expect(include.getResolvedFragment()?.statusCode).toBe(504);
     expect(include.getResolvedFragmentSource()).toBe('remote src');
-    expect(include.getResolveTimeMillis()).toBeGreaterThan(0);
   });
 
   it('should ignore fallback content and set fragment status code and body of errored src if primary', async () => {

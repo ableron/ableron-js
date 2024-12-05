@@ -38,7 +38,7 @@ describe('Ableron', () => {
     await ableron.resolveIncludes('', new Headers());
 
     // then
-    expect(logMessages[0]).toMatch(/^\[Ableron] Processed 0 include\(s\) in \d+ms$/);
+    expect(logMessages[0]).toMatch(/^\[Ableron] Processed 0 includes in \d+ms$/);
   });
 
   it('should create complete config', () => {

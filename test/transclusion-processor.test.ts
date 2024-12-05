@@ -21,14 +21,10 @@ afterEach(async () => {
 
 function serverAddress(path: string): string {
   if (server) {
-    try {
-      const address = ['127.0.0.1', '::1'].includes(server.addresses()[0].address)
-        ? 'localhost'
-        : server.addresses()[0].address;
-      return `http://${address}:${server.addresses()[0].port}/${path.replace(/^\//, '')}`;
-    } catch (e) {
-      console.error('Unable to compose server address: ' + e);
-    }
+    const address = ['127.0.0.1', '::1'].includes(server.addresses()[0].address)
+      ? 'localhost'
+      : server.addresses()[0].address;
+    return `http://${address}:${server.addresses()[0].port}/${path.replace(/^\//, '')}`;
   }
 
   return 'undefined';
@@ -229,8 +225,7 @@ describe('TransclusionProcessor', () => {
     <body>
     <ableron-include src="https://foo.bar/baz?test=789"><!-- failed loading 3rd include --></ableron-include>
     </body>
-    </html>`,
-      new Headers()
+    </html>`
     );
 
     // then
@@ -394,7 +389,7 @@ describe('TransclusionProcessor', () => {
       <!-- #1 -->
       <!-- #2 -->`
     );
-    expect(result.getContentExpirationTime() as Date).toEqual(new Date(0));
+    expect(result.getContentExpirationTime()).toEqual(new Date(0));
   });
 
   it.each([
@@ -489,7 +484,7 @@ describe('TransclusionProcessor', () => {
 
     // then
     expect(result.getContent()).toMatch(
-      /^<!-- fallback content -->\n<!-- Ableron stats:\nProcessed 1 include\(s\) in \d+ms/gm
+      /^<!-- fallback content -->\n<!-- Ableron stats:\nProcessed 1 include in \d+ms/gm
     );
     expect(result.getContent()).toMatch(/^\d+ms \| ce164c3 \| fallback content \| -$/gm);
     expect(result.getContentExpirationTime()?.getTime()).toBeLessThanOrEqual(new Date(Date.now() + 60000).getTime());
@@ -568,7 +563,7 @@ describe('TransclusionProcessor', () => {
         '       200-not-cacheable\n' +
         '       200-cacheable\n' +
         '<!-- Ableron stats:\n' +
-        'Processed 6 include(s) in XXXms\n' +
+        'Processed 6 includes in XXXms\n' +
         '\n' +
         'Time | Include | Resolved With | Fragment Cacheability\n' +
         '------------------------------------------------------\n' +

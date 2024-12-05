@@ -144,7 +144,7 @@ export default class TransclusionResult {
   }
 
   private getProcessedIncludesStats(): string {
-    let stats = `\nProcessed ${this.getProcessedIncludesCount()} include(s) in ${this.processingTimeMillis}ms`;
+    let stats = `\nProcessed ${this.getProcessedIncludesCount()} ${this.getProcessedIncludesCount() === 1 ? 'include' : 'includes'} in ${this.processingTimeMillis}ms`;
 
     if (this.processedIncludes.length) {
       stats +=
