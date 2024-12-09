@@ -86,30 +86,27 @@ export default class FragmentCache {
   ): void {
     this.refreshTimers.set(
       cacheKey,
-      setTimeout(() => {
+      setTimeout(async () => {
         this.refreshTimers.delete(cacheKey);
 
-        try {
-          if (this.shouldPerformAutoRefresh(cacheKey)) {
-            autoRefresh()
-              .then((fragment) => {
-                if (this.isFragmentCacheable(fragment)) {
-                  const oldCacheEntry = this.cache.get(cacheKey);
-                  this.set(cacheKey, fragment!, autoRefresh);
-                  this.handleSuccessfulCacheRefresh(cacheKey, oldCacheEntry);
-                } else {
-                  this.handleFailedCacheRefreshAttempt(cacheKey, autoRefresh);
-                }
-              })
-              .catch((e: Error) => {
-                this.logger.error(`[Ableron] Unable to refresh cached fragment '${cacheKey}': ${e.stack || e.message}`);
-              });
-          } else {
-            this.inactiveFragmentRefreshs.delete(cacheKey);
-            this.logger.debug(`[Ableron] Stopping auto refresh of fragment '${cacheKey}': Inactive fragment`);
+        if (this.shouldPerformAutoRefresh(cacheKey)) {
+          try {
+            const fragment = await autoRefresh();
+
+            if (this.isFragmentCacheable(fragment)) {
+              const oldCacheEntry = this.cache.get(cacheKey);
+              this.set(cacheKey, fragment!, autoRefresh);
+              this.handleSuccessfulCacheRefresh(cacheKey, oldCacheEntry);
+            } else {
+              this.handleFailedCacheRefreshAttempt(cacheKey, autoRefresh);
+            }
+          } catch (e: any) {
+            this.logger.error(`[Ableron] Unable to refresh cached fragment '${cacheKey}': ${e.stack || e.message}`);
+            this.handleFailedCacheRefreshAttempt(cacheKey, autoRefresh);
           }
-        } catch (e: any) {
-          this.logger.error(`[Ableron] Unable to refresh cached fragment '${cacheKey}': ${e.stack || e.message}`);
+        } else {
+          this.inactiveFragmentRefreshs.delete(cacheKey);
+          this.logger.debug(`[Ableron] Stopping auto refresh of fragment '${cacheKey}': Inactive fragment`);
         }
       }, refreshDelayMs).unref()
     );

@@ -180,7 +180,7 @@ describe('FragmentCache', () => {
         case 8:
           return new Fragment(200, 'fragment', undefined, new Date(Date.now() + 1000));
         default:
-          return new Fragment(500, '');
+          throw new Error('Refresh failed!');
       }
     };
     fragmentCache.set('key', newFragment(), () => Promise.resolve(newFragment()));
