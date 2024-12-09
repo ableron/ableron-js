@@ -31,14 +31,7 @@ export default class Ableron {
     parentRequestHeaders: Headers | IncomingHttpHeaders | OutgoingHttpHeaders | { [key: string]: string | string[] }
   ): Promise<TransclusionResult> {
     if (this.ableronConfig.enabled) {
-      const transclusionResult = await this.transclusionProcessor.resolveIncludes(
-        content,
-        HttpUtil.normalizeHeaders(parentRequestHeaders)
-      );
-      this.logger.debug(
-        `[Ableron] Processed ${transclusionResult.getProcessedIncludesCount()} ${transclusionResult.getProcessedIncludesCount() === 1 ? 'include' : 'includes'} in ${transclusionResult.getProcessingTimeMillis()}ms`
-      );
-      return transclusionResult;
+      return await this.transclusionProcessor.resolveIncludes(content, HttpUtil.normalizeHeaders(parentRequestHeaders));
     }
 
     return new TransclusionResult(content, this.emptyCacheStats, false, false, this.logger);

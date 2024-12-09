@@ -131,6 +131,10 @@ export default class TransclusionResult {
     return this.calculateCacheControlHeaderValue(pageMaxAge);
   }
 
+  getProcessedIncludesLogLine(): string {
+    return `Processed ${this.getProcessedIncludesCount()} ${this.getProcessedIncludesCount() === 1 ? 'include' : 'includes'} in ${this.processingTimeMillis}ms`;
+  }
+
   private getStats(): string {
     return this.getStatsHeader() + this.getProcessedIncludesStats() + this.getCacheStats() + this.getStatsFooter();
   }
@@ -144,7 +148,7 @@ export default class TransclusionResult {
   }
 
   private getProcessedIncludesStats(): string {
-    let stats = `\nProcessed ${this.getProcessedIncludesCount()} ${this.getProcessedIncludesCount() === 1 ? 'include' : 'includes'} in ${this.processingTimeMillis}ms`;
+    let stats = `\n${this.getProcessedIncludesLogLine()}`;
 
     if (this.processedIncludes.length) {
       stats +=
