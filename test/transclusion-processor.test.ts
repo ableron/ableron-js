@@ -483,9 +483,7 @@ describe('TransclusionProcessor', () => {
     );
 
     // then
-    expect(result.getContent()).toMatch(
-      /^<!-- fallback content -->\n<!-- Ableron stats:\nProcessed 1 include in \d+ms/gm
-    );
+    expect(result.getContent()).toMatch(/^<!-- fallback content -->\n<!-- Processed 1 include in \d+ms/gm);
     expect(result.getContent()).toMatch(/^\d+ms \| ce164c3 \| fallback content \| -$/gm);
     expect(result.getContentExpirationTime()?.getTime()).toBeLessThanOrEqual(new Date(Date.now() + 60000).getTime());
     expect(result.getContentExpirationTime()?.getTime()).toBeGreaterThanOrEqual(new Date(Date.now() + 58000).getTime());
@@ -562,8 +560,7 @@ describe('TransclusionProcessor', () => {
         '       404\n' +
         '       200-not-cacheable\n' +
         '       200-cacheable\n' +
-        '<!-- Ableron stats:\n' +
-        'Processed 6 includes in XXXms\n' +
+        '<!-- Processed 6 includes in XXXms\n' +
         '\n' +
         'Time | Include | Resolved With | Fragment Cacheability\n' +
         '------------------------------------------------------\n' +

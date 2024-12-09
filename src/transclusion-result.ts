@@ -136,19 +136,13 @@ export default class TransclusionResult {
   }
 
   private getStats(): string {
-    return this.getStatsHeader() + this.getProcessedIncludesStats() + this.getCacheStats() + this.getStatsFooter();
-  }
-
-  private getStatsHeader(): string {
-    return '\n<!-- Ableron stats:';
-  }
-
-  private getStatsFooter(): string {
-    return '\n-->';
+    return (
+      '\n<!-- ' + this.getProcessedIncludesLogLine() + this.getProcessedIncludesStats() + this.getCacheStats() + '\n-->'
+    );
   }
 
   private getProcessedIncludesStats(): string {
-    let stats = `\n${this.getProcessedIncludesLogLine()}`;
+    let stats = '';
 
     if (this.processedIncludes.length) {
       stats +=

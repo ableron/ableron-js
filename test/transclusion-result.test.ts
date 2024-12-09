@@ -139,8 +139,7 @@ describe('TransclusionResult', () => {
   it('should append stats to content - zero includes', () => {
     expect(new TransclusionResult('content', new CacheStats(), true).getContent()).toBe(
       'content\n' +
-        '<!-- Ableron stats:\n' +
-        'Processed 0 includes in 0ms\n' +
+        '<!-- Processed 0 includes in 0ms\n' +
         '\n' +
         'Cache Stats: 0 hits, 0 misses, 0 successful refreshs, 0 failed refreshs\n' +
         '-->'
@@ -196,8 +195,7 @@ describe('TransclusionResult', () => {
         '       uncacheable-fragment\n' +
         '       cacheable-fragment-1\n' +
         '       cacheable-fragment-2\n' +
-        '<!-- Ableron stats:\n' +
-        'Processed 4 includes in XXXms\n' +
+        '<!-- Processed 4 includes in XXXms\n' +
         '\n' +
         'Time | Include | Resolved With | Fragment Cacheability | Fragment URL\n' +
         '------------------------------------------------------\n' +
@@ -221,8 +219,7 @@ describe('TransclusionResult', () => {
     // then
     expect(transclusionResult.getContent()).toBe(
       '\n' +
-        '<!-- Ableron stats:\n' +
-        'Processed 1 include in 0ms\n' +
+        '<!-- Processed 1 include in 0ms\n' +
         '\n' +
         'Time | Include | Resolved With | Fragment Cacheability\n' +
         '------------------------------------------------------\n' +
@@ -245,8 +242,7 @@ describe('TransclusionResult', () => {
     // then
     expect(transclusionResult.getContent()).toBe(
       '\n' +
-        '<!-- Ableron stats:\n' +
-        'Processed 1 include in 0ms\n' +
+        '<!-- Processed 1 include in 0ms\n' +
         '\n' +
         'Time | Include | Resolved With | Fragment Cacheability\n' +
         '------------------------------------------------------\n' +
@@ -272,8 +268,7 @@ describe('TransclusionResult', () => {
     // then
     expect(transclusionResult.getContent()).toBe(
       '\n' +
-        '<!-- Ableron stats:\n' +
-        'Processed 2 includes in 0ms\n' +
+        '<!-- Processed 2 includes in 0ms\n' +
         '\n' +
         'Time | Include | Resolved With | Fragment Cacheability\n' +
         '------------------------------------------------------\n' +
