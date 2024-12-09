@@ -33,7 +33,7 @@ export default class TransclusionResult {
   }
 
   getContent(): string {
-    return this.appendStatsToContent ? this.content + this.getStats() : this.content;
+    return this.appendStatsToContent ? this.content + this.getStatsAsHtmlComment() : this.content;
   }
 
   getContentExpirationTime(): Date | undefined {
@@ -135,13 +135,17 @@ export default class TransclusionResult {
     return `Processed ${this.getProcessedIncludesCount()} ${this.getProcessedIncludesCount() === 1 ? 'include' : 'includes'} in ${this.processingTimeMillis}ms`;
   }
 
-  private getStats(): string {
+  private getStatsAsHtmlComment(): string {
     return (
-      '\n<!-- ' + this.getProcessedIncludesLogLine() + this.getProcessedIncludesStats() + this.getCacheStats() + '\n-->'
+      '\n<!-- ' +
+      this.getProcessedIncludesLogLine() +
+      this.getProcessedIncludesDetails() +
+      this.getCacheStats() +
+      '\n-->'
     );
   }
 
-  private getProcessedIncludesStats(): string {
+  private getProcessedIncludesDetails(): string {
     let stats = '';
 
     if (this.processedIncludes.length) {
@@ -159,7 +163,8 @@ export default class TransclusionResult {
 
   private getCacheStats(): string {
     return (
-      `\n\nCache Stats: ${this.cacheStats.getHitCount()} hits` +
+      `\n\nCache: ${this.cacheStats.getItemCount()} items` +
+      `, ${this.cacheStats.getHitCount()} hits` +
       `, ${this.cacheStats.getMissCount()} misses` +
       `, ${this.cacheStats.getRefreshSuccessCount()} successful refreshs` +
       `, ${this.cacheStats.getRefreshFailureCount()} failed refreshs`

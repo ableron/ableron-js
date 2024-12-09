@@ -44,6 +44,7 @@ export default class FragmentCache {
       this.stats.recordMiss();
     }
 
+    this.stats.setItemCount(this.cache.size);
     return fragmentFromCache;
   }
 
