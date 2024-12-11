@@ -135,12 +135,23 @@ export default class TransclusionResult {
     return `Processed ${this.getProcessedIncludesCount()} ${this.getProcessedIncludesCount() === 1 ? 'include' : 'includes'} in ${this.processingTimeMillis}ms`;
   }
 
+  getCacheStatsLogLine(): string {
+    return (
+      `Cache: ${this.cacheStats.getItemCount()} items` +
+      `, ${this.cacheStats.getHitCount()} hits` +
+      `, ${this.cacheStats.getMissCount()} misses` +
+      `, ${this.cacheStats.getRefreshSuccessCount()} successful refreshs` +
+      `, ${this.cacheStats.getRefreshFailureCount()} failed refreshs`
+    );
+  }
+
   private getStatsAsHtmlComment(): string {
     return (
       '\n<!-- ' +
       this.getProcessedIncludesLogLine() +
       this.getProcessedIncludesDetails() +
-      this.getCacheStats() +
+      '\n\n' +
+      this.getCacheStatsLogLine() +
       '\n-->'
     );
   }
@@ -159,16 +170,6 @@ export default class TransclusionResult {
     }
 
     return stats;
-  }
-
-  private getCacheStats(): string {
-    return (
-      `\n\nCache: ${this.cacheStats.getItemCount()} items` +
-      `, ${this.cacheStats.getHitCount()} hits` +
-      `, ${this.cacheStats.getMissCount()} misses` +
-      `, ${this.cacheStats.getRefreshSuccessCount()} successful refreshs` +
-      `, ${this.cacheStats.getRefreshFailureCount()} failed refreshs`
-    );
   }
 
   private getProcessedIncludeStatsRow(include: Include): string {

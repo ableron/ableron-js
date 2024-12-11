@@ -69,7 +69,9 @@ export default class TransclusionProcessor {
       })
     );
     transclusionResult.setProcessingTimeMillis(Date.now() - startTime);
-    this.logger.debug(`[Ableron] ${transclusionResult.getProcessedIncludesLogLine()}`);
+    this.logger.debug(
+      `[Ableron] ${transclusionResult.getProcessedIncludesLogLine()} (${transclusionResult.getCacheStatsLogLine()})`
+    );
     return transclusionResult;
   }
 
