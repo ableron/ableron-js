@@ -19,7 +19,7 @@ export default class Include {
   /**
    * Name of the attribute which contains the timeout for requesting the src URL.
    */
-  private readonly ATTR_SOURCE_TIMEOUT_MILLIS: string = 'src-timeout-millis';
+  private readonly ATTR_SOURCE_TIMEOUT: string = 'src-timeout';
 
   /**
    * Name of the attribute which contains the fallback URL to resolve the include to in case the
@@ -30,13 +30,21 @@ export default class Include {
   /**
    * Name of the attribute which contains the timeout for requesting the fallback-src URL.
    */
-  private readonly ATTR_FALLBACK_SOURCE_TIMEOUT_MILLIS: string = 'fallback-src-timeout-millis';
+  private readonly ATTR_FALLBACK_SOURCE_TIMEOUT: string = 'fallback-src-timeout';
 
   /**
    * Name of the attribute which denotes a fragment whose response code is set as response code
    * for the page.
    */
   private readonly ATTR_PRIMARY: string = 'primary';
+
+  /**
+   * Regular expression for parsing timeouts.<br>
+   * <br>
+   * Accepts plain numbers and numbers suffixed with either <code>s</code> indicating <code>seconds</code> or
+   * <code>ms</code> indicating <code>milliseconds</code>.
+   */
+  private readonly TIMEOUT_PATTERN: RegExp = /^(\d+)(ms|s)?$/;
 
   /**
    * HTTP status codes indicating successful and cacheable responses.
@@ -112,9 +120,9 @@ export default class Include {
     this.rawAttributes = rawAttributes !== undefined ? rawAttributes : new Map<string, string>();
     this.id = this.buildIncludeId(this.rawAttributes.get(this.ATTR_ID));
     this.src = this.rawAttributes.get(this.ATTR_SOURCE);
-    this.srcTimeoutMillis = this.parseTimeout(this.rawAttributes.get(this.ATTR_SOURCE_TIMEOUT_MILLIS));
+    this.srcTimeoutMillis = this.parseTimeout(this.rawAttributes.get(this.ATTR_SOURCE_TIMEOUT));
     this.fallbackSrc = this.rawAttributes.get(this.ATTR_FALLBACK_SOURCE);
-    this.fallbackSrcTimeoutMillis = this.parseTimeout(this.rawAttributes.get(this.ATTR_FALLBACK_SOURCE_TIMEOUT_MILLIS));
+    this.fallbackSrcTimeoutMillis = this.parseTimeout(this.rawAttributes.get(this.ATTR_FALLBACK_SOURCE_TIMEOUT));
     const primary = this.rawAttributes.get(this.ATTR_PRIMARY);
     this.primary = primary !== undefined && ['', 'primary'].includes(primary.toLowerCase());
     this.fallbackContent = fallbackContent !== undefined ? fallbackContent : '';
@@ -335,17 +343,24 @@ export default class Include {
   }
 
   private parseTimeout(timeoutAsString?: string): number | undefined {
-    const parsedTimeout = Number(timeoutAsString);
+    if (timeoutAsString !== undefined) {
+      const match = timeoutAsString.match(this.TIMEOUT_PATTERN);
 
-    if (isNaN(parsedTimeout)) {
-      if (timeoutAsString) {
-        this.logger.error(`[Ableron] Invalid request timeout: ${timeoutAsString}`);
+      if (match !== null) {
+        const amount = Number(match[1]);
+        const unit = match[2];
+
+        if (unit === 's') {
+          return amount * 1000;
+        }
+
+        return amount;
       }
 
-      return undefined;
+      this.logger.error(`[Ableron] Invalid request timeout: '${timeoutAsString}'`);
     }
 
-    return parsedTimeout;
+    return undefined;
   }
 
   private getRequestTimeout(localTimeout: number | undefined, config: AbleronConfig): number {

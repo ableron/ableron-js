@@ -394,22 +394,25 @@ describe('TransclusionProcessor', () => {
 
   it.each([
     ['invalid src url', '<ableron-include src=",._">fallback</ableron-include>', 'fallback'],
-    ['invalid src timeout', '<ableron-include src-timeout-millis="5s">fallback</ableron-include>', 'fallback'],
+    ['invalid src timeout', '<ableron-include src-timeout="5 seconds">fallback</ableron-include>', 'fallback'],
     [
       'invalid fallback-src timeout',
-      '<ableron-include fallback-src-timeout-millis="5s">fallback</ableron-include>',
+      '<ableron-include fallback-src-timeout=" 5s">fallback</ableron-include>',
       'fallback'
     ]
-  ])('should replace identical includes', async (scenarioName: string, includeTag: string, expectedResult: string) => {
-    // when
-    const result = await transclusionProcessor.resolveIncludes(
-      '<ableron-include >before</ableron-include>' + includeTag + '<ableron-include >after</ableron-include>',
-      new Headers()
-    );
+  ])(
+    'should not crash due to include tag invalid attribute',
+    async (scenarioName: string, includeTag: string, expectedResult: string) => {
+      // when
+      const result = await transclusionProcessor.resolveIncludes(
+        '<ableron-include >before</ableron-include>' + includeTag + '<ableron-include >after</ableron-include>',
+        new Headers()
+      );
 
-    // then
-    expect(result.getContent()).toBe('before' + expectedResult + 'after');
-  });
+      // then
+      expect(result.getContent()).toBe('before' + expectedResult + 'after');
+    }
+  );
 
   it('should resolve includes in parallel', async () => {
     // given

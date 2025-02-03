@@ -82,8 +82,14 @@ describe('Include', () => {
 
   it.each([
     [new Include(''), undefined],
-    [new Include('', new Map([['src-timeout-millis', '2000']])), 2000],
-    [new Include('', new Map([['src-timeout-millis', '2s']])), undefined]
+    [new Include('', new Map([['src-timeout', '2000']])), 2000],
+    [new Include('', new Map([['src-timeout', '2000ms']])), 2000],
+    [new Include('', new Map([['src-timeout', '2s']])), 2000],
+    [new Include('', new Map([['src-timeout', '2S']])), undefined],
+    [new Include('', new Map([['src-timeout', ' 2000']])), undefined],
+    [new Include('', new Map([['src-timeout', '2000 ']])), undefined],
+    [new Include('', new Map([['src-timeout', '2m']])), undefined],
+    [new Include('', new Map([['src-timeout', '2\ns']])), undefined]
   ])('should set src timeout attribute in constructor', (include: Include, expectedSrcTimeout?: number) => {
     expect(include.getSrcTimeoutMillis()).toBe(expectedSrcTimeout);
   });
@@ -97,8 +103,14 @@ describe('Include', () => {
 
   it.each([
     [new Include(''), undefined],
-    [new Include('', new Map([['fallback-src-timeout-millis', '2000']])), 2000],
-    [new Include('', new Map([['fallback-src-timeout-millis', '2s']])), undefined]
+    [new Include('', new Map([['fallback-src-timeout', '2000']])), 2000],
+    [new Include('', new Map([['fallback-src-timeout', '2000ms']])), 2000],
+    [new Include('', new Map([['fallback-src-timeout', '2s']])), 2000],
+    [new Include('', new Map([['fallback-src-timeout', '2S']])), undefined],
+    [new Include('', new Map([['fallback-src-timeout', ' 2000']])), undefined],
+    [new Include('', new Map([['fallback-src-timeout', '2000 ']])), undefined],
+    [new Include('', new Map([['fallback-src-timeout', '2m']])), undefined],
+    [new Include('', new Map([['fallback-src-timeout', '2\ns']])), undefined]
   ])(
     'should set fallback-src timeout attribute in constructor',
     (include: Include, expectedFallbackSrcTimeout?: number) => {
@@ -747,11 +759,11 @@ describe('Include', () => {
 
   it.each([
     ['src', new Map(), ''],
-    ['src', new Map([['src-timeout-millis', '2000']]), 'fragment'],
-    ['src', new Map([['fallback-src-timeout-millis', '2000']]), ''],
+    ['src', new Map([['src-timeout', '2000']]), 'fragment'],
+    ['src', new Map([['fallback-src-timeout', '2000']]), ''],
     ['fallback-src', new Map(), ''],
-    ['fallback-src', new Map([['fallback-src-timeout-millis', '2000']]), 'fragment'],
-    ['fallback-src', new Map([['src-timeout-millis', '2000']]), '']
+    ['fallback-src', new Map([['fallback-src-timeout', '2000']]), 'fragment'],
+    ['fallback-src', new Map([['src-timeout', '2000']]), '']
   ])(
     'should favor include tag specific request timeout over global one - %s, %o',
     async (srcAttributeName: string, timeoutAttribute: Map<string, string>, expectedFragmentContent: string) => {
